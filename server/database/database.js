@@ -7,19 +7,6 @@ let dbName = './server/database/voteWatch.db';
 let db;
 
 const execute = async (sql, params = []) => {
-    //use db.run
-    if (params && params.length > 0) {
-        return new Promise((resolve, reject) => {
-            db.run(sql, params, (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            })
-        })
-    }
-    //use db.exec
     return new Promise((resolve, reject) => {
         db.exec(sql, (err, result) => {
             if (err) {
@@ -30,6 +17,18 @@ const execute = async (sql, params = []) => {
         });
     });
 };
+
+const run = async (sql, params) => {
+    return new Promise((resolve, reject) => {
+        db.run(sql, params, (err, result) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(result);
+            }
+        })
+    })
+}
 
 const createNewDatabase = async () => {
     try {
@@ -66,8 +65,12 @@ const createTables = async () => {
                                     generalProvisions TEXT, 
                                     highlightedProvisions TEXT, 
                                     lastAction TEXT,
-                                    lastActionDate TEXT,  
-                                    subjects TEXT,  
+                                    lastActionDate TEXT, 
+                                    year TEXT, 
+                                    sessionId TEXT, 
+                                    subjects TEXT, 
+                                    houseVoteUrl TEXT, 
+                                    senateVoteURL TEXT,  
                                     link TEXT)`);
 
         const createLegislatorsTable = await execute(`CREATE TABLE IF NOT EXISTS legislators (
@@ -109,11 +112,27 @@ const closeDatabase = () => {
 
 const addToBills = async (bill) => {
     try {
-        const insertSql = `INSERT INTO bills (id, shortTitle, generalProvisions, highlightedProvisions, 
-                                lastAction, lastActionDate, subjects, link)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-        const result = await execute(insertSql, [bill.id, bill.shortTitle, bill.generalProvisions, bill.highlightedProvisions,
-        bill.lastAction, bill.lastActionDate, bill.subjects, bill.link]);
+        const insertSql = `INSERT INTO bills (
+            id, shortTitle, generalProvisions, highlightedProvisions, lastAction,
+            lastActionDate, year, sessionId, link, subjects, houseVoteUrl, senateVoteUrl
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+        const values = [
+            bill.id,
+            bill.shortTitle,
+            bill.generalProvisions,
+            bill.highlightedProvisions,
+            bill.lastAction,
+            bill.lastActionDate,
+            bill.year,
+            bill.sessionId,
+            bill.link,
+            bill.subjects,
+            bill.houseVoteUrl,
+            bill.senateVoteUrl,
+        ];
+
+        const result = await run(insertSql, values);
     } catch (err) {
         console.log(`Error adding information to bills table: ${err.stack}`);
     }
@@ -121,12 +140,28 @@ const addToBills = async (bill) => {
 
 const addToLegislators = async (legislator) => {
     try {
-        const insertSql = `INSERT INTO legislators(id, fullName, formatName, image, house, party, district,
-                                        counties, email, cell, serviceStart, link) 
-                                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-        const result = await execute(insertSql, [legislator.id, legislator.fullName, legislator.formatName, legislator.image,
-        legislator.house, legislator.party, legislator.district, legislator.counties, legislator.email, legislator.cell,
-        legislator.serviceStart, legislator.link]);
+        const insertSql = `INSERT INTO legislators (
+            id, fullName, formatName, image, house,
+            party, district, counties, email, cell,
+            serviceStart, link
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+        const values = [
+            legislator.id,
+            legislator.fullName,
+            legislator.formatName,
+            legislator.image,
+            legislator.house,
+            legislator.party,
+            legislator.district,
+            legislator.counties,
+            legislator.email,
+            legislator.cell,
+            legislator.serviceStart,
+            legislator.link,
+        ];
+
+        const result = await run(insertSql, values);
     } catch (err) {
         console.log(`Error adding information to legislators table: ${err.stack}`);
     }
