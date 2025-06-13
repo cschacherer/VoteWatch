@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Utah Legislature Vote Watch</title>
+    <link href="./resources/css/index.css" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+    <h2>All Legislators - Find your representative and see how they voted for each legislature bill.</h2>
+
+    <ul id="legislators">
+    </ul>
+
+    <script type="module">
+        import * as getData from './getData.js';
+
+        main();
+
+        async function main() {
+            const response = await getLegislators();
+            const legislatorsUl = document.getElementById("legislators");
+
+
+            for (const element of response) {
+                console.log(element);
+
+                let linkUrl;
+                if (element.house === 'S') {
+                    linkUrl = `https://senate.utah.gov/sen/${element.id}/`;
+                } else {
+                    linkUrl = `https://house.utleg.gov/rep/${element.id}/`;
+                }
+
+                let li = document.createElement("li");
+                li.innerHTML = `
+                        <li>
+                            <div>
+                                <a href="${linkUrl}">
+                                    <img src="${element.image}">
+                                </a>
+                                <p>${element.fullName}</p>
+                            </div>
+                        </li>`;
+                legislatorsUl.appendChild(li);
+            }
+        }
+
+        async function getLegislators() {
+            const response = await getData.getAllLegislators();
+            console.log(response);
+            return response;
+        }
+
+    </script>
+</body>
+
+<footer>
+
+</footer>
+
+</html>

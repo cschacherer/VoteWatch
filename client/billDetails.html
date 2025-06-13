@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8" />
+    <title>title</title>
+</head>
+
+<body>
+    <h2>Bill Details</h2>
+
+    <ul id="billDetailList"></ul>
+
+    <script type="module">
+        import * as getData from "./getData.js";
+
+        main();
+
+        async function main() {
+            const id = 'HB0001'
+            const billData = await getData.getBill(2025, id);
+            console.log(billData);
+
+            const billDetailsUl = document.getElementById("billDetailList");
+
+            let li = document.createElement("li");
+            li.innerHTML = `
+                <li>
+                    <div>
+                        <h1>${billData.billNumber} - ${billData.shortTitle}</h1>
+                        <p>${billData.generalProvisions}</p>
+                        <p>${billData.highlightedProvisions}</p>
+                    </div>
+                </li>`;
+            billDetailsUl.appendChild(li);
+
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Utah Legislature Vote Watch</title>
+    <link href="./resources/css/index.css" type="text/css" rel="stylesheet">
+</head>
+
+<body>
+    <h2>All Bills (By Year)</h2>
+
+    <label for="yearDropdown">Choose Year:</label>
+    <select type="dropdown" name="yearDropdown" id="yearDropdown">
+        <option value="2025">2025</option>
+    </select>
+
+    <ul id="allBills">
+    </ul>
+
+    <!-- <div class="billSummary">
+        <h3>Bill Number - Title</h3>
+        <p>Bill Summary <a href="">Link</a></p>
+        <div class="grid votes">
+            <div class="yesVotes">
+                <a href="">Senator Name</a>
+            </div>
+            <div class="noVotes">
+                <a href="">Senator Name</a>
+            </div>
+            <div class="abstainedVotes">
+                <a href="">Senator Name</a>
+            </div>
+        </div>
+    </div> -->
+
+    <script type="module">
+        import * as getData from './getData.js';
+
+        main();
+
+        async function main() {
+            console.log('in main');
+            const allBills = await getData.getAllBillsByYear(2025);
+            const ulBills = document.getElementById('allBills');
+
+            for (const element of allBills) {
+                console.log(element);
+                let li = document.createElement("li");
+                li.innerHTML = `
+                    <li>
+                        <div>
+                            <a href="https://le.utah.gov/~2025/bills/static/${element.number}.html">
+                                <p>${element.number}</p>
+                            </a>
+                            <p>${element.lastActionTime}</p>
+                        </div>
+                    </li>`;
+                ulBills.appendChild(li);
+            }
+        }
+    </script>
+
+</body>
+
+<footer>
+
+</footer>
+
+</html>
