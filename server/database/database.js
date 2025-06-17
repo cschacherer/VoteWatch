@@ -3,47 +3,77 @@ import sqlite3 from 'sqlite3'
 
 const sqlite = sqlite3.verbose();
 
-let dbName = './server/database/voteWatch.db';
+let dbName;
 let db;
 
 const execute = async (sql, params = []) => {
-    return new Promise((resolve, reject) => {
-        db.exec(sql, (err, result) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
+    if (params && params.length !== 0) {
+        return new Promise((resolve, reject) => {
+            //use db.run if you want to add in parameter values
+            db.run(sql, params, (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            })
+        })
+    } else {
+        return new Promise((resolve, reject) => {
+            //use db.exec if you do not need any parameter values 
+            db.exec(sql, (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
         });
-    });
+    }
 };
 
-const run = async (sql, params) => {
+//get MULTIPLE rows 
+const getAll = async (sql, params) => {
     return new Promise((resolve, reject) => {
-        db.run(sql, params, (err, result) => {
+        db.all(sql, params, (err, rows) => {
             if (err) {
                 reject(err);
             } else {
-                resolve(result);
-            }
+                resolve(rows);
+            };
         })
     })
 }
 
-const createNewDatabase = async () => {
+//get ONE row 
+const getFirst = async (sql, params) => {
+    return new Promise((resolve, reject) => {
+        db.get(sql, params, (err, row) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(rows);
+            };
+        })
+    })
+}
+
+const createNewDatabase = async (name) => {
     try {
+        dbName = name;
         if (fs.existsSync(dbName)) {
             fs.unlinkSync(dbName);
         }
-        await openDatabase();
+        await openDatabase(dbName);
         await createTables();
     } catch (err) {
         console.log(`Error creating new database: ${err.stack}`);
     }
 };
 
-const openDatabase = async () => {
+const openDatabase = async (name) => {
     try {
+        dbName = name;
         db = new sqlite.Database(dbName, (err) => {
             if (err) {
                 console.log(err.message);
@@ -87,15 +117,6 @@ const createTables = async () => {
                                         serviceStart TEXT, 
                                         link TEXT)`);
 
-        // const createVotesTable = await execute(`CREATE TABLE IF NOT EXISTS votes (
-        //                                     billId TEXT NOT NULL, 
-        //                                     legislatorId TEXT NOT NULL, 
-        //                                     legislatorName TEXT NOT NULL,
-        //                                     vote TEXT NOT NULL,
-        //                                     year INTEGER NOT NULL,
-        //                                     house TEXT NOT NULL,
-        //                                     FOREIGN KEY(billId) REFERENCES bills(id), 
-        //                                     FOREIGN KEY(legislatorId) REFERENCES legislators(id))`);
         const createVotesTable = await execute(`CREATE TABLE IF NOT EXISTS votes (
                                                 billId TEXT NOT NULL, 
                                                 legislatorId TEXT NOT NULL, 
@@ -144,7 +165,7 @@ const addToBills = async (bill) => {
             bill.senateVoteUrl,
         ];
 
-        const result = await run(sqlCommand, values);
+        const result = await execute(sqlCommand, values);
     } catch (err) {
         console.log(`Error adding information to bills table: ${err.stack}`);
     }
@@ -173,7 +194,7 @@ const addToLegislators = async (legislator) => {
             legislator.link,
         ];
 
-        const result = await run(sqlCommand, values);
+        const result = await execute(sqlCommand, values);
     } catch (err) {
         console.log(`Error adding information to legislators table: ${err.stack}`);
     }
@@ -193,11 +214,71 @@ const addToVotes = async (vote) => {
             vote.house,
         ];
 
-        const result = await run(insertSql, values);
+        const result = await execute(insertSql, values);
     } catch (err) {
         console.log(`Error adding information to votes table: ${err.stack}. ${Object.values(vote)}`);
     }
 };
+
+const getVotingHistoryForLegislator = async (legislatorId) => {
+    const sqlCommand = `SELECT * FROM votes WHERE legislatorId = ?`;
+    const values = [
+        legislatorId,
+    ]
+    const result = await getAll(sqlCommand, values);
+    console.log(result);
+}
+
+const getAllBills = async (year) => {
+    const sqlCommand = `SELECT * FROM bills WHERE year = ?`;
+    const values = [
+        year,
+    ]
+    const result = await getAll(sqlCommand, values);
+    console.log(result);
+}
+
+const getBill = async (id, year) => {
+    const sqlCommand = `SELECT * FROM bills WHERE (id = ? AND year = ?)`;
+    const values = [
+        id,
+        year,
+    ]
+    const result = await getAll(sqlCommand, values);
+    console.log(result);
+}
+
+const getAllVotesOnBill = async (billId, year) => {
+    const sqlCommand = `SELECT * FROM votes WHERE (billId = ? AND year = ?)`;
+    const values = [
+        billId,
+        year,
+    ]
+    const result = await getAll(sqlCommand, values);
+    console.log(result);
+}
+
+const getAllHouseVotesOnBill = async (billId, year) => {
+    const sqlCommand = `SELECT * FROM votes WHERE (billId = ? AND year = ? AND house = ?)`;
+    const values = [
+        billId,
+        year,
+        'H',
+    ]
+    const result = await getAll(sqlCommand, values);
+    console.log(result);
+}
+
+const getAllSenateVotesOnBill = async (billId, year) => {
+    const sqlCommand = `SELECT * FROM votes WHERE (billId = ? AND year = ? AND house = ?)`;
+    const values = [
+        billId,
+        year,
+        'S',
+    ]
+    const result = await getAll(sqlCommand, values);
+    console.log(result);
+}
 
 export {
     createNewDatabase,
@@ -206,4 +287,12 @@ export {
     addToBills,
     addToLegislators,
     addToVotes
-}; 
+};
+
+// await openDatabase('./server/database/voteWatch.db');
+// // await getVotingHistoryForLegislator('PETERT');
+// // await getAllBills(2025);
+// //await getBill('HB0020', 2025);
+// const all = await getAllVotesOnBill('HB0020', 2025)
+// const house = await getAllHouseVotesOnBill('HB0020', 2025)
+// const senate = await getAllSenateVotesOnBill('HB0020', 2025)

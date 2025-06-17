@@ -61,16 +61,20 @@ const fillVotesTable = async (allBills) => {
         //const allBills = await getBills(year);
 
         for (let i = 0; i < allBills.length; i++) {
-            const currentBill = allBills[i];
-            if (currentBill.houseVoteUrl) {
-                const allHouseVotes = await scrapeBillVote(currentBill.year, currentBill.id, currentBill.houseVoteUrl);
-                const addHouseVotesToDb = await Promise.all(allHouseVotes.map(x => addToVotes(x)));
+            try {
+                const currentBill = allBills[i];
+                if (currentBill.houseVoteUrl) {
+                    const allHouseVotes = await scrapeBillVote(currentBill.year, currentBill.id, currentBill.houseVoteUrl);
+                    const addHouseVotesToDb = await Promise.all(allHouseVotes.map(x => addToVotes(x)));
+                }
+                if (currentBill.senateVoteUrl) {
+                    const allSenateVotes = await scrapeBillVote(currentBill.year, currentBill.id, currentBill.senateVoteUrl);
+                    const addSenateVotesToDb = await Promise.all(allSenateVotes.map(x => addToVotes(x)));
+                }
+                console.log(`added bill: ${currentBill.id}`);
+            } catch (err) {
+                console.log(`///////////////////////////////////Error adding bill: ${currentBill.id}`);
             }
-            if (currentBill.senateVoteUrl) {
-                const allSenateVotes = await scrapeBillVote(currentBill.year, currentBill.id, currentBill.senateVoteUrl);
-                const addSenateVotesToDb = await Promise.all(allSenateVotes.map(x => addToVotes(x)));
-            }
-            console.log(`added bill: ${currentBill.id}`);
         }
 
         return true;
@@ -81,10 +85,15 @@ const fillVotesTable = async (allBills) => {
     }
 }
 
-await createNewDatabase();
-await fillLegislatorsTable();
-const BillsIn2025 = await getBills(2025);
-const shorterArray = BillsIn2025.slice(0, 10)
-await fillBillsTable(shorterArray);
-await fillVotesTable(shorterArray);
-console.log('x'); 
+const createNewAndFillDatabase = async (dbName) => {
+    await createNewDatabase(dbName);
+    await fillLegislatorsTable();
+    const BillsIn2025 = await getBills(2025);
+    await fillBillsTable(BillsIn2025);
+    await fillVotesTable(BillsIn2025);
+    console.log('x');
+}
+
+let databaseName = './server/database/voteWatch.db';
+await createNewAndFillDatabase(databaseName);
+
