@@ -2,6 +2,7 @@
 const devToken = '83C4D87BC38A20EE125713B39B56AA5B';
 const baseUrl = 'https://glen.le.utah.gov';
 
+//this calls the utah government legislator API and returns JSON responses
 
 const getAllLegislators = async () => {
     const legislatorsUrl = `/legislators/${devToken}`;

@@ -87,12 +87,24 @@ const createTables = async () => {
                                         serviceStart TEXT, 
                                         link TEXT)`);
 
+        // const createVotesTable = await execute(`CREATE TABLE IF NOT EXISTS votes (
+        //                                     billId TEXT NOT NULL, 
+        //                                     legislatorId TEXT NOT NULL, 
+        //                                     legislatorName TEXT NOT NULL,
+        //                                     vote TEXT NOT NULL,
+        //                                     year INTEGER NOT NULL,
+        //                                     house TEXT NOT NULL,
+        //                                     FOREIGN KEY(billId) REFERENCES bills(id), 
+        //                                     FOREIGN KEY(legislatorId) REFERENCES legislators(id))`);
         const createVotesTable = await execute(`CREATE TABLE IF NOT EXISTS votes (
-                                            billId TEXT NOT NULL, 
-                                            legId TEXT NOT NULL, 
-                                            vote TEXT NOT NULL,
-                                            FOREIGN KEY(billId) REFERENCES bills(id), 
-                                            FOREIGN KEY(legId) REFERENCES legislators(id))`);
+                                                billId TEXT NOT NULL, 
+                                                legislatorId TEXT NOT NULL, 
+                                                legislatorName TEXT NOT NULL,
+                                                vote TEXT NOT NULL,
+                                                year INTEGER,
+                                                house TEXT,
+                                                FOREIGN KEY(billId) REFERENCES bills(id), 
+                                                PRIMARY KEY (billId, legislatorId, legislatorName))`);
 
 
 
@@ -112,7 +124,7 @@ const closeDatabase = () => {
 
 const addToBills = async (bill) => {
     try {
-        const insertSql = `INSERT INTO bills (
+        const sqlCommand = `INSERT INTO bills (
             id, shortTitle, generalProvisions, highlightedProvisions, lastAction,
             lastActionDate, year, sessionId, link, subjects, houseVoteUrl, senateVoteUrl
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
@@ -132,7 +144,7 @@ const addToBills = async (bill) => {
             bill.senateVoteUrl,
         ];
 
-        const result = await run(insertSql, values);
+        const result = await run(sqlCommand, values);
     } catch (err) {
         console.log(`Error adding information to bills table: ${err.stack}`);
     }
@@ -140,7 +152,7 @@ const addToBills = async (bill) => {
 
 const addToLegislators = async (legislator) => {
     try {
-        const insertSql = `INSERT INTO legislators (
+        const sqlCommand = `INSERT INTO legislators (
             id, fullName, formatName, image, house,
             party, district, counties, email, cell,
             serviceStart, link
@@ -161,18 +173,29 @@ const addToLegislators = async (legislator) => {
             legislator.link,
         ];
 
-        const result = await run(insertSql, values);
+        const result = await run(sqlCommand, values);
     } catch (err) {
         console.log(`Error adding information to legislators table: ${err.stack}`);
     }
 };
 
-const addToVotes = async (billId, legId, vote) => {
+const addToVotes = async (vote) => {
     try {
-        const insertSql = `INSERT INTO votes(billId, legId, vote) VALUES (?, ?, ?)`;
-        const result = await execute(insertSql, [billId, legId, vote]);
+        const insertSql = `INSERT INTO votes (
+            billId, legislatorId, legislatorName, vote, year, house
+          )  VALUES (?, ?, ?, ?, ?, ?)`;
+        const values = [
+            vote.billId,
+            vote.legislatorId,
+            vote.legislatorName,
+            vote.vote,
+            vote.year,
+            vote.house,
+        ];
+
+        const result = await run(insertSql, values);
     } catch (err) {
-        console.log(`Error adding information to votes table: ${err.stack}`);
+        console.log(`Error adding information to votes table: ${err.stack}. ${Object.values(vote)}`);
     }
 };
 
