@@ -1,4 +1,3 @@
-// const puppeteer = require('puppeteer');
 import * as cheerio from 'cheerio';
 import { VoteValue } from '../classes/vote.js';
 

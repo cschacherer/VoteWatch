@@ -1,10 +1,22 @@
-import { createNewDatabase, addToLegislators, closeDatabase, addToBills, addToVotes } from './database.js';
+import Database from './database.js';
 import { getAllBillsByYear, getAllLegislators, getBill } from './getOnlineData.js';
 import Bill from '../classes/bill.js';
 import Legislator from '../classes/legislator.js';
 import { scrapeBillVote } from './voteWebScraping.js';
 
-const fillLegislatorsTable = async () => {
+//let databaseName = './server/database/voteWatch.db';
+let db;
+
+const createAndFillNewDatabase = async (dbName) => {
+    db = new Database(dbName);
+    await createNewDatabase(dbName);
+    await _fillLegislatorsTable();
+    const BillsIn2025 = await _getBills(2025);
+    await _fillBillsTable(BillsIn2025);
+    await _fillVotesTable(BillsIn2025);
+}
+
+const _fillLegislatorsTable = async () => {
     try {
         //only works for 2025 right now 
         const allLegislators = await getAllLegislators();
@@ -12,7 +24,7 @@ const fillLegislatorsTable = async () => {
         const allLegislatorsClass = allLegislators.map(leg => new Legislator(leg));
 
         await Promise.all(allLegislatorsClass.map(async legislator => {
-            await addToLegislators(legislator);
+            await Database.addToLegislators(legislator);
         }));
 
         return true;
@@ -22,7 +34,7 @@ const fillLegislatorsTable = async () => {
     }
 };
 
-const getBills = async (year) => {
+const _getBills = async (year) => {
     //only works for 2025 right now 
     const allBills = await getAllBillsByYear(year);
 
@@ -39,7 +51,7 @@ const getBills = async (year) => {
     return promiseResult;
 }
 
-const fillBillsTable = async (allBills) => {
+const _fillBillsTable = async (allBills) => {
     try {
         //only works for 2025 right now 
         //const year = 2025;
@@ -55,11 +67,8 @@ const fillBillsTable = async (allBills) => {
     }
 }
 
-const fillVotesTable = async (allBills) => {
+const _fillVotesTable = async (allBills) => {
     try {
-        //const year = 2025;
-        //const allBills = await getBills(year);
-
         for (let i = 0; i < allBills.length; i++) {
             try {
                 const currentBill = allBills[i];
@@ -71,9 +80,8 @@ const fillVotesTable = async (allBills) => {
                     const allSenateVotes = await scrapeBillVote(currentBill.year, currentBill.id, currentBill.senateVoteUrl);
                     const addSenateVotesToDb = await Promise.all(allSenateVotes.map(x => addToVotes(x)));
                 }
-                console.log(`added bill: ${currentBill.id}`);
             } catch (err) {
-                console.log(`///////////////////////////////////Error adding bill: ${currentBill.id}`);
+                console.log(`Error adding bill: ${currentBill.id}`);
             }
         }
 
@@ -84,16 +92,4 @@ const fillVotesTable = async (allBills) => {
         return false;
     }
 }
-
-const createNewAndFillDatabase = async (dbName) => {
-    await createNewDatabase(dbName);
-    await fillLegislatorsTable();
-    const BillsIn2025 = await getBills(2025);
-    await fillBillsTable(BillsIn2025);
-    await fillVotesTable(BillsIn2025);
-    console.log('x');
-}
-
-let databaseName = './server/database/voteWatch.db';
-await createNewAndFillDatabase(databaseName);
 
