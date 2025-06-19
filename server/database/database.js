@@ -5,13 +5,8 @@ class Database {
     constructor() {
         this.sqlite = sqlite3.verbose();
 
-        const databaseLocation = './server/database/voteWatch.db';
-
-        if (fs.existsSync(databaseLocation)) {
-            this._db = this.openDatabase(databaseLocation);
-        } else {
-            console.log('database name does not exist. You must create teh database.');
-        }
+        this._dbName = './server/database/voteWatch.db';
+        //this._dbName = `C:/Users/Conner Schacherer/Desktop/VoteWatch/server/database/voteWatch.db`;
     }
 
     //external methods 
@@ -28,9 +23,11 @@ class Database {
         }
     };
 
-    async openDatabase(name) {
+    async openDatabase() {
         try {
-            this._dbName = name;
+            if (fs.existsSync(this._dbName)) {
+                console.log('db exists');
+            }
             this._db = new this.sqlite.Database(this._dbName, (err) => {
                 if (err) {
                     console.log(err.message);
@@ -104,7 +101,7 @@ class Database {
                 legislator.link,
             ];
 
-            const result = await this._execute(sqlCommand, values);
+            return await this._execute(sqlCommand, values);
         } catch (err) {
             console.log(`Error adding information to legislators table: ${err.stack}`);
         }
@@ -124,27 +121,32 @@ class Database {
                 vote.house,
             ];
 
-            const result = await this._execute(insertSql, values);
+            return await this._execute(insertSql, values);
         } catch (err) {
             console.log(`Error adding information to votes table: ${err.stack}. ${Object.values(vote)}`);
         }
     };
 
-    async getAllBills(year) {
+    async getAllBills(year = 2025) {
         const sqlCommand = `SELECT * FROM bills WHERE year = ?`;
         const values = [
             year,
         ]
-        const result = await this._getAllRows(sqlCommand, values);
+        return await this._getAllRows(sqlCommand, values);
     }
 
-    async getBill(id, year) {
+    async getAllLegislators() {
+        const sqlCommand = `SELECT * FROM legislators`;
+        return await this._getAllRows(sqlCommand);
+    }
+
+    async getBill(id, year = 2025) {
         const sqlCommand = `SELECT * FROM bills WHERE (id = ? AND year = ?)`;
         const values = [
             id,
             year,
         ]
-        const result = await this._getFirstRow(sqlCommand, values);
+        return await this._getFirstRow(sqlCommand, values);
     }
 
     async getLegislator(id) {
@@ -152,7 +154,7 @@ class Database {
         const values = [
             id,
         ]
-        const result = await this._getFirstRow(sqlCommand, values);
+        return await this._getFirstRow(sqlCommand, values);
     }
 
     async getAllVotesOnBill(billId, year) {
@@ -161,7 +163,7 @@ class Database {
             billId,
             year,
         ]
-        const result = await this._getAllRows(sqlCommand, values);
+        return await this._getAllRows(sqlCommand, values);
     }
 
     async getAllHouseVotesOnBill(billId, year) {
@@ -171,7 +173,7 @@ class Database {
             year,
             'H',
         ]
-        const result = await this._getAllRows(sqlCommand, values);
+        return await this._getAllRows(sqlCommand, values);
     }
 
     async getAllSenateVotesOnBill(billId, year) {
@@ -181,7 +183,7 @@ class Database {
             year,
             'S',
         ]
-        const result = await this._getAllRows(sqlCommand, values);
+        return await this._getAllRows(sqlCommand, values);
     }
 
     async getVotesForAllBills(year) {
@@ -192,7 +194,7 @@ class Database {
             year,
         ]
 
-        const result = await this._getAllRows(joinCommand, values);
+        return await this._getAllRows(joinCommand, values);
     }
 
     async getAllBillsAndVotesForLegislator(legislatorId) {
@@ -218,7 +220,7 @@ class Database {
             legislatorId,
         ]
 
-        const result = await this._getAllRows(joinCommand, values);
+        return await this._getAllRows(joinCommand, values);
     }
 
 
@@ -247,7 +249,7 @@ class Database {
                 });
             });
         }
-    };
+    }
 
     //get MULTIPLE rows matching sql query 
     async _getAllRows(sql, params) {
@@ -258,8 +260,8 @@ class Database {
                 } else {
                     resolve(rows);
                 };
-            })
-        })
+            });
+        });
     }
 
     //get first row matching sql query 
@@ -269,7 +271,7 @@ class Database {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(rows);
+                    resolve(row);
                 };
             })
         })

@@ -3,55 +3,62 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    {
-        "type": "node",
-        "request": "launch",
-        "name": "Debug current file",
-        "program": "${file}",
-    },
-    {
-        "name": "Launch billDetails html",
-        "type": "firefox",
-        "request": "launch",
-        "reAttach": true,
-        "url": "http://127.0.0.1:5500/billDetails.html",
-        "webRoot": "${workspaceFolder}"
-    },
-    {
-        "name": "Launch bills html",
-        "type": "firefox",
-        "request": "launch",
-        "reAttach": true,
-        "url": "http://127.0.0.1:5500/bills.html",
-        "webRoot": "${workspaceFolder}"
-    },
-    {
-        "name": "Launch legislators html",
-        "type": "firefox",
-        "request": "launch",
-        "reAttach": true,
-        "url": "http://127.0.0.1:5500/legislators.html",
-        "webRoot": "${workspaceFolder}"
-    },
-    {
-        "name": "Launch localhost",
-        "type": "firefox",
-        "request": "launch",
-        "reAttach": true,
-        "url": "http://localhost/index.html",
-        "webRoot": "${workspaceFolder}"
-    },
-    {
-        "name": "Attach",
-        "type": "firefox",
-        "request": "attach"
-    },
-    {
-        "name": "Launch WebExtension",
-        "type": "firefox",
-        "request": "launch",
-        "reAttach": true,
-        "addonPath": "${workspaceFolder}"
-    }
-]
+    "configurations": [
+        {
+            "name": "Debug legislators",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:3005/legislators.html",
+            "webRoot": "${workspaceFolder}/client"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug current file",
+            "program": "${file}",
+        },
+        {
+            "name": "Launch billDetails html",
+            "type": "firefox",
+            "request": "launch",
+            "reAttach": true,
+            "url": "http://127.0.0.1:5500/billDetails.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "Launch bills html",
+            "type": "firefox",
+            "request": "launch",
+            "reAttach": true,
+            "url": "http://127.0.0.1:5500/bills.html",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            "name": "Launch legislators html",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://127.0.0.1:3005/legislators.html",
+            "webRoot": "${workspaceFolder}/client"
+        },
+        {
+            "name": "Launch localhost",
+            "type": "firefox",
+            "request": "launch",
+            "reAttach": true,
+            "url": "http://localhost/index.html",
+            "webRoot": "${workspaceFolder}/client"
+        },
+        {
+            "name": "Attach",
+            "type": "firefox",
+            "request": "attach"
+        },
+        {
+            "name": "Launch WebExtension",
+            "type": "firefox",
+            "request": "launch",
+            "reAttach": true,
+            "addonPath": "${workspaceFolder}"
+        }
+    ]
 }
