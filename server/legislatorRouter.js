@@ -3,17 +3,21 @@ import Database from "./database/database.js";
 
 const legislatorRouter = express.Router();
 
-try {
-    const _db = new Database();
-    await _db.openDatabase();
-} catch (err) {
-    console.error("Error opening database:", err);
-}
+const openDatabase = async () => {
+    try {
+        const _db = new Database();
+        await _db.openDatabase();
+    } catch (err) {
+        console.error("Error opening database:", err);
+    }
+};
 
 legislatorRouter.get("/", async (req, res) => {
     //send back the legislator id information        console.log('get all bills');
     try {
         console.log("get all legislators");
+
+        await openDatabase();
 
         const allLegislators = await _db.getAllLegislators();
         res.send(allLegislators);
@@ -28,6 +32,8 @@ legislatorRouter.get("/:id", async (req, res) => {
     try {
         console.log("get legislator with id");
 
+        await openDatabase();
+
         const id = req.params.id;
         const legislatorData = await _db.getLegislator(id);
         res.send(legislatorData);
@@ -40,10 +46,12 @@ legislatorRouter.get("/:id", async (req, res) => {
 legislatorRouter.get("/:id/votes", async (req, res) => {
     try {
         console.log("get all votes for legislator");
+
+        await openDatabase();
+
         const id = req.params.id;
-        const allLegislatorVotes = await _db.getAllBillsAndVotesForLegislator(
-            id
-        );
+        const allLegislatorVotes =
+            await _db.getAllBillsAndVotesForLegislator(id);
         res.send(allLegislatorVotes);
     } catch (err) {
         console.error("Error fetching votes for legislator:", err);

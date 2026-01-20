@@ -1,0 +1,14 @@
+.homePage__container {
+    display: flex;
+    flex-direction: row;
+    padding: 0px;
+    margin: 0px;
+    width: 100%;
+    height: fit-content;
+    min-height: 100%;
+}
+
+.homePage__body {
+    display: flex; 
+    align-items: flex-start; 
+}

@@ -45,8 +45,8 @@
             "type": "firefox",
             "request": "launch",
             "reAttach": true,
-            "url": "http://localhost/index.html",
-            "webRoot": "${workspaceFolder}/client"
+            "url": "http://localhost:5173/index.html",
+            "webRoot": "${workspaceFolder}/react_client"
         },
         {
             "name": "Attach",
