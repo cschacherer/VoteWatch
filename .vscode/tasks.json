@@ -1,0 +1,47 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "npm run server:dev",
+            "type": "npm",
+            "script": "dev",
+            "path": "server",
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": [
+                    {
+                        "regexp": "^(.*)$",
+                        "message": 1
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Debugger listening on",
+                    "endsPattern": "listening|ready|started"
+                }
+            }
+        },
+        {
+            "label": "npm run client:dev",
+            "type": "npm",
+            "script": "dev",
+            "path": "react_client",
+            "isBackground": true,
+            "problemMatcher": {
+                "owner": "custom",
+                "pattern": [
+                    {
+                        "regexp": "^(.*)$",
+                        "message": 1
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "VITE",
+                    "endsPattern": "ready in"
+                }
+            }
+        }
+    ]
+}

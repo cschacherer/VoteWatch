@@ -1,15 +1,21 @@
-import fs from 'fs';
-import sqlite3 from 'sqlite3'
+import fs from "fs";
+import sqlite3 from "sqlite3";
+import { fileURLToPath } from "url";
+import path from "path";
 
 class Database {
     constructor() {
+        //need to fix database name
+
         this.sqlite = sqlite3.verbose();
 
-        this._dbName = './server/database/voteWatch.db';
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        this._dbName = path.join(__dirname, "voteWatch.db");
         //this._dbName = `C:/Users/Conner Schacherer/Desktop/VoteWatch/server/database/voteWatch.db`;
     }
 
-    //external methods 
+    //external methods
     async createNewDatabase(name) {
         try {
             this._dbName = name;
@@ -21,31 +27,29 @@ class Database {
         } catch (err) {
             console.log(`Error creating new database: ${err.stack}`);
         }
-    };
+    }
 
     async openDatabase() {
         try {
             if (fs.existsSync(this._dbName)) {
-                console.log('db exists');
+                console.log("db exists");
             }
             this._db = new this.sqlite.Database(this._dbName, (err) => {
                 if (err) {
                     console.log(err.message);
                     return;
                 }
-
             });
-            await this._execute('PRAGMA foreign_keys = ON');
+            await this._execute("PRAGMA foreign_keys = ON");
         } catch (err) {
             console.log(`Error opening database: ${err.stack}`);
         }
-    };
+    }
 
     closeDatabase() {
         try {
             this._db.close();
-        }
-        catch (err) {
+        } catch (err) {
             console.log(`Error closing database. ${err.stack}`);
         }
     }
@@ -74,9 +78,11 @@ class Database {
 
             const result = await this._execute(sqlCommand, values);
         } catch (err) {
-            console.log(`Error adding information to bills table: ${err.stack}`);
+            console.log(
+                `Error adding information to bills table: ${err.stack}`,
+            );
         }
-    };
+    }
 
     async addToLegislators(legislator) {
         try {
@@ -103,9 +109,11 @@ class Database {
 
             return await this._execute(sqlCommand, values);
         } catch (err) {
-            console.log(`Error adding information to legislators table: ${err.stack}`);
+            console.log(
+                `Error adding information to legislators table: ${err.stack}`,
+            );
         }
-    };
+    }
 
     async addToVotes(vote) {
         try {
@@ -123,15 +131,15 @@ class Database {
 
             return await this._execute(insertSql, values);
         } catch (err) {
-            console.log(`Error adding information to votes table: ${err.stack}. ${Object.values(vote)}`);
+            console.log(
+                `Error adding information to votes table: ${err.stack}. ${Object.values(vote)}`,
+            );
         }
-    };
+    }
 
     async getAllBills(year = 2025) {
         const sqlCommand = `SELECT * FROM bills WHERE year = ?`;
-        const values = [
-            year,
-        ]
+        const values = [year];
         return await this._getAllRows(sqlCommand, values);
     }
 
@@ -142,47 +150,31 @@ class Database {
 
     async getBill(id, year = 2025) {
         const sqlCommand = `SELECT * FROM bills WHERE (id = ? AND year = ?)`;
-        const values = [
-            id,
-            year,
-        ]
+        const values = [id, year];
         return await this._getFirstRow(sqlCommand, values);
     }
 
     async getLegislator(id) {
         const sqlCommand = `SELECT * FROM legislators WHERE id = ?`;
-        const values = [
-            id,
-        ]
+        const values = [id];
         return await this._getFirstRow(sqlCommand, values);
     }
 
     async getAllVotesOnBill(billId, year) {
         const sqlCommand = `SELECT * FROM votes WHERE (billId = ? AND year = ?)`;
-        const values = [
-            billId,
-            year,
-        ]
+        const values = [billId, year];
         return await this._getAllRows(sqlCommand, values);
     }
 
     async getAllHouseVotesOnBill(billId, year) {
         const sqlCommand = `SELECT * FROM votes WHERE (billId = ? AND year = ? AND house = ?)`;
-        const values = [
-            billId,
-            year,
-            'H',
-        ]
+        const values = [billId, year, "H"];
         return await this._getAllRows(sqlCommand, values);
     }
 
     async getAllSenateVotesOnBill(billId, year) {
         const sqlCommand = `SELECT * FROM votes WHERE (billId = ? AND year = ? AND house = ?)`;
-        const values = [
-            billId,
-            year,
-            'S',
-        ]
+        const values = [billId, year, "S"];
         return await this._getAllRows(sqlCommand, values);
     }
 
@@ -190,9 +182,7 @@ class Database {
         const allBillsForYear = await this.getAllBills(year);
 
         const joinCommand = `SELECT * FROM bills JOIN votes ON bills.id = votes.billId AND bills.year = votes.year AND (bills.year = ?)`;
-        const values = [
-            year,
-        ]
+        const values = [year];
 
         return await this._getAllRows(joinCommand, values);
     }
@@ -216,15 +206,12 @@ class Database {
                                 ON (bills.id = votes.billId AND bills.year = votes.year)
                             WHERE legislators.id = ?`;
 
-        const values = [
-            legislatorId,
-        ]
+        const values = [legislatorId];
 
         return await this._getAllRows(joinCommand, values);
     }
 
-
-    //internal methods 
+    //internal methods
     async _execute(sql, params = []) {
         if (params && params.length !== 0) {
             return new Promise((resolve, reject) => {
@@ -235,11 +222,11 @@ class Database {
                     } else {
                         resolve(result);
                     }
-                })
-            })
+                });
+            });
         } else {
             return new Promise((resolve, reject) => {
-                //use db.exec if you do not need any parameter values 
+                //use db.exec if you do not need any parameter values
                 this._db.exec(sql, (err, result) => {
                     if (err) {
                         reject(err);
@@ -251,7 +238,7 @@ class Database {
         }
     }
 
-    //get MULTIPLE rows matching sql query 
+    //get MULTIPLE rows matching sql query
     async _getAllRows(sql, params) {
         return new Promise((resolve, reject) => {
             this._db.all(sql, params, (err, rows) => {
@@ -259,12 +246,12 @@ class Database {
                     reject(err);
                 } else {
                     resolve(rows);
-                };
+                }
             });
         });
     }
 
-    //get first row matching sql query 
+    //get first row matching sql query
     async _getFirstRow(sql, params) {
         return new Promise((resolve, reject) => {
             this._db.get(sql, params, (err, row) => {
@@ -272,14 +259,15 @@ class Database {
                     reject(err);
                 } else {
                     resolve(row);
-                };
-            })
-        })
+                }
+            });
+        });
     }
 
     async _createTables() {
         try {
-            const createBillsTable = await this._execute(`CREATE TABLE IF NOT EXISTS bills (
+            const createBillsTable = await this
+                ._execute(`CREATE TABLE IF NOT EXISTS bills (
                                         id TEXT PRIMARY KEY, 
                                         shortTitle TEXT, 
                                         generalProvisions TEXT, 
@@ -293,7 +281,8 @@ class Database {
                                         senateVoteURL TEXT,  
                                         link TEXT)`);
 
-            const createLegislatorsTable = await this._execute(`CREATE TABLE IF NOT EXISTS legislators (
+            const createLegislatorsTable = await this
+                ._execute(`CREATE TABLE IF NOT EXISTS legislators (
                                             id TEXT PRIMARY KEY, 
                                             fullName TEXT NOT NULL, 
                                             formatName TEXT NOT NULL, 
@@ -307,7 +296,8 @@ class Database {
                                             serviceStart TEXT, 
                                             link TEXT)`);
 
-            const createVotesTable = await this._execute(`CREATE TABLE IF NOT EXISTS votes (
+            const createVotesTable = await this
+                ._execute(`CREATE TABLE IF NOT EXISTS votes (
                                                     billId TEXT NOT NULL, 
                                                     legislatorId TEXT NOT NULL, 
                                                     legislatorName TEXT NOT NULL,
@@ -316,14 +306,10 @@ class Database {
                                                     house TEXT,
                                                     FOREIGN KEY(billId) REFERENCES bills(id), 
                                                     PRIMARY KEY (billId, legislatorId, legislatorName))`);
-
-
-
         } catch (err) {
             console.log(`Error creating tables: ${err.stack}`);
         }
     }
-
 }
 
 export default Database;

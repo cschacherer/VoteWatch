@@ -3,20 +3,22 @@ import Database from "./database/database.js";
 
 const billRouter = express.Router();
 
-const openDatabase = async () => {
-    try {
-        const _db = new Database();
-        await _db.openDatabase();
-    } catch (err) {
-        console.error("Error opening database:", err);
-    }
-};
+const _db = new Database();
+await _db.openDatabase();
+
+// const openDb = async () => {
+//     try {
+//         await _db.openDatabase();
+//     } catch (err) {
+//         console.error("Error opening database:", err);
+//     }
+// };
 
 billRouter.get("/", async (req, res) => {
     try {
         console.log("get all bills");
 
-        await openDatabase();
+        // await openDb();
 
         //send back the bill id information
         const allBills = await _db.getAllBills();
@@ -33,7 +35,7 @@ billRouter.get("/:id", async (req, res) => {
         //send back the bill id information
         console.log("get bill with id");
 
-        await openDatabase();
+        // await openDb();
 
         const id = req.params.id;
         console.log(id);
@@ -47,7 +49,7 @@ billRouter.get("/:id", async (req, res) => {
 
 billRouter.get("/:id/votes", async (req, res) => {
     try {
-        await openDatabase();
+        // await openDb();
         //send back the bill id information
         const id = req.params.id;
         const allVotes = await _db.getAllVotesOnBill(id);
