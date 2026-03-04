@@ -14,7 +14,10 @@ app.use(
     }),
 );
 
-app.use(express.json());
+app.use((req, res, next) => {
+    console.log(`${req.method} ${req.url}`);
+    next();
+});
 
 // Enable __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);

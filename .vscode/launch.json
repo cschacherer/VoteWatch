@@ -1,111 +1,37 @@
-// {
-//     // Use IntelliSense to learn about possible attributes.
-//     // Hover to view descriptions of existing attributes.
-//     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-//     "version": "0.2.0",
-//     "configurations": [
-//         {
-//             "type": "node",
-//             "request": "launch",
-//             "name": "Debug current file",
-//             "program": "${file}",
-//         },
-//         {
-//             "name": "Launch React Frontend",
-//             "type": "firefox",
-//             "request": "launch",
-//             "reAttach": true,
-//             "url": "http://localhost:5173/index.html",
-//             "webRoot": "${workspaceFolder}/react_client"
-//         },
-//         {
-//             "name": "Attach",
-//             "type": "firefox",
-//             "request": "attach"
-//         },
-//         {
-//             "name": "Launch WebExtension",
-//             "type": "firefox",
-//             "request": "launch",
-//             "reAttach": true,
-//             "addonPath": "${workspaceFolder}"
-//         },
-//         {
-//             "type": "node",
-//             "request": "attach",
-//             "name": "Attach to Server Debugger",
-//             "port": 9229,
-//             "restart": true
-//         },
-//         {
-//             "name": "Debug npm run dev (Terminal)",
-//             "type": "node-terminal",
-//             "request": "launch",
-//             "command": "npm run dev"
-//         },
-//         {
-//             "type": "firefox",
-//             "request": "launch",
-//             "name": "Launch frontend",
-//             "url": "http://localhost:5173",
-//             "pathMappings": [
-//                 {
-//                     "url": "http://localhost:5173/src",
-//                     "path": "${workspaceFolder}/react_client/src"
-//                 }
-//             ]
-//         },
-//         // Configuration for the browser frontend
-//         {
-//             "type": "firefox", // Or "msedge"
-//             "request": "launch",
-//             "name": "Debug Frontend",
-//             "url": "http://localhost:5173", // Replace with your app's URL and port
-//             "webRoot": "${workspaceFolder}/react_client", // Replace with your frontend source directory
-//             "preLaunchTask": "npm run dev" // Optional: if you need a task to start the process
-//         }
-//     ],
-//     "compounds": [
-//         {
-//             "name": "Debug Full Stack",
-//             "configurations": [
-//                 "Debug Server",
-//                 "Debug Frontend"
-//             ],
-//             "stopAll": true // Terminate all sessions when one stops
-//         }
-//     ]
-// }
 {
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Launch and Debug Server",
             "type": "node",
-            "request": "attach",
-            "name": "Debug Server",
-            "port": 9229,
+            "request": "launch",
+            "runtimeExecutable": "nodemon",
+            "program": "${workspaceFolder}/server/server.js",
+            "cwd": "${workspaceFolder}/server",
             "restart": true,
-            "preLaunchTask": "npm run server:dev",
-            "sourceMaps": true,
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
             "skipFiles": [
                 "<node_internals>/**"
-            ]
+            ],
+            "env": {
+                "NODE_ENV": "development"
+            }
         },
         {
+            "name": "Launch and Debug Frontend",
             "type": "firefox",
             "request": "launch",
-            "name": "Debug Frontend",
             "url": "http://localhost:5173",
             "webRoot": "${workspaceFolder}/react_client",
-            "preLaunchTask": "npm run client:dev"
         }
     ],
     "compounds": [
         {
             "name": "Debug Full Stack",
             "configurations": [
-                "Debug Server",
-                "Debug Frontend"
+                "Launch and Debug Server",
+                "Launch and Debug Frontend"
             ],
             "stopAll": true
         }

@@ -1,0 +1,57 @@
+.bills__pageContainer {
+    display: flex;
+    flex-direction: column;
+    margin: 25px;
+}
+
+
+.bills__tableContainer {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+.bills__table {
+    line-height: 1.5;
+    text-align: start;
+    table-layout: fixed;
+    width: 100%;    
+}
+
+.bills__colHeader{
+    position: relative;
+    white-space: wrap;
+    background-color: #525252;
+    color: white;
+    font-weight: 600;
+    text-align: left;
+    padding: 10px;
+}
+
+
+
+td {
+    border: 1px solid black;
+    padding: 0.25rem 0.75rem;
+    overflow: hidden;
+    max-height: 30px;
+    white-space: wrap;
+    text-overflow: ellipsis;
+}
+
+
+.bills__resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 10px;
+    cursor: col-resize;
+    user-select: none;
+    touch-action: none;
+    background-color: transparent;
+}
+
+.bills__resizer:hover {
+    background-color: rgba(0, 0, 0, 0.15);
+}

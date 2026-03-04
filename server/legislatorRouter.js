@@ -3,24 +3,16 @@ import Database from "./database/database.js";
 
 const legislatorRouter = express.Router();
 
-const openDatabase = async () => {
-    try {
-        const _db = new Database();
-        await _db.openDatabase();
-    } catch (err) {
-        console.error("Error opening database:", err);
-    }
-};
+const _db = new Database();
+await _db.openDatabase();
 
 legislatorRouter.get("/", async (req, res) => {
     //send back the legislator id information        console.log('get all bills');
     try {
         console.log("get all legislators");
 
-        await openDatabase();
-
         const allLegislators = await _db.getAllLegislators();
-        res.send(allLegislators);
+        res.json(allLegislators);
     } catch (err) {
         console.error("Error fetching legislator details:", err);
         res.status(500).send("Internal Server Error");
@@ -32,11 +24,9 @@ legislatorRouter.get("/:id", async (req, res) => {
     try {
         console.log("get legislator with id");
 
-        await openDatabase();
-
         const id = req.params.id;
         const legislatorData = await _db.getLegislator(id);
-        res.send(legislatorData);
+        res.json(legislatorData);
     } catch (err) {
         console.error("Error fetching legislator details:", err);
         res.status(500).send("Internal Server Error");
@@ -47,12 +37,10 @@ legislatorRouter.get("/:id/votes", async (req, res) => {
     try {
         console.log("get all votes for legislator");
 
-        await openDatabase();
-
         const id = req.params.id;
         const allLegislatorVotes =
             await _db.getAllBillsAndVotesForLegislator(id);
-        res.send(allLegislatorVotes);
+        res.json(allLegislatorVotes);
     } catch (err) {
         console.error("Error fetching votes for legislator:", err);
         res.status(500).send("Internal Server Error");

@@ -6,23 +6,13 @@ const billRouter = express.Router();
 const _db = new Database();
 await _db.openDatabase();
 
-// const openDb = async () => {
-//     try {
-//         await _db.openDatabase();
-//     } catch (err) {
-//         console.error("Error opening database:", err);
-//     }
-// };
-
 billRouter.get("/", async (req, res) => {
     try {
         console.log("get all bills");
 
-        // await openDb();
-
         //send back the bill id information
         const allBills = await _db.getAllBills();
-        res.send(allBills);
+        res.json(allBills);
     } catch (err) {
         console.error("Error fetching bill details:", error);
         res.status(500).send("Internal Server Error");
@@ -35,12 +25,10 @@ billRouter.get("/:id", async (req, res) => {
         //send back the bill id information
         console.log("get bill with id");
 
-        // await openDb();
-
         const id = req.params.id;
         console.log(id);
         const billDetails = await _db.getBill(id);
-        res.send(billDetails);
+        res.json(billDetails);
     } catch (err) {
         console.error("Error fetching bill details:", error);
         res.status(500).send("Internal Server Error");
@@ -49,11 +37,10 @@ billRouter.get("/:id", async (req, res) => {
 
 billRouter.get("/:id/votes", async (req, res) => {
     try {
-        // await openDb();
         //send back the bill id information
         const id = req.params.id;
         const allVotes = await _db.getAllVotesOnBill(id);
-        res.send(allVotes);
+        res.json(allVotes);
     } catch (err) {
         console.error("Error fetching bill details:", error);
         res.status(500).send("Internal Server Error");

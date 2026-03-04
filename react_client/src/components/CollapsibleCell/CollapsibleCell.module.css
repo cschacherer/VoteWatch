@@ -1,0 +1,26 @@
+.cellCollapsed {
+    overflow: hidden;
+    max-height: 30px;
+    /* 👈 real, computable limit */
+    transition: max-height 0.2s ease;
+    white-space: pre-wrap;
+}
+
+.cellExpanded {
+    overflow: visible;
+    max-height: none;
+    white-space: pre-wrap;
+}
+.cellToggle {
+    margin-top: 4px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: #2563eb;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.cellToggle:hover {
+    text-decoration: underline;
+}
