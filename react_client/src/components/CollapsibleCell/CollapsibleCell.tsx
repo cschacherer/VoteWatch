@@ -1,28 +1,40 @@
 import { useState } from "react";
+import style from "./CollapsibleCell.module.css";
 
 type CollapsibleCellProps = {
     text: string;
-    collapsedHeight?: number;
+    lines?: number;
 };
 
 const CollapsibleCell = ({ text }: CollapsibleCellProps) => {
-    const [expanded, setExpanded] = useState(() => text.length <= 300);
-
     if (!text) return null;
+
+    const linesShown = 5;
+    const isLongText = text.length > 150;
+    const [isExpanded, setIsExpanded] = useState(!isLongText);
 
     return (
         <div>
-            <div className={expanded ? "cellExpanded" : "cellCollapsed"}>
+            <div
+                className={
+                    isExpanded
+                        ? style.collapsibleCell__cellExpanded
+                        : style.collapsibleCell__cellCollapsed
+                }
+                style={
+                    !isExpanded ? { WebkitLineClamp: linesShown } : undefined
+                }
+            >
                 {text}
             </div>
 
-            {expanded && (
+            {isLongText && (
                 <button
                     type="button"
-                    className="cellToggle"
-                    onClick={() => setExpanded((v) => !v)}
+                    className={style.collapsibleCell__toggleButton}
+                    onClick={() => setIsExpanded((v) => !v)}
                 >
-                    {expanded ? "Show less" : "Show more"}
+                    {isExpanded ? "Show less" : "Show more"}
                 </button>
             )}
         </div>

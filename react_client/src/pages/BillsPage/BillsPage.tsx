@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { getAllBills, getBillDetails } from "../../services/billService";
 import type { Bill } from "../../models/Bills";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
+import SortableHeader from "../../components/SortableHeader/SortableHeader";
 
 import style from "./BillsPage.module.css";
 
@@ -38,35 +39,52 @@ const BillsPage = () => {
         fetchBills();
     }, []);
 
+    //helper function for declaring columns
+    function createSortableColumn<T>(
+        accessorKey: keyof T,
+        title: string,
+        size: number,
+        collapsibleCell: boolean = false,
+    ): ColumnDef<T> {
+        return {
+            accessorKey: accessorKey as string,
+            header: ({ column }) => (
+                <SortableHeader column={column} title={title} />
+            ),
+            enableSorting: true,
+            size: size,
+            //.../ is the spread operator, which conditionally adds properties to an object (in this case, cell property is only added if collapsibleCell is true)
+            ...(collapsibleCell && {
+                cell: ({ getValue }) => (
+                    <CollapsibleCell text={getValue<string>()} />
+                ),
+            }),
+        };
+    }
+
     //set all column tables here
     const columns: ColumnDef<Bill>[] = [
-        { accessorKey: "id", header: "Bill Id", size: 120 },
-        { accessorKey: "shortTitle", header: "Title", size: 250 },
-        {
-            accessorKey: "generalProvisions",
-            header: "General Provisions",
-            size: 300,
-        },
-        {
-            accessorKey: "highlightedProvisions",
-            header: "Highlighted Provisions",
-            size: 300,
-            cell: ({ getValue }) => (
-                <CollapsibleCell text={getValue<string>()} />
-            ),
-        },
-        { accessorKey: "lastAction", header: "Last Action", size: 200 },
-        {
-            accessorKey: "lastActionDate",
-            header: "Last Action Date",
-            size: 150,
-        },
-        { accessorKey: "year", header: "Year", size: 80 },
-        { accessorKey: "sessionId", header: "Session Id", size: 120 },
-        { accessorKey: "link", header: "Link", size: 200 },
-        { accessorKey: "subjects", header: "Subjects", size: 250 },
-        { accessorKey: "houseVoteUrl", header: "House Vote URL", size: 200 },
-        { accessorKey: "senateVoteUrl", header: "Senate Vote URL", size: 200 },
+        createSortableColumn<Bill>("id", "Bill Id", 120),
+        createSortableColumn<Bill>("shortTitle", "Title", 250),
+        createSortableColumn<Bill>(
+            "generalProvisions",
+            "General Provisions",
+            300,
+        ),
+        createSortableColumn<Bill>(
+            "highlightedProvisions",
+            "Highlighted Provisions",
+            350,
+            true,
+        ),
+        createSortableColumn<Bill>("lastAction", "Last Action", 150),
+        createSortableColumn<Bill>("lastActionDate", "Last Action Date", 150),
+        createSortableColumn<Bill>("year", "Year", 80),
+        createSortableColumn<Bill>("sessionId", "Session Id", 120),
+        createSortableColumn<Bill>("link", "Link", 200),
+        createSortableColumn<Bill>("subjects", "Subjects", 250),
+        createSortableColumn<Bill>("houseVoteUrl", "House Vote URL", 100),
+        createSortableColumn<Bill>("senateVoteUrl", "Senate Vote URL", 100),
     ];
 
     //use tanstack react-table to use a responsive table (ie changing col widths, sorting, etc)
@@ -89,7 +107,7 @@ const BillsPage = () => {
     return (
         <div className={style.bills__pageContainer}>
             <div>
-                <h1>Bills Bills Bills!</h1>
+                <h1 className={style.bills__header}>Bills Bills Bills!</h1>
             </div>
 
             {/* Global filter */}
@@ -111,8 +129,9 @@ const BillsPage = () => {
                                         <th
                                             key={header.id}
                                             className={style.bills__colHeader}
-                                            style={{ width: header.getSize() }} //need this to resize column width
-                                            onClick={header.column.getToggleSortingHandler()}
+                                            style={{
+                                                width: header.getSize(),
+                                            }} //need this to resize column width
                                         >
                                             <div>
                                                 {flexRender(
@@ -120,12 +139,6 @@ const BillsPage = () => {
                                                         .header,
                                                     header.getContext(),
                                                 )}
-                                                {{
-                                                    asc: " 🔼",
-                                                    desc: " 🔽",
-                                                }[
-                                                    header.column.getIsSorted() as string
-                                                ] ?? null}
                                             </div>
 
                                             {/* Resize column handle */}

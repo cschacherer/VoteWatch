@@ -1,26 +1,20 @@
-.cellCollapsed {
+.collapsibleCell__cellCollapsed {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    max-height: 30px;
-    /* 👈 real, computable limit */
-    transition: max-height 0.2s ease;
     white-space: pre-wrap;
 }
 
-.cellExpanded {
-    overflow: visible;
-    max-height: none;
+.collapsibleCell__cellExpanded {
+    display: block;
     white-space: pre-wrap;
 }
-.cellToggle {
-    margin-top: 4px;
-    padding: 0;
-    border: none;
-    background: none;
-    color: #2563eb;
+
+.collapsibleCell__toggleButton {
+    background: white;
+    color: black;
     cursor: pointer;
+    padding: 4px 4px;
     font-size: 0.8rem;
-}
-
-.cellToggle:hover {
-    text-decoration: underline;
+    margin-top: 15px;
 }
