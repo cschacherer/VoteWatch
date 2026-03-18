@@ -5,8 +5,6 @@ import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import SortableHeader from "../../components/SortableHeader/SortableHeader";
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
 
-import style from "./BillsPage.module.css";
-
 import {
     useReactTable,
     getCoreRowModel,
@@ -17,6 +15,8 @@ import {
     type SortingState,
     type ColumnFiltersState,
 } from "@tanstack/react-table";
+
+import style from "./BillsPage.module.css";
 
 const BillsPage = () => {
     const [bills, setBills] = useState<Bill[]>([]);
@@ -84,10 +84,53 @@ const BillsPage = () => {
         createSortableColumn<Bill>("lastActionDate", "Last Action Date", 150),
         createSortableColumn<Bill>("year", "Year", 80),
         createSortableColumn<Bill>("sessionId", "Session Id", 120),
-        createSortableColumn<Bill>("link", "Link", 200),
+
         createSortableColumn<Bill>("subjects", "Subjects", 250),
-        createSortableColumn<Bill>("houseVoteUrl", "House Vote URL", 100),
-        createSortableColumn<Bill>("senateVoteUrl", "Senate Vote URL", 100),
+        // createSortableColumn<Bill>("houseVoteUrl", "House Vote URL", 100),
+        // createSortableColumn<Bill>("senateVoteUrl", "Senate Vote URL", 100),
+        // createSortableColumn<Bill>("link", "Link", 200),
+        {
+            accessorKey: "houseVoteUrl",
+            header: "House Vote URL",
+            size: 100,
+            cell: ({ row }) => (
+                <a
+                    href={row.original.houseVoteUrl}
+                    target="_self"
+                    style={{ color: "#2563eb", textDecoration: "underline" }}
+                >
+                    {row.original.houseVoteUrl}
+                </a>
+            ),
+        },
+        {
+            accessorKey: "senateVoteUrl",
+            header: "Senate Vote URL",
+            size: 100,
+            cell: ({ row }) => (
+                <a
+                    href={row.original.senateVoteUrl}
+                    target="_self"
+                    style={{ color: "#2563eb", textDecoration: "underline" }}
+                >
+                    {row.original.senateVoteUrl}
+                </a>
+            ),
+        },
+        {
+            accessorKey: "link",
+            header: "Utah Gov Link",
+            size: 100,
+            cell: ({ row }) => (
+                <a
+                    href={row.original.link}
+                    target="_self"
+                    style={{ color: "#2563eb", textDecoration: "underline" }}
+                >
+                    Official Link
+                </a>
+            ),
+        },
     ];
 
     //use tanstack react-table to use a responsive table (ie changing col widths, sorting, etc)
