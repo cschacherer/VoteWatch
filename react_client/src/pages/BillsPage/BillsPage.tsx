@@ -3,6 +3,7 @@ import { getAllBills, getBillDetails } from "../../services/billService";
 import type { Bill } from "../../models/Bills";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import SortableHeader from "../../components/SortableHeader/SortableHeader";
+import FilterPanel from "../../components/FilterPanel/FilterPanel";
 
 import style from "./BillsPage.module.css";
 
@@ -14,12 +15,14 @@ import {
     flexRender,
     type ColumnDef,
     type SortingState,
+    type ColumnFiltersState,
 } from "@tanstack/react-table";
 
 const BillsPage = () => {
     const [bills, setBills] = useState<Bill[]>([]);
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState("");
+    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
     useEffect(() => {
         const fetchBills = async () => {
@@ -94,11 +97,14 @@ const BillsPage = () => {
         state: {
             sorting,
             globalFilter,
+            columnFilters,
         },
         onSortingChange: setSorting,
         onGlobalFilterChange: setGlobalFilter,
         getCoreRowModel: getCoreRowModel(),
         getSortedRowModel: getSortedRowModel(),
+        filterFns: {},
+        onColumnFiltersChange: setColumnFilters,
         getFilteredRowModel: getFilteredRowModel(),
         enableColumnResizing: true,
         columnResizeMode: "onChange",
@@ -117,6 +123,9 @@ const BillsPage = () => {
                 onChange={(e) => setGlobalFilter(e.target.value)}
                 placeholder="Search bills..."
             />
+
+            {/* Specific column filter */}
+            <FilterPanel table={responsiveTable} />
 
             <div className={style.bills__tableContainer}>
                 <table className={style.bills__table}>
@@ -159,7 +168,7 @@ const BillsPage = () => {
                                 {row.getVisibleCells().map((cell) => (
                                     <td
                                         key={cell.id}
-                                        className={style.cell}
+                                        className={style.bills_cell}
                                         title={cell.getValue() as string}
                                     >
                                         {flexRender(

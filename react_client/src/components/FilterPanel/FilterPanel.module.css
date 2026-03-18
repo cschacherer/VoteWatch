@@ -1,0 +1,69 @@
+.filterPanel__container {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    box-sizing: border-box;
+    /* border: 5px solid red; */
+    justify-content: normal;
+}
+
+.filterPanel__subContainer {
+    display: flex;
+    justify-content: normal;
+    align-content: center;
+    box-sizing: border-box;
+    /* border: 5px solid blue; */
+    flex-direction: column;
+    height: 100%; 
+    width: 100%;
+}
+
+.filterPanel__columnSelector {
+    padding: 5px;
+    margin: 5px;
+    box-sizing: border-box;
+}
+
+.filterPanel__valueTextbox {
+    padding: 5px;
+    margin: 5px;
+    box-sizing: border-box;
+    width: 100%
+}
+
+.filterPanel__filterRow {
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    padding: 5px;
+    box-sizing: border-box;
+    /* border: 5px solid purple; */
+}
+
+.filterPanel__deleteFilterButton {
+    padding: 5px 10px;
+    margin: 5px;
+    box-sizing: border-box;
+
+}
+
+.filterPanel__addFilterButton {
+    padding: 5px;
+    margin: 10px;
+    box-sizing: border-box;
+    width: 20%;
+    align-self: start;
+}
+
+.filterPanel__filterAllButton {
+    padding: 5px;
+    margin: 5px;
+    box-sizing: border-box;
+    width: 30%;
+}
+
+.filterPanel__showFiltersButton {
+    padding: 5px;
+    margin: 10px 0px;
+    box-sizing: border-box;
+}

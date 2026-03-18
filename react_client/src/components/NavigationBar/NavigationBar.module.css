@@ -11,8 +11,8 @@
 }
 
 .navigationBar__link {
-    margin: 15px;
-    font-size: 1.4rem;
+    margin: 10px;
+    font-size: 22px !important;
     align-content: center;
 }
 
@@ -27,7 +27,7 @@
 }
 
 .navigationBar__brand {
-    font-size: 2.4rem;
+    font-size: 40px !important;
     margin-left: 25px;
     display: flex; 
     align-items: center;
