@@ -3,6 +3,8 @@ import { getAllLegislators } from "../../services/legislatorService";
 import type { Legislator } from "../../models/Legislator";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import SortableHeader from "../../components/SortableHeader/SortableHeader";
+import SortableColumn from "../../components/SortableColumn/SortableColumn";
+
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
 
 import {
@@ -44,33 +46,8 @@ const LegislatorsPage = () => {
         fetchBills();
     }, []);
 
-    //helper function for declaring columns
-    function createSortableColumn<T>(
-        accessorKey: keyof T,
-        title: string,
-        size: number,
-        collapsibleCell: boolean = false,
-        link: boolean = false,
-    ): ColumnDef<T> {
-        return {
-            accessorKey: accessorKey as string,
-            header: ({ column }) => (
-                <SortableHeader column={column} title={title} />
-            ),
-            enableSorting: true,
-            size: size,
-            //.../ is the spread operator, which conditionally adds properties to an object (in this case, cell property is only added if collapsibleCell is true)
-            ...(collapsibleCell && {
-                cell: ({ getValue }) => (
-                    <CollapsibleCell text={getValue<string>()} />
-                ),
-            }),
-        };
-    }
-
     //set all column tables here
     const columns: ColumnDef<Legislator>[] = [
-        // createSortableColumn<Legislator>("formatName", "Name", 150),
         {
             accessorKey: "fullName",
             header: ({ column }) => (
@@ -87,7 +64,6 @@ const LegislatorsPage = () => {
                 </a>
             ),
         },
-        // createSortableColumn<Legislator>("image", "Image", 120),
         {
             accessorKey: "image",
             header: "Image",
@@ -101,14 +77,41 @@ const LegislatorsPage = () => {
             ),
         },
 
-        createSortableColumn<Legislator>("house", "House", 120),
-        createSortableColumn<Legislator>("party", "Party", 120),
-        createSortableColumn<Legislator>("district", "District", 120),
-        createSortableColumn<Legislator>("counties", "Counties", 180),
-        createSortableColumn<Legislator>("email", "Email", 200),
-        createSortableColumn<Legislator>("cell", "Cell Phone", 140),
-        createSortableColumn<Legislator>("serviceStart", "Service Start", 140),
-        // createSortableColumn<Legislator>("link", "Link", 200),
+        SortableColumn<Legislator>({
+            accessorKey: "house",
+            title: "House",
+            size: 120,
+        }),
+        SortableColumn<Legislator>({
+            accessorKey: "party",
+            title: "Party",
+            size: 120,
+        }),
+        SortableColumn<Legislator>({
+            accessorKey: "district",
+            title: "District",
+            size: 120,
+        }),
+        SortableColumn<Legislator>({
+            accessorKey: "counties",
+            title: "Counties",
+            size: 180,
+        }),
+        SortableColumn<Legislator>({
+            accessorKey: "email",
+            title: "Email",
+            size: 200,
+        }),
+        SortableColumn<Legislator>({
+            accessorKey: "cell",
+            title: "Cell Phone",
+            size: 140,
+        }),
+        SortableColumn<Legislator>({
+            accessorKey: "serviceStart",
+            title: "Service Start",
+            size: 140,
+        }),
         {
             accessorKey: "link",
             header: "Utah Gov Link",

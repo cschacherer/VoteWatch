@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { getAllBills } from "../../services/billService";
 import type { Bill } from "../../models/Bill";
-import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
+import SortableColumn from "../../components/SortableColumn/SortableColumn";
 import SortableHeader from "../../components/SortableHeader/SortableHeader";
+
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
 
 import {
@@ -42,35 +43,14 @@ const BillsPage = () => {
         fetchBills();
     }, []);
 
-    //helper function for declaring columns
-    function createSortableColumn<T>(
-        accessorKey: keyof T,
-        title: string,
-        size: number,
-        collapsibleCell: boolean = false,
-    ): ColumnDef<T> {
-        return {
-            accessorKey: accessorKey as string,
-            header: ({ column }) => (
-                <SortableHeader column={column} title={title} />
-            ),
-            enableSorting: true,
-            size: size,
-            //.../ is the spread operator, which conditionally adds properties to an object (in this case, cell property is only added if collapsibleCell is true)
-            ...(collapsibleCell && {
-                cell: ({ getValue }) => (
-                    <CollapsibleCell text={getValue<string>()} />
-                ),
-            }),
-        };
-    }
-
     //set all column tables here
     const columns: ColumnDef<Bill>[] = [
-        // createSortableColumn<Bill>("id", "Bill Id", 120),
         {
             accessorKey: "billId",
-            header: "Bill Id",
+            header: ({ column }) => (
+                <SortableHeader column={column} title={"Bill Id"} />
+            ),
+            enableSorting: true,
             size: 100,
             cell: ({ row }) => (
                 <a
@@ -82,27 +62,44 @@ const BillsPage = () => {
                 </a>
             ),
         },
-        createSortableColumn<Bill>("shortTitle", "Title", 250),
-        createSortableColumn<Bill>(
-            "generalProvisions",
-            "General Provisions",
-            300,
-        ),
-        createSortableColumn<Bill>(
-            "highlightedProvisions",
-            "Highlighted Provisions",
-            350,
-            true,
-        ),
-        createSortableColumn<Bill>("lastAction", "Last Action", 150),
-        createSortableColumn<Bill>("lastActionDate", "Last Action Date", 150),
-        createSortableColumn<Bill>("year", "Year", 80),
-        createSortableColumn<Bill>("sessionId", "Session Id", 120),
+        SortableColumn<Bill>({
+            accessorKey: "shortTitle",
+            title: "Title",
+            size: 250,
+        }),
+        SortableColumn<Bill>({
+            accessorKey: "generalProvisions",
+            title: "General Provisions",
+            size: 300,
+        }),
+        SortableColumn<Bill>({
+            accessorKey: "highlightedProvisions",
+            title: "Highlighted Provisions",
+            size: 350,
+            collapsibleCell: true,
+        }),
+        SortableColumn<Bill>({
+            accessorKey: "lastAction",
+            title: "Last Action",
+            size: 150,
+        }),
+        SortableColumn<Bill>({
+            accessorKey: "lastActionDate",
+            title: "Last Action Date",
+            size: 150,
+        }),
+        SortableColumn<Bill>({ accessorKey: "year", title: "Year", size: 80 }),
+        SortableColumn<Bill>({
+            accessorKey: "sessionId",
+            title: "Session Id",
+            size: 120,
+        }),
 
-        createSortableColumn<Bill>("subjects", "Subjects", 250),
-        // createSortableColumn<Bill>("houseVoteUrl", "House Vote URL", 100),
-        // createSortableColumn<Bill>("senateVoteUrl", "Senate Vote URL", 100),
-        // createSortableColumn<Bill>("link", "Link", 200),
+        SortableColumn<Bill>({
+            accessorKey: "subjects",
+            title: "Subjects",
+            size: 250,
+        }),
         {
             accessorKey: "houseVoteUrl",
             header: "House Vote URL",

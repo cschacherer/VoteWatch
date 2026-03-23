@@ -7,7 +7,7 @@ import Row from "react-bootstrap/Row";
 
 import VoteTable from "../../components/VoteTable/VoteTable";
 
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import style from "./BillDetailsPage.module.css";
 

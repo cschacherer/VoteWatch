@@ -5,6 +5,7 @@ import AboutPage from "./pages/AboutPage/AboutPage";
 import BillsPage from "./pages/BillsPage/BillsPage";
 import LegislatorsPage from "./pages/LegislatorsPage/LegislatorsPage";
 import BillDetailsPage from "./pages/BillDetailsPage/BillDetailsPage";
+import LegislatorDetailsPage from "./pages/LegislatorDetailsPage/LegislatorDetailsPage";
 
 import "./App.css";
 
@@ -18,6 +19,10 @@ function App() {
                 <Route path="/bills" element={<BillsPage />} />
                 <Route path="/legislators" element={<LegislatorsPage />} />
                 <Route path="/bills/:billId" element={<BillDetailsPage />} />
+                <Route
+                    path="/legislators/:legislatorId"
+                    element={<LegislatorDetailsPage />}
+                />
             </Route>
         </Routes>
     );

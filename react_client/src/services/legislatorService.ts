@@ -3,6 +3,7 @@ import apiClient from "./apiClient";
 import { endpointsAPI } from "./endpointsAPI";
 import { createLegislator } from "../models/Legislator";
 import { createVote } from "../models/Vote";
+import { createLegislatorVote } from "../models/LegislatorVote";
 
 export const getAllLegislators = async () => {
     try {
@@ -33,7 +34,7 @@ export const getLegislatorDetails = async (id: string) => {
 export const getLegislatorVotes = async (id: string) => {
     try {
         const response = await apiClient.get(endpointsAPI.legislatorVotes(id));
-        const votesArray = response.data.map(createVote);
+        const votesArray = response.data.map(createLegislatorVote);
         return votesArray;
     } catch (error) {
         let msg = getErrorMessage(error);

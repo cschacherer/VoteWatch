@@ -189,7 +189,10 @@ class Database {
 
     async getAllBillsAndVotesForLegislator(legislatorId) {
         const joinCommand = `SELECT 
+                                votes.legislatorId,
+                                votes.legislatorName,
                                 votes.billId, 
+                                votes.house,
                                 votes.year,
                                 votes.vote, 
                                 bills.generalProvisions, 
