@@ -298,14 +298,14 @@ class Database {
 
             const createVotesTable = await this
                 ._execute(`CREATE TABLE IF NOT EXISTS votes (
+                                                    voteId TEXT PRIMARY KEY,
                                                     billId TEXT NOT NULL, 
                                                     legislatorId TEXT NOT NULL, 
                                                     legislatorName TEXT NOT NULL,
                                                     vote TEXT NOT NULL,
                                                     year INTEGER,
                                                     house TEXT,
-                                                    FOREIGN KEY(billId) REFERENCES bills(id), 
-                                                    PRIMARY KEY (billId, legislatorId, legislatorName))`);
+                                                    FOREIGN KEY(billId) REFERENCES bills(id))`);
         } catch (err) {
             console.log(`Error creating tables: ${err.stack}`);
         }

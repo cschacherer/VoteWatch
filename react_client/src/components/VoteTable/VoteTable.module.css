@@ -1,0 +1,35 @@
+.voteTable__rowContainer {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid black;
+    --bs-gutter-x: 0 !important;
+    --bs-gutter-y: 0 !important;
+}
+
+.voteTable__voteCell {
+    padding: 0px;
+}
+
+.voteTable__rowContent {
+    padding: 20px;
+}
+
+.voteTable__rowPadding {
+    padding: 10px 0px;
+}
+
+.voteTable__rowHeader {
+    background-color: rgb(175, 175, 175);
+    color: black;
+    font-weight: 500;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+.row {
+    --bs-gutter-x: 0;
+    --bs-gutter-y: 0;
+}

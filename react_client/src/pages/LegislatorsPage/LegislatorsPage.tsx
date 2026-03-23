@@ -50,6 +50,7 @@ const LegislatorsPage = () => {
         title: string,
         size: number,
         collapsibleCell: boolean = false,
+        link: boolean = false,
     ): ColumnDef<T> {
         return {
             accessorKey: accessorKey as string,
@@ -69,7 +70,23 @@ const LegislatorsPage = () => {
 
     //set all column tables here
     const columns: ColumnDef<Legislator>[] = [
-        createSortableColumn<Legislator>("formatName", "Format Name", 150),
+        // createSortableColumn<Legislator>("formatName", "Name", 150),
+        {
+            accessorKey: "fullName",
+            header: ({ column }) => (
+                <SortableHeader column={column} title="Name" />
+            ),
+            size: 150,
+            cell: ({ row }) => (
+                <a
+                    href={`legislators/${row.original.id}`}
+                    target="_self"
+                    style={{ color: "#2563eb", textDecoration: "underline" }}
+                >
+                    {row.original.fullName}
+                </a>
+            ),
+        },
         // createSortableColumn<Legislator>("image", "Image", 120),
         {
             accessorKey: "image",

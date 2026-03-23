@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { getAllBills, getBillDetails } from "../../services/billService";
-import type { Bill } from "../../models/Bills";
+import { getAllBills } from "../../services/billService";
+import type { Bill } from "../../models/Bill";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import SortableHeader from "../../components/SortableHeader/SortableHeader";
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
@@ -67,7 +67,21 @@ const BillsPage = () => {
 
     //set all column tables here
     const columns: ColumnDef<Bill>[] = [
-        createSortableColumn<Bill>("id", "Bill Id", 120),
+        // createSortableColumn<Bill>("id", "Bill Id", 120),
+        {
+            accessorKey: "billId",
+            header: "Bill Id",
+            size: 100,
+            cell: ({ row }) => (
+                <a
+                    href={`/bills/${row.original.id}`}
+                    target="_self"
+                    style={{ color: "#2563eb", textDecoration: "underline" }}
+                >
+                    {row.original.id}
+                </a>
+            ),
+        },
         createSortableColumn<Bill>("shortTitle", "Title", 250),
         createSortableColumn<Bill>(
             "generalProvisions",

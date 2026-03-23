@@ -35,11 +35,12 @@ billRouter.get("/:id", async (req, res) => {
     }
 });
 
-billRouter.get("/:id/votes", async (req, res) => {
+billRouter.get("/:year/:id/votes", async (req, res) => {
     try {
         //send back the bill id information
+        const year = req.params.year;
         const id = req.params.id;
-        const allVotes = await _db.getAllVotesOnBill(id);
+        const allVotes = await _db.getAllVotesOnBill(id, year);
         res.json(allVotes);
     } catch (err) {
         console.error("Error fetching bill details:", error);
