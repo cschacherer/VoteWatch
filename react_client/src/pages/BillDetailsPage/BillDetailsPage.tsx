@@ -5,7 +5,7 @@ import { type Vote, VoteValue } from "../../models/Vote";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 
-import VoteTable from "../../components/VoteTable/VoteTable";
+import BillVoteTable from "../../components/VoteTable/BillVoteTable";
 
 import { useParams } from "react-router-dom";
 
@@ -102,26 +102,26 @@ const BillDetailsPage = () => {
                                 </text>
                             </Row>
                             {/* YEAS */}
-                            <VoteTable
+                            <BillVoteTable
                                 voteList={billVotes}
                                 house="H"
                                 voteValue={VoteValue.Yes}
                                 title="Yeas"
-                            ></VoteTable>
+                            ></BillVoteTable>
                             {/* NAYS */}
-                            <VoteTable
+                            <BillVoteTable
                                 voteList={billVotes}
                                 house="H"
                                 voteValue={VoteValue.No}
                                 title="Nays"
-                            ></VoteTable>
+                            ></BillVoteTable>
                             {/* ABSENT */}
-                            <VoteTable
+                            <BillVoteTable
                                 voteList={billVotes}
                                 house="H"
                                 voteValue={VoteValue.Absent}
                                 title="Absent / Abstained"
-                            ></VoteTable>
+                            ></BillVoteTable>
                         </Container>
                     </Row>
 
@@ -138,26 +138,26 @@ const BillDetailsPage = () => {
                                 </div>
                             </Row>
                             {/* YEAS */}
-                            <VoteTable
+                            <BillVoteTable
                                 voteList={billVotes}
                                 house="S"
                                 voteValue={VoteValue.Yes}
                                 title="Yeas"
-                            ></VoteTable>
+                            ></BillVoteTable>
                             {/* NAYS */}
-                            <VoteTable
+                            <BillVoteTable
                                 voteList={billVotes}
                                 house="S"
                                 voteValue={VoteValue.No}
                                 title="Nays"
-                            ></VoteTable>
+                            ></BillVoteTable>
                             {/* ABSENT */}
-                            <VoteTable
+                            <BillVoteTable
                                 voteList={billVotes}
                                 house="S"
                                 voteValue={VoteValue.Absent}
                                 title="Absent / Abstained"
-                            ></VoteTable>
+                            ></BillVoteTable>
                         </Container>
                     </Row>
                 </Container>

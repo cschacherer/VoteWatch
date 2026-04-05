@@ -1,0 +1,21 @@
+.generalTable__container {
+    border: 3px solid black;
+    box-sizing: border-box;
+    width: 100%; 
+    overflow-x: auto; 
+}
+
+.generalTable__searchBar {
+    margin: 8px 0px;
+}
+
+.generalTable__subHeader {
+    width: 100%; 
+    display: flex; 
+    flex-direction: column;
+    margin: 8px;  
+}
+
+.generalTable__container :global(header[align="right"]) {
+    padding: 0px 10px; 
+}

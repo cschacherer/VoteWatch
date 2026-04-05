@@ -4,16 +4,21 @@ import Row from "react-bootstrap/Row";
 import Container from "react-bootstrap/Container";
 import type { Vote, VoteValue } from "../../models/Vote";
 
-import style from "./VoteTable.module.css";
+import style from "./BillVoteTable.module.css";
 
-type VoteTableProps = {
+type BillVoteTableProps = {
     voteList: Vote[];
     voteValue: VoteValue;
     house: string;
     title: string;
 };
 
-const VoteTable = ({ voteList, voteValue, house, title }: VoteTableProps) => {
+const BillVoteTable = ({
+    voteList,
+    voteValue,
+    house,
+    title,
+}: BillVoteTableProps) => {
     const [voteData, setVoteData] = useState<Vote[]>([]);
 
     useEffect(() => {
@@ -29,12 +34,12 @@ const VoteTable = ({ voteList, voteValue, house, title }: VoteTableProps) => {
     }, [voteList]);
 
     return (
-        <Row className={style.voteTable__rowContainer}>
-            <Col xs={2} className={style.voteTable__rowHeader}>
+        <Row className={style.billVoteTable__rowContainer}>
+            <Col xs={2} className={style.billVoteTable__rowHeader}>
                 {title}
             </Col>
             <Col xs={10} className="p-0">
-                <Row className={`${style.voteTable__rowContent} g-0`}>
+                <Row className={`${style.billVoteTable__rowContent} g-0`}>
                     {voteData.map((vote) => (
                         <Col
                             key={vote.legislatorId}
@@ -42,7 +47,7 @@ const VoteTable = ({ voteList, voteValue, house, title }: VoteTableProps) => {
                             sm={6}
                             md={4}
                             lg={2}
-                            className={style.voteTable__voteCell}
+                            className={style.billVoteTable__voteCell}
                         >
                             <a href={`/legislators/${vote.legislatorId}`}>
                                 {vote.legislatorName}
@@ -55,4 +60,4 @@ const VoteTable = ({ voteList, voteValue, house, title }: VoteTableProps) => {
     );
 };
 
-export default VoteTable;
+export default BillVoteTable;

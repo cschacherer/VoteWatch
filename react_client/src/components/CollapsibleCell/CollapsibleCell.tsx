@@ -3,39 +3,39 @@ import style from "./CollapsibleCell.module.css";
 
 type CollapsibleCellProps = {
     text: string;
-    lines?: number;
 };
 
 const CollapsibleCell = ({ text }: CollapsibleCellProps) => {
     if (!text) return null;
 
-    const linesShown = 5;
-    const isLongText = text.length > 150;
-    const [isExpanded, setIsExpanded] = useState(!isLongText);
+    const [expanded, setExpanded] = useState(false);
+
+    const limit = 200;
+
+    const isLong = text.length > limit;
+
+    const previewText = expanded ? text : text.slice(0, limit);
 
     return (
         <div>
             <div
-                className={
-                    isExpanded
-                        ? style.collapsibleCell__cellExpanded
-                        : style.collapsibleCell__cellCollapsed
-                }
-                style={
-                    !isExpanded ? { WebkitLineClamp: linesShown } : undefined
-                }
+                style={{
+                    whiteSpace: "pre-wrap",
+                }}
             >
-                {text}
+                {previewText}
+                {!expanded && isLong && "..."}
             </div>
 
-            {isLongText && (
-                <button
-                    type="button"
-                    className={style.collapsibleCell__toggleButton}
-                    onClick={() => setIsExpanded((v) => !v)}
-                >
-                    {isExpanded ? "Show less" : "Show more"}
-                </button>
+            {isLong && (
+                <div className={style.collapsibleCell__container}>
+                    <span
+                        className={style.collapsibleCell_showMoreButton}
+                        onClick={() => setExpanded((prev) => !prev)}
+                    >
+                        {expanded ? "Show less" : "Show more"}
+                    </span>
+                </div>
             )}
         </div>
     );

@@ -1,34 +1,31 @@
+.filterPanel__showFiltersButton {
+    padding: 5px;
+    margin: 10px 0px;
+    box-sizing: border-box;
+    width: 200px;
+}
+
+.filterPanel__headerText {
+    font-size: 25px;
+    margin-left: 10px;
+}
+
 .filterPanel__container {
     display: flex;
     flex-direction: column; 
     align-items: center;
     box-sizing: border-box;
-    /* border: 5px solid red; */
     justify-content: normal;
 }
 
 .filterPanel__subContainer {
     display: flex;
+    flex-direction: column;
     justify-content: normal;
     align-content: center;
     box-sizing: border-box;
-    /* border: 5px solid blue; */
-    flex-direction: column;
     height: 100%; 
     width: 100%;
-}
-
-.filterPanel__columnSelector {
-    padding: 5px;
-    margin: 5px;
-    box-sizing: border-box;
-}
-
-.filterPanel__valueTextbox {
-    padding: 5px;
-    margin: 5px;
-    box-sizing: border-box;
-    width: 100%
 }
 
 .filterPanel__filterRow {
@@ -38,6 +35,36 @@
     padding: 5px;
     box-sizing: border-box;
     /* border: 5px solid purple; */
+}
+
+.filterPanel__columnSelector {
+    padding: 5px;
+    margin: 5px;
+    box-sizing: border-box;
+    width: max-content; 
+    min-width: 200px
+}
+
+.filterPanel__valueDropdown {
+    padding: 5px;
+    margin: 5px;
+    box-sizing: border-box;
+    width: 100%;
+    background-color: white;
+}
+
+.filterPanel__operatorDropdown {
+    padding: 5px;
+    margin: 5px;
+    box-sizing: border-box;
+    width: max-content;
+}
+
+.filterPanel__valueTextbox {
+    padding: 5px;
+    margin: 5px;
+    box-sizing: border-box;
+    width: 100%
 }
 
 .filterPanel__deleteFilterButton {
@@ -55,15 +82,18 @@
     align-self: start;
 }
 
-.filterPanel__filterAllButton {
+.filterPanel__bottomFilterButton {
     padding: 5px;
     margin: 5px;
     box-sizing: border-box;
-    width: 30%;
+    width: 200px;
 }
 
-.filterPanel__showFiltersButton {
-    padding: 5px;
-    margin: 10px 0px;
-    box-sizing: border-box;
+.filterPanel__bottomButtons {
+    display: flex;
+    justify-content: space-evenly;
+    width: 100%;
 }
+
+
+

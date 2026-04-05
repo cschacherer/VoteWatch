@@ -1,29 +1,13 @@
 import { useState, useEffect } from "react";
 import { getAllBills } from "../../services/billService";
 import type { Bill } from "../../models/Bill";
-import SortableColumn from "../../components/SortableColumn/SortableColumn";
-import SortableHeader from "../../components/SortableHeader/SortableHeader";
-
-import FilterPanel from "../../components/FilterPanel/FilterPanel";
-
-import {
-    useReactTable,
-    getCoreRowModel,
-    getSortedRowModel,
-    getFilteredRowModel,
-    flexRender,
-    type ColumnDef,
-    type SortingState,
-    type ColumnFiltersState,
-} from "@tanstack/react-table";
+import GeneralTable from "../../components/GeneralTable/GeneralTable";
+import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 
 import style from "./BillsPage.module.css";
 
 const BillsPage = () => {
     const [bills, setBills] = useState<Bill[]>([]);
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [globalFilter, setGlobalFilter] = useState("");
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
     useEffect(() => {
         const fetchBills = async () => {
@@ -44,198 +28,228 @@ const BillsPage = () => {
     }, []);
 
     //set all column tables here
-    const columns: ColumnDef<Bill>[] = [
+    const columns = [
         {
-            accessorKey: "billId",
-            header: ({ column }) => (
-                <SortableHeader column={column} title={"Bill Id"} />
-            ),
-            enableSorting: true,
-            size: 100,
-            cell: ({ row }) => (
+            name: "Bill Id",
+            selector: (row: Bill) => row.id,
+            sortable: true,
+            width: "120px",
+            cell: (row: Bill) => (
                 <a
-                    href={`/bills/${row.original.id}`}
-                    target="_self"
+                    href={`/bills/${row.id}`}
                     style={{ color: "#2563eb", textDecoration: "underline" }}
                 >
-                    {row.original.id}
-                </a>
-            ),
-        },
-        SortableColumn<Bill>({
-            accessorKey: "shortTitle",
-            title: "Title",
-            size: 250,
-        }),
-        SortableColumn<Bill>({
-            accessorKey: "generalProvisions",
-            title: "General Provisions",
-            size: 300,
-        }),
-        SortableColumn<Bill>({
-            accessorKey: "highlightedProvisions",
-            title: "Highlighted Provisions",
-            size: 350,
-            collapsibleCell: true,
-        }),
-        SortableColumn<Bill>({
-            accessorKey: "lastAction",
-            title: "Last Action",
-            size: 150,
-        }),
-        SortableColumn<Bill>({
-            accessorKey: "lastActionDate",
-            title: "Last Action Date",
-            size: 150,
-        }),
-        SortableColumn<Bill>({ accessorKey: "year", title: "Year", size: 80 }),
-        SortableColumn<Bill>({
-            accessorKey: "sessionId",
-            title: "Session Id",
-            size: 120,
-        }),
-
-        SortableColumn<Bill>({
-            accessorKey: "subjects",
-            title: "Subjects",
-            size: 250,
-        }),
-        {
-            accessorKey: "houseVoteUrl",
-            header: "House Vote URL",
-            size: 100,
-            cell: ({ row }) => (
-                <a
-                    href={row.original.houseVoteUrl}
-                    target="_self"
-                    style={{ color: "#2563eb", textDecoration: "underline" }}
-                >
-                    {row.original.houseVoteUrl}
+                    {row.id}
                 </a>
             ),
         },
         {
-            accessorKey: "senateVoteUrl",
-            header: "Senate Vote URL",
-            size: 100,
-            cell: ({ row }) => (
-                <a
-                    href={row.original.senateVoteUrl}
-                    target="_self"
-                    style={{ color: "#2563eb", textDecoration: "underline" }}
-                >
-                    {row.original.senateVoteUrl}
-                </a>
+            name: "Title",
+            selector: (row: Bill) => row.shortTitle,
+            sortable: true,
+            grow: 1,
+            minWidth: "170px",
+            maxWidth: "250px",
+            wrap: true,
+        },
+        {
+            name: "General Provisions",
+            selector: (row: Bill) => row.generalProvisions,
+            sortable: true,
+            grow: 2,
+            minWidth: "250px",
+            wrap: true,
+        },
+        {
+            name: "Highlighted Provisions",
+            selector: (row: Bill) => row.highlightedProvisions,
+            sortable: true,
+            grow: 2,
+            minWidth: "350px",
+            wrap: true,
+            cell: (row: Bill) => (
+                <CollapsibleCell text={row.highlightedProvisions} />
             ),
         },
         {
-            accessorKey: "link",
-            header: "Utah Gov Link",
-            size: 100,
-            cell: ({ row }) => (
-                <a
-                    href={row.original.link}
-                    target="_self"
-                    style={{ color: "#2563eb", textDecoration: "underline" }}
-                >
-                    Official Link
-                </a>
+            name: "Last Action",
+            selector: (row: Bill) => row.lastAction,
+            sortable: true,
+            width: "150px",
+            wrap: true,
+            cell: (row: Bill) => (
+                <div className={style.bills__lastActionCell}>
+                    <div>{row.lastAction}</div>
+                    <div>{row.lastActionDate}</div>
+                </div>
             ),
         },
+        {
+            name: "Year",
+            selector: (row: Bill) => row.year,
+            sortable: true,
+            width: "100px",
+        },
+        {
+            name: "Session Id",
+            selector: (row: Bill) => row.sessionId,
+            sortable: true,
+            width: "150px",
+        },
+        {
+            name: "Subjects",
+            selector: (row: Bill) => row.subjects,
+            sortable: true,
+            grow: 2,
+            minWidth: "250px",
+            wrap: true,
+            cell: (row: Bill) => <CollapsibleCell text={row.subjects} />,
+        },
+        {
+            name: "Official Links",
+            selector: (row: Bill) => row.houseVoteUrl,
+            sortable: false,
+            width: "150px",
+            cell: (row: Bill) => (
+                <div className={style.bills__lastActionCell}>
+                    <div>
+                        <a
+                            href={row.houseVoteUrl}
+                            style={{
+                                color: "#2563eb",
+                                textDecoration: "underline",
+                            }}
+                        >
+                            House Vote
+                        </a>
+                    </div>
+                    <div>
+                        <a
+                            href={row.senateVoteUrl}
+                            style={{
+                                color: "#2563eb",
+                                textDecoration: "underline",
+                            }}
+                        >
+                            Senate Vote
+                        </a>
+                    </div>
+                    <div>
+                        <a
+                            href={row.link}
+                            style={{
+                                color: "#2563eb",
+                                textDecoration: "underline",
+                            }}
+                        >
+                            Government Bill
+                        </a>
+                    </div>
+                </div>
+            ),
+        },
+        // {
+        //     name: "House Vote URL",
+        //     selector: (row: Bill) => row.houseVoteUrl,
+        //     sortable: false,
+        //     width: "150px",
+        //     cell: (row: Bill) => (
+        //         <a
+        //             href={row.houseVoteUrl}
+        //             style={{ color: "#2563eb", textDecoration: "underline" }}
+        //         >
+        //             House Vote
+        //         </a>
+        //     ),
+        // },
+        // {
+        //     name: "Senate Vote URL",
+        //     selector: (row: Bill) => row.senateVoteUrl,
+        //     sortable: false,
+        //     width: "150px",
+        //     cell: (row: Bill) => (
+        //         <a
+        //             href={row.senateVoteUrl}
+        //             style={{ color: "#2563eb", textDecoration: "underline" }}
+        //         >
+        //             Senate Vote
+        //         </a>
+        //     ),
+        // },
+        // {
+        //     name: "Utah Gov Link",
+        //     selector: (row: Bill) => row.link,
+        //     sortable: false,
+        //     width: "150px",
+        //     cell: (row: Bill) => (
+        //         <a
+        //             href={row.link}
+        //             style={{ color: "#2563eb", textDecoration: "underline" }}
+        //         >
+        //             Official Link
+        //         </a>
+        //     ),
+        // },
     ];
 
-    //use tanstack react-table to use a responsive table (ie changing col widths, sorting, etc)
-    const responsiveTable = useReactTable({
-        data: bills,
-        columns,
-        state: {
-            sorting,
-            globalFilter,
-            columnFilters,
+    const filters = [
+        {
+            key: "id",
+            label: "Bill Id",
+            type: "text",
         },
-        onSortingChange: setSorting,
-        onGlobalFilterChange: setGlobalFilter,
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        filterFns: {},
-        onColumnFiltersChange: setColumnFilters,
-        getFilteredRowModel: getFilteredRowModel(),
-        enableColumnResizing: true,
-        columnResizeMode: "onChange",
-    });
+        {
+            key: "shortTitle",
+            label: "Title",
+            type: "text",
+        },
+        {
+            key: "generalProvisions",
+            label: "General Provisions",
+            type: "text",
+        },
+        {
+            key: "highlightedProvisions",
+            label: "Highlighted Provisions",
+            type: "text",
+        },
+        {
+            key: "lastAction",
+            label: "Last Action",
+            type: "text",
+        },
+        {
+            key: "lastActionDate",
+            label: "Last Action Date",
+            type: "text", // could upgrade to date later
+        },
+        {
+            key: "year",
+            label: "Year",
+            type: "number", // 🔥 numeric filter enabled
+        },
+        {
+            key: "sessionId",
+            label: "Session Id",
+            type: "text",
+        },
+        {
+            key: "subjects",
+            label: "Subjects",
+            type: "text",
+        },
+    ];
 
     return (
         <div className={style.bills__pageContainer}>
             <div>
                 <h1 className={style.bills__header}>Bills Bills Bills!</h1>
             </div>
-
-            {/* Global filter */}
-            <input
-                className={style.bills__filter}
-                value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder="Search bills..."
-            />
-
-            {/* Specific column filter */}
-            <FilterPanel table={responsiveTable} />
-
-            <div className={style.bills__tableContainer}>
-                <table className={style.bills__table}>
-                    <thead>
-                        {responsiveTable
-                            .getHeaderGroups()
-                            .map((headerGroup) => (
-                                <tr key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => (
-                                        <th
-                                            key={header.id}
-                                            className={style.bills__colHeader}
-                                            style={{
-                                                width: header.getSize(),
-                                            }} //need this to resize column width
-                                        >
-                                            <div>
-                                                {flexRender(
-                                                    header.column.columnDef
-                                                        .header,
-                                                    header.getContext(),
-                                                )}
-                                            </div>
-
-                                            {/* Resize column handle */}
-                                            <div
-                                                onMouseDown={header.getResizeHandler()}
-                                                onTouchStart={header.getResizeHandler()}
-                                                className={style.bills__resizer}
-                                            />
-                                        </th>
-                                    ))}
-                                </tr>
-                            ))}
-                    </thead>
-
-                    <tbody>
-                        {responsiveTable.getRowModel().rows.map((row) => (
-                            <tr key={row.id}>
-                                {row.getVisibleCells().map((cell) => (
-                                    <td
-                                        key={cell.id}
-                                        className={style.bills_cell}
-                                        title={cell.getValue() as string}
-                                    >
-                                        {flexRender(
-                                            cell.column.columnDef.cell,
-                                            cell.getContext(),
-                                        )}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            <GeneralTable
+                columns={columns}
+                data={bills}
+                filters={filters}
+            ></GeneralTable>
         </div>
     );
 };

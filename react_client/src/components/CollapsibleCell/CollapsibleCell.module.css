@@ -10,11 +10,12 @@
     white-space: pre-wrap;
 }
 
-.collapsibleCell__toggleButton {
-    background: white;
-    color: black;
+.collapsibleCell_showMoreButton {
+    color: #2563eb;
     cursor: pointer;
-    padding: 4px 4px;
-    font-size: 0.8rem;
-    margin-top: 15px;
+    font-size: 13px;
+}
+
+.collapsibleCell__container {
+    margin-top: 10px; 
 }

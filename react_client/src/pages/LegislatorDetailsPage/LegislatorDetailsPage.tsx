@@ -5,30 +5,10 @@ import {
 } from "../../services/legislatorService";
 import type { Legislator } from "../../models/Legislator";
 import type { LegislatorVote } from "../../models/LegislatorVote";
-
-import type { Bill } from "../../models/Bill";
-import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
-import FilterPanel from "../../components/FilterPanel/FilterPanel";
-
-import SortableColumn from "../../components/SortableColumn/SortableColumn";
-import SortableHeader from "../../components/SortableHeader/SortableHeader";
-
-import {
-    useReactTable,
-    getCoreRowModel,
-    getSortedRowModel,
-    getFilteredRowModel,
-    flexRender,
-    type ColumnDef,
-    type SortingState,
-    type ColumnFiltersState,
-} from "@tanstack/react-table";
-
-import { type Vote, VoteValue } from "../../models/Vote";
-import Container from "react-bootstrap/Container";
-import Row from "react-bootstrap/Row";
-
+import { Container, Col, Row } from "react-bootstrap";
 import { useParams } from "react-router-dom";
+import GeneralTable from "../../components/GeneralTable/GeneralTable";
+import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 
 import style from "./LegislatorDetailsPage.module.css";
 
@@ -37,9 +17,6 @@ const LegislatorDetailsPage = () => {
     const [legislatorVotes, setLegislatorVotes] = useState<LegislatorVote[]>(
         [],
     );
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [globalFilter, setGlobalFilter] = useState("");
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
     let { legislatorId } = useParams<string>();
     if (!legislatorId) {
@@ -65,234 +42,314 @@ const LegislatorDetailsPage = () => {
         fetchLegislatorDetails();
     }, []);
 
-    //set all column tables here
-    // const columns: ColumnDef<LegislatorVote>[] = [
-    //     {
-    //         accessorKey: "billId",
-    //         header: ({ column }) => (
-    //             <SortableHeader column={column} title={"Bill Id"} />
-    //         ),
-    //         enableSorting: true,
-    //         size: 100,
-    //         cell: ({ row }) => (
-    //             <a
-    //                 href={`/bills/${row.original.billId}`}
-    //                 target="_self"
-    //                 style={{ color: "#2563eb", textDecoration: "underline" }}
-    //             >
-    //                 {row.original.billId}
-    //             </a>
-    //         ),
-    //     },
-    //     SortableColumn<LegislatorVote>({
-    //         accessorKey: "shortTitle",
-    //         title: "Title",
-    //         size: 250,
-    //     }),
-    //     SortableColumn<LegislatorVote>({
-    //         accessorKey: "generalProvisions",
-    //         title: "General Provisions",
-    //         size: 300,
-    //     }),
-    //     SortableColumn<LegislatorVote>({
-    //         accessorKey: "lastAction",
-    //         title: "Last Action",
-    //         size: 150,
-    //     }),
-    //     SortableColumn<LegislatorVote>({
-    //         accessorKey: "lastActionDate",
-    //         title: "Last Action Date",
-    //         size: 150,
-    //     }),
-    //     SortableColumn<LegislatorVote>({
-    //         accessorKey: "year",
-    //         title: "Year",
-    //         size: 80,
-    //     }),
-    //     SortableColumn<LegislatorVote>({
-    //         accessorKey: "sessionId",
-    //         title: "Session Id",
-    //         size: 120,
-    //     }),
+    const columns = [
+        {
+            name: "Bill Id",
+            selector: (row: LegislatorVote) => row.bill.id,
+            sortable: true,
+            width: "100px",
+            cell: (row: LegislatorVote) => (
+                <a
+                    href={`/bills/${row.bill.id}`}
+                    style={{ color: "#2563eb", textDecoration: "underline" }}
+                >
+                    {row.bill.id}
+                </a>
+            ),
+        },
+        {
+            name: "Title",
+            selector: (row: LegislatorVote) => row.bill.shortTitle,
+            sortable: true,
+            wrap: true,
+            grow: 1,
+            minWidth: "170px",
+            maxWidth: "250px",
+        },
+        {
+            name: "General Provisions",
+            selector: (row: LegislatorVote) => row.bill.generalProvisions,
+            sortable: true,
+            wrap: true,
+            grow: 2,
+            minWidth: "250px",
+        },
+        {
+            name: "Highlighted Provisions",
+            selector: (row: LegislatorVote) => row.bill.highlightedProvisions,
+            sortable: true,
+            grow: 2,
+            minWidth: "350px",
+            wrap: true,
+            cell: (row: LegislatorVote) => (
+                <CollapsibleCell text={row.bill.highlightedProvisions} />
+            ),
+        },
+        {
+            name: "Vote",
+            selector: (row: LegislatorVote) => row.vote,
+            sortable: true,
+            width: "120px",
+        },
+        {
+            name: "Last Action",
+            selector: (row: LegislatorVote) => row.bill.lastAction,
+            sortable: true,
+            width: "150px",
+            wrap: true,
+            cell: (row: LegislatorVote) => (
+                <div className={style.bills__lastActionCell}>
+                    <div>{row.bill.lastAction}</div>
+                    <div>{row.bill.lastActionDate}</div>
+                </div>
+            ),
+        },
+        {
+            name: "Year",
+            selector: (row: LegislatorVote) => row.bill.year,
+            sortable: true,
+            width: "100px",
+        },
+        {
+            name: "Session Id",
+            selector: (row: LegislatorVote) => row.bill.sessionId,
+            sortable: true,
+            width: "150px",
+        },
+        {
+            name: "Subjects",
+            selector: (row: LegislatorVote) => row.bill.subjects,
+            sortable: true,
+            grow: 2,
+            minWidth: "150px",
+            wrap: true,
+        },
+        {
+            name: "Utah Gov Link",
+            cell: (row: LegislatorVote) => (
+                <a
+                    href={row.bill.link}
+                    style={{ color: "#2563eb", textDecoration: "underline" }}
+                >
+                    Official Link
+                </a>
+            ),
+            ignoreRowClick: true,
+            allowOverflow: true,
+            button: true,
+            width: "150px",
+        },
+    ];
 
-    //     SortableColumn<LegislatorVote>({
-    //         accessorKey: "subjects",
-    //         title: "Subjects",
-    //         size: 250,
-    //     }),
-    //     {
-    //         accessorKey: "houseVoteUrl",
-    //         header: "House Vote URL",
-    //         size: 100,
-    //         cell: ({ row }) => (
-    //             <a
-    //                 href={row.original.houseVoteUrl}
-    //                 target="_self"
-    //                 style={{ color: "#2563eb", textDecoration: "underline" }}
-    //             >
-    //                 {row.original.houseVoteUrl}
-    //             </a>
-    //         ),
-    //     },
-    //     {
-    //         accessorKey: "senateVoteUrl",
-    //         header: "Senate Vote URL",
-    //         size: 100,
-    //         cell: ({ row }) => (
-    //             <a
-    //                 href={row.original.senateVoteUrl}
-    //                 target="_self"
-    //                 style={{ color: "#2563eb", textDecoration: "underline" }}
-    //             >
-    //                 {row.original.senateVoteUrl}
-    //             </a>
-    //         ),
-    //     },
-    //     {
-    //         accessorKey: "link",
-    //         header: "Utah Gov Link",
-    //         size: 100,
-    //         cell: ({ row }) => (
-    //             <a
-    //                 href={row.original.link}
-    //                 target="_self"
-    //                 style={{ color: "#2563eb", textDecoration: "underline" }}
-    //             >
-    //                 Official Link
-    //             </a>
-    //         ),
-    //     },
-    // ];
-
-    // //use tanstack react-table to use a responsive table (ie changing col widths, sorting, etc)
-    // const responsiveTable = useReactTable({
-    //     data: bills,
-    //     columns,
-    //     state: {
-    //         sorting,
-    //         globalFilter,
-    //         columnFilters,
-    //     },
-    //     onSortingChange: setSorting,
-    //     onGlobalFilterChange: setGlobalFilter,
-    //     getCoreRowModel: getCoreRowModel(),
-    //     getSortedRowModel: getSortedRowModel(),
-    //     filterFns: {},
-    //     onColumnFiltersChange: setColumnFilters,
-    //     getFilteredRowModel: getFilteredRowModel(),
-    //     enableColumnResizing: true,
-    //     columnResizeMode: "onChange",
-    // });
+    const filters = [
+        {
+            key: "bill.id",
+            label: "Bill Id",
+            type: "text",
+        },
+        {
+            key: "bill.shortTitle",
+            label: "Title",
+            type: "text",
+        },
+        {
+            key: "bill.generalProvisions",
+            label: "General Provisions",
+            type: "text",
+        },
+        {
+            key: "vote",
+            label: "Vote",
+            type: "select",
+            options: ["Yes", "No", "Absent"], // adjust if needed
+        },
+        {
+            key: "bill.lastAction",
+            label: "Last Action",
+            type: "text",
+        },
+        {
+            key: "bill.lastActionDate",
+            label: "Last Action Date",
+            type: "text",
+        },
+        {
+            key: "bill.year",
+            label: "Year",
+            type: "number",
+        },
+        {
+            key: "bill.sessionId",
+            label: "Session Id",
+            type: "text",
+        },
+        {
+            key: "bill.subjects",
+            label: "Subjects",
+            type: "text",
+        },
+    ];
 
     return (
         <>
             <div className={style.legislatorDetailsPage__pageContainer}>
+                <div>
+                    <h1 className={style.legislatorDetailsPage__header}>
+                        Legislator's Details !
+                    </h1>
+                </div>
                 {/* Legislator Details */}
                 <Container
                     fluid
                     className={style.legislatorDetailsPage__detailsContainer}
                 >
                     <Row
-                        className={`${style.legislatorDetailsPage__title} ${style.legislatorDetailsPage__rowPadding}`}
+                        className={`${style.legislatorDetailsPage__rowPadding}`}
                     >
-                        <div>{legislatorDetails?.fullName}</div>
-                        <img
-                            src={legislatorDetails?.image}
-                            alt={legislatorDetails?.fullName}
-                            style={{ width: 100, borderRadius: "50%" }}
-                        />
-                    </Row>
-                    <Row className={style.legislatorDetailsPage__rowPadding}>
-                        <div
-                            className={
-                                style.legislatorDetailsPage__sectionTitle
-                            }
-                        >
-                            House
-                        </div>
-                        <div>{legislatorDetails?.house}</div>
-                    </Row>
-                    <Row className={style.legislatorDetailsPage__rowPadding}>
-                        <div
-                            className={
-                                style.legislatorDetailsPage__sectionTitle
-                            }
-                        >
-                            Party
-                        </div>
-                        <div>{legislatorDetails?.party}</div>
-                    </Row>
-                    <Row className={style.legislatorDetailsPage__rowPadding}>
-                        <div
-                            className={
-                                style.legislatorDetailsPage__sectionTitle
-                            }
-                        >
-                            House
-                        </div>
-                        <div>{legislatorDetails?.house}</div>
-                    </Row>
-                    <Row className={style.legislatorDetailsPage__rowPadding}>
-                        <div
-                            className={
-                                style.legislatorDetailsPage__sectionTitle
-                            }
-                        >
-                            District
-                        </div>
-                        <div>{legislatorDetails?.district}</div>
-                    </Row>
-                    <Row className={style.legislatorDetailsPage__rowPadding}>
-                        <div
-                            className={
-                                style.legislatorDetailsPage__sectionTitle
-                            }
-                        >
-                            Counties
-                        </div>
-                        <div>{legislatorDetails?.counties}</div>
-                    </Row>
-                    <Row className={style.legislatorDetailsPage__rowPadding}>
-                        <div
-                            className={
-                                style.legislatorDetailsPage__sectionTitle
-                            }
-                        >
-                            Email
-                        </div>
-                        <div>{legislatorDetails?.email}</div>
-                    </Row>
-                    <Row className={style.legislatorDetailsPage__rowPadding}>
-                        <div
-                            className={
-                                style.legislatorDetailsPage__sectionTitle
-                            }
-                        >
-                            Cell
-                        </div>
-                        <div>{legislatorDetails?.cell}</div>
-                    </Row>
-                    <Row className={style.legislatorDetailsPage__rowPadding}>
-                        <div
-                            className={
-                                style.legislatorDetailsPage__sectionTitle
-                            }
-                        >
-                            Service Start
-                        </div>
-                        <div>{legislatorDetails?.serviceStart}</div>
-                    </Row>
-                    <Row className={style.legislatorDetailsPage__rowPadding}>
-                        <div
-                            className={
-                                style.legislatorDetailsPage__sectionTitle
-                            }
-                        >
-                            Official Link
-                        </div>
-                        <div>{legislatorDetails?.link}</div>
+                        {/* Name and Profile Pic */}
+                        <Col>
+                            <div
+                                className={`${style.legislatorDetailsPage__title}`}
+                            >
+                                {legislatorDetails?.fullName}
+                                <img
+                                    src={legislatorDetails?.image}
+                                    alt={legislatorDetails?.fullName}
+                                    style={{ width: 100, borderRadius: "10%" }}
+                                />
+                            </div>
+                        </Col>
+                        {/* House and Party */}
+                        <Col>
+                            <Row
+                                className={
+                                    style.legislatorDetailsPage__rowPadding
+                                }
+                            >
+                                <div
+                                    className={
+                                        style.legislatorDetailsPage__sectionTitle
+                                    }
+                                >
+                                    House
+                                </div>
+                                <div>{legislatorDetails?.house}</div>
+                            </Row>
+
+                            <Row
+                                className={
+                                    style.legislatorDetailsPage__rowPadding
+                                }
+                            >
+                                <div
+                                    className={
+                                        style.legislatorDetailsPage__sectionTitle
+                                    }
+                                >
+                                    Party
+                                </div>
+                                <div>{legislatorDetails?.party}</div>
+                            </Row>
+                        </Col>
+                        {/* Counties */}
+                        <Col>
+                            <Row
+                                className={
+                                    style.legislatorDetailsPage__rowPadding
+                                }
+                            >
+                                <div
+                                    className={
+                                        style.legislatorDetailsPage__sectionTitle
+                                    }
+                                >
+                                    District
+                                </div>
+                                <div>{legislatorDetails?.district}</div>
+                            </Row>
+                            <Row
+                                className={
+                                    style.legislatorDetailsPage__rowPadding
+                                }
+                            >
+                                <div
+                                    className={
+                                        style.legislatorDetailsPage__sectionTitle
+                                    }
+                                >
+                                    Counties
+                                </div>
+                                <div>{legislatorDetails?.counties}</div>
+                            </Row>
+                        </Col>
+                        <Col>
+                            <Row
+                                className={
+                                    style.legislatorDetailsPage__rowPadding
+                                }
+                            >
+                                <div
+                                    className={
+                                        style.legislatorDetailsPage__sectionTitle
+                                    }
+                                >
+                                    Email
+                                </div>
+                                <div>{legislatorDetails?.email}</div>
+                            </Row>
+                            <Row
+                                className={
+                                    style.legislatorDetailsPage__rowPadding
+                                }
+                            >
+                                <div
+                                    className={
+                                        style.legislatorDetailsPage__sectionTitle
+                                    }
+                                >
+                                    Cell
+                                </div>
+                                <div>{legislatorDetails?.cell}</div>
+                            </Row>
+                        </Col>
+                        <Col>
+                            <Row
+                                className={
+                                    style.legislatorDetailsPage__rowPadding
+                                }
+                            >
+                                <div
+                                    className={
+                                        style.legislatorDetailsPage__sectionTitle
+                                    }
+                                >
+                                    Service Start
+                                </div>
+                                <div>{legislatorDetails?.serviceStart}</div>
+                            </Row>
+                            <Row
+                                className={
+                                    style.legislatorDetailsPage__rowPadding
+                                }
+                            >
+                                <div
+                                    className={
+                                        style.legislatorDetailsPage__sectionTitle
+                                    }
+                                >
+                                    Official Link
+                                </div>
+                                <div>{legislatorDetails?.link}</div>
+                            </Row>
+                        </Col>
                     </Row>
                 </Container>
+                {/* Legislator Voting History Table */}
+                <GeneralTable
+                    columns={columns}
+                    data={legislatorVotes}
+                    filters={filters}
+                ></GeneralTable>
             </div>
         </>
     );

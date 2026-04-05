@@ -1,21 +1,12 @@
 import { type Vote, VoteValue, createVote } from "./Vote";
-import { type Bill, createBill } from "./Bill";
+import { type Bill, createBill, createBillFromVote } from "./Bill";
 
 export type LegislatorVote = {
-    year: string;
-    billId: string;
-    house: string;
     legislatorId: string;
     legislatorName: string;
     vote: VoteValue;
 
-    shortTitle: string;
-    generalProvisions: string;
-    lastAction: string;
-    lastActionDate: string;
-    sessionId: string;
-    link: string;
-    subjects: string;
+    bill: Bill;
 };
 
 export const createLegislatorVote = (raw: any): LegislatorVote => {
@@ -30,23 +21,9 @@ export const createLegislatorVote = (raw: any): LegislatorVote => {
     }
 
     return {
-        shortTitle: String(raw.shortTitle ?? ""),
-
-        generalProvisions: String(raw.generalProvisions ?? ""),
-
-        lastAction: String(raw.lastAction ?? ""),
-        lastActionDate: String(raw.lastActionDate ?? ""),
-
-        year: String(raw.year ?? 0),
-        sessionId: String(raw.sessionId ?? ""),
-
-        link: String(raw.link ?? ""),
-        subjects: String(raw.subjects ?? ""),
-
-        billId: String(raw.billId ?? ""),
-        house: String(raw.house ?? ""),
         legislatorId: String(raw.legislatorId ?? ""),
         legislatorName: String(raw.legislatorName ?? ""),
         vote: voteValue as VoteValue,
+        bill: createBillFromVote(raw),
     };
 };

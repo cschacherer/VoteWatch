@@ -48,3 +48,29 @@ export const createBill = (raw: any): Bill => {
         senateVoteUrl: String(raw.senateVoteUrl ?? ""),
     };
 };
+
+export const createBillFromVote = (raw: any): Bill => {
+    if (typeof raw !== "object" || raw === null) {
+        throw new Error("Invalid bill payload");
+    }
+
+    return {
+        id: String(raw.billId ?? ""),
+        shortTitle: String(raw.shortTitle ?? ""),
+
+        generalProvisions: String(raw.generalProvisions ?? ""),
+        highlightedProvisions: normalizeBillText(raw.highlightedProvisions),
+
+        lastAction: String(raw.lastAction ?? ""),
+        lastActionDate: String(raw.lastActionDate ?? ""),
+
+        year: Number(raw.year ?? 0),
+        sessionId: String(raw.sessionId ?? ""),
+
+        link: String(raw.link ?? ""),
+        subjects: String(raw.subjects ?? ""),
+
+        houseVoteUrl: String(raw.houseVoteUrl ?? ""),
+        senateVoteUrl: String(raw.senateVoteUrl ?? ""),
+    };
+};

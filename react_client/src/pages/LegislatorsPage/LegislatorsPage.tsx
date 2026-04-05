@@ -1,30 +1,12 @@
 import { useState, useEffect } from "react";
 import { getAllLegislators } from "../../services/legislatorService";
 import type { Legislator } from "../../models/Legislator";
-import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
-import SortableHeader from "../../components/SortableHeader/SortableHeader";
-import SortableColumn from "../../components/SortableColumn/SortableColumn";
-
-import FilterPanel from "../../components/FilterPanel/FilterPanel";
-
-import {
-    useReactTable,
-    getCoreRowModel,
-    getSortedRowModel,
-    getFilteredRowModel,
-    flexRender,
-    type ColumnDef,
-    type SortingState,
-    type ColumnFiltersState,
-} from "@tanstack/react-table";
 
 import style from "./LegislatorsPage.module.css";
+import GeneralTable from "../../components/GeneralTable/GeneralTable";
 
 const LegislatorsPage = () => {
     const [legislators, setLegislators] = useState<Legislator[]>([]);
-    const [sorting, setSorting] = useState<SortingState>([]);
-    const [globalFilter, setGlobalFilter] = useState("");
-    const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
     useEffect(() => {
         const fetchBills = async () => {
@@ -46,107 +28,146 @@ const LegislatorsPage = () => {
         fetchBills();
     }, []);
 
-    //set all column tables here
-    const columns: ColumnDef<Legislator>[] = [
+    //Set up columns
+    const columns = [
         {
-            accessorKey: "fullName",
-            header: ({ column }) => (
-                <SortableHeader column={column} title="Name" />
+            name: "Name",
+            selector: (row: Legislator) => row.fullName,
+            sortable: true,
+            grow: 1,
+            minWidth: "180px",
+            cell: (row: Legislator) => (
+                <div className={style.legislators__nameCell}>
+                    <img
+                        src={row.image}
+                        alt={row.fullName}
+                        style={{ width: "100", borderRadius: "10px" }}
+                    />
+                    <a
+                        href={`legislators/${row.id}`}
+                        style={{
+                            color: "#2563eb",
+                            textDecoration: "underline",
+                        }}
+                    >
+                        {row.fullName}
+                    </a>
+                </div>
             ),
-            size: 150,
-            cell: ({ row }) => (
-                <a
-                    href={`legislators/${row.original.id}`}
-                    target="_self"
-                    style={{ color: "#2563eb", textDecoration: "underline" }}
-                >
-                    {row.original.fullName}
-                </a>
+        },
+        {
+            name: "House",
+            selector: (row: Legislator) => row.house,
+            sortable: true,
+            grow: 1,
+            minWidth: "120px",
+        },
+        {
+            name: "Party",
+            selector: (row: Legislator) => row.party,
+            sortable: true,
+            grow: 1,
+            minWidth: "120px",
+        },
+        {
+            name: "District",
+            selector: (row: Legislator) => row.district,
+            sortable: true,
+            grow: 1,
+            minWidth: "120px",
+        },
+        {
+            name: "Counties",
+            selector: (row: Legislator) => row.counties,
+            sortable: true,
+            grow: 1,
+            minWidth: "180px",
+            wrap: true,
+        },
+        {
+            name: "Email",
+            selector: (row: Legislator) => row.email,
+            sortable: true,
+            grow: 1,
+            minWidth: "220px",
+            cell: (row: Legislator) => (
+                <a href={`mailto:${row.email}`}>{row.email}</a>
             ),
         },
         {
-            accessorKey: "image",
-            header: "Image",
-            size: 100,
-            cell: ({ row }) => (
-                <img
-                    src={row.original.image}
-                    alt={row.original.fullName}
-                    style={{ width: 100, borderRadius: "50%" }}
-                />
-            ),
+            name: "Cell Phone",
+            selector: (row: Legislator) => row.cell,
+            sortable: true,
+            grow: 1,
+            minWidth: "150px",
         },
-
-        SortableColumn<Legislator>({
-            accessorKey: "house",
-            title: "House",
-            size: 120,
-        }),
-        SortableColumn<Legislator>({
-            accessorKey: "party",
-            title: "Party",
-            size: 120,
-        }),
-        SortableColumn<Legislator>({
-            accessorKey: "district",
-            title: "District",
-            size: 120,
-        }),
-        SortableColumn<Legislator>({
-            accessorKey: "counties",
-            title: "Counties",
-            size: 180,
-        }),
-        SortableColumn<Legislator>({
-            accessorKey: "email",
-            title: "Email",
-            size: 200,
-        }),
-        SortableColumn<Legislator>({
-            accessorKey: "cell",
-            title: "Cell Phone",
-            size: 140,
-        }),
-        SortableColumn<Legislator>({
-            accessorKey: "serviceStart",
-            title: "Service Start",
-            size: 140,
-        }),
         {
-            accessorKey: "link",
-            header: "Utah Gov Link",
-            size: 100,
-            cell: ({ row }) => (
+            name: "Service Start",
+            selector: (row: Legislator) => row.serviceStart,
+            sortable: true,
+            grow: 1,
+            minWidth: "150px",
+        },
+        {
+            name: "Link",
+            selector: (row: Legislator) => row.link,
+            sortable: false,
+            width: "150px",
+            cell: (row: Legislator) => (
                 <a
-                    href={row.original.link}
-                    target="_self"
+                    href={row.link}
                     style={{ color: "#2563eb", textDecoration: "underline" }}
                 >
-                    Official Link
+                    Government Link
                 </a>
             ),
         },
     ];
 
-    //use tanstack react-table to use a responsive table (ie changing col widths, sorting, etc)
-    const responsiveTable = useReactTable({
-        data: legislators,
-        columns,
-        state: {
-            sorting,
-            globalFilter,
-            columnFilters,
+    const filters = [
+        {
+            key: "fullName",
+            label: "Name",
+            type: "text",
         },
-        onSortingChange: setSorting,
-        onGlobalFilterChange: setGlobalFilter,
-        getCoreRowModel: getCoreRowModel(),
-        getSortedRowModel: getSortedRowModel(),
-        filterFns: {},
-        onColumnFiltersChange: setColumnFilters,
-        getFilteredRowModel: getFilteredRowModel(),
-        enableColumnResizing: true,
-        columnResizeMode: "onChange",
-    });
+        {
+            key: "house",
+            label: "House",
+            type: "select",
+            options: ["House", "Senate"], // adjust to your data
+        },
+        {
+            key: "party",
+            label: "Party",
+            type: "select",
+            options: ["Republican", "Democrat", "Independent"], // adjust
+        },
+        {
+            key: "district",
+            label: "District",
+            type: "number", // 🔥 allows > < =
+        },
+        {
+            key: "counties",
+            label: "Counties",
+            type: "text",
+        },
+        {
+            key: "email",
+            label: "Email",
+            type: "text",
+        },
+        {
+            key: "cell",
+            label: "Cell Phone",
+            type: "text",
+        },
+        {
+            key: "serviceStart",
+            label: "Service Start",
+            type: "text", // can upgrade to date later
+        },
+    ];
 
     return (
         <div className={style.legislators__pageContainer}>
@@ -154,76 +175,11 @@ const LegislatorsPage = () => {
                 <h1 className={style.legislators__header}>Legislators!</h1>
             </div>
 
-            {/* Global filter */}
-            <input
-                className={style.legislators__filter}
-                value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder="Search legislators..."
-            />
-
-            {/* Specific column filter */}
-            <FilterPanel table={responsiveTable} />
-
-            <div className={style.legislators__tableContainer}>
-                <table className={style.legislators__table}>
-                    <thead>
-                        {responsiveTable
-                            .getHeaderGroups()
-                            .map((headerGroup) => (
-                                <tr key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => (
-                                        <th
-                                            key={header.id}
-                                            className={
-                                                style.legislators__colHeader
-                                            }
-                                            style={{
-                                                width: header.getSize(),
-                                            }} //need this to resize column width
-                                        >
-                                            <div>
-                                                {flexRender(
-                                                    header.column.columnDef
-                                                        .header,
-                                                    header.getContext(),
-                                                )}
-                                            </div>
-
-                                            {/* Resize column handle */}
-                                            <div
-                                                onMouseDown={header.getResizeHandler()}
-                                                onTouchStart={header.getResizeHandler()}
-                                                className={
-                                                    style.legislators__resizer
-                                                }
-                                            />
-                                        </th>
-                                    ))}
-                                </tr>
-                            ))}
-                    </thead>
-
-                    <tbody>
-                        {responsiveTable.getRowModel().rows.map((row) => (
-                            <tr key={row.id}>
-                                {row.getVisibleCells().map((cell) => (
-                                    <td
-                                        key={cell.id}
-                                        className={style.legislators_cell}
-                                        title={cell.getValue() as string}
-                                    >
-                                        {flexRender(
-                                            cell.column.columnDef.cell,
-                                            cell.getContext(),
-                                        )}
-                                    </td>
-                                ))}
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+            <GeneralTable
+                columns={columns}
+                data={legislators}
+                filters={filters}
+            ></GeneralTable>
         </div>
     );
 };

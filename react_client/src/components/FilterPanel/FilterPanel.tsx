@@ -1,33 +1,48 @@
 import { useState } from "react";
 import { Modal } from "react-bootstrap";
-import { type Table } from "@tanstack/react-table";
 
 import style from "./FilterPanel.module.css";
 
-type FilterPanelProps<TData> = {
-    table: Table<TData>;
+type FilterConfig = {
+    key: string;
+    label: string;
+    type: "text" | "select" | "number";
+    options?: string[];
 };
 
-const FilterPanel = <TData,>({ table }: FilterPanelProps<TData>) => {
-    const [open, setOpen] = useState(false);
+export type ActiveFilter = {
+    key: string;
+    value: string;
+    operator?: "contains" | "=" | ">" | "<" | ">=" | "<=";
+};
 
-    const [draftFilters, setDraftFilters] = useState(
-        table.getState().columnFilters,
+type FilterPanelProps = {
+    filters: FilterConfig[];
+    activeFilters: ActiveFilter[];
+    onApplyFilters: (filters: ActiveFilter[]) => void;
+};
+
+const FilterPanel = ({
+    filters,
+    activeFilters,
+    onApplyFilters,
+}: FilterPanelProps) => {
+    const [open, setOpen] = useState(false);
+    const [draftFilters, setDraftFilters] = useState<ActiveFilter[]>(
+        activeFilters.length ? activeFilters : [{ key: "", value: "" }],
     );
 
-    const addOneFilter = () => {
-        if (draftFilters.length == 0)
-            setDraftFilters(() => [{ id: "", value: "" }]);
-    };
-    addOneFilter();
-
     const addFilter = () => {
-        setDraftFilters((prev) => [...prev, { id: "", value: "" }]);
+        setDraftFilters((prev) => [...prev, { key: "", value: "" }]);
     };
 
-    const updateFilter = (index: number, key: string, value: string) => {
+    const updateFilter = (
+        index: number,
+        field: "key" | "value",
+        value: string,
+    ) => {
         setDraftFilters((old) =>
-            old.map((f, i) => (i === index ? { ...f, [key]: value } : f)),
+            old.map((f, i) => (i === index ? { ...f, [field]: value } : f)),
         );
     };
 
@@ -35,13 +50,16 @@ const FilterPanel = <TData,>({ table }: FilterPanelProps<TData>) => {
         setDraftFilters((old) => old.filter((_, i) => i !== index));
     };
 
-    const submitTableFilters = () => {
-        table.setColumnFilters(draftFilters); // 🚀 apply all at once
-        setOpen(false); // close modal
+    const applyFilters = () => {
+        const cleaned = draftFilters.filter((f) => f.key && f.value);
+
+        onApplyFilters(cleaned);
+        setOpen(false);
     };
 
-    const leafColumns = table.getAllLeafColumns();
-    console.log(leafColumns);
+    const clearFilters = () => {
+        setDraftFilters([{ key: "", value: "" }]);
+    };
 
     return (
         <div>
@@ -49,7 +67,7 @@ const FilterPanel = <TData,>({ table }: FilterPanelProps<TData>) => {
                 className={style.filterPanel__showFiltersButton}
                 onClick={() => setOpen(true)}
             >
-                Filters ({table.getState().columnFilters.length})
+                Filters ({activeFilters.length})
             </button>
             {open && (
                 <Modal
@@ -59,10 +77,7 @@ const FilterPanel = <TData,>({ table }: FilterPanelProps<TData>) => {
                     backdrop="static"
                     centered
                 >
-                    <Modal.Header
-                        className={style.filterPanel__header}
-                        closeButton
-                    >
+                    <Modal.Header closeButton>
                         <div className={style.filterPanel__headerText}>
                             Filter Table
                         </div>
@@ -70,67 +85,173 @@ const FilterPanel = <TData,>({ table }: FilterPanelProps<TData>) => {
                     <Modal.Body>
                         <div className={style.filterPanel__container}>
                             <div className={style.filterPanel__subContainer}>
-                                {draftFilters.map((filter, i) => (
-                                    <div
-                                        key={i}
-                                        className={style.filterPanel__filterRow}
-                                    >
-                                        {/* Column selector */}
-                                        <select
+                                {draftFilters.map((filter, i) => {
+                                    const config = filters.find(
+                                        (f) => f.key === filter.key,
+                                    );
+
+                                    return (
+                                        <div
+                                            key={i}
                                             className={
-                                                style.filterPanel__columnSelector
-                                            }
-                                            value={filter.id}
-                                            onChange={(e) =>
-                                                updateFilter(
-                                                    i,
-                                                    "id",
-                                                    e.target.value,
-                                                )
+                                                style.filterPanel__filterRow
                                             }
                                         >
-                                            <option value="">
-                                                Select column
-                                            </option>
-                                            {table
-                                                .getAllLeafColumns()
-                                                .map((col) => (
+                                            {/* Column selector */}
+                                            <select
+                                                className={
+                                                    style.filterPanel__columnSelector
+                                                }
+                                                value={filter.key}
+                                                onChange={(e) =>
+                                                    updateFilter(
+                                                        i,
+                                                        "key",
+                                                        e.target.value,
+                                                    )
+                                                }
+                                            >
+                                                <option value="">
+                                                    Select column
+                                                </option>
+                                                {filters.map((f) => (
                                                     <option
-                                                        key={col.id}
-                                                        value={col.id}
+                                                        key={f.key}
+                                                        value={f.key}
                                                     >
-                                                        {col.id}
+                                                        {f.label}
                                                     </option>
                                                 ))}
-                                        </select>
+                                            </select>
 
-                                        {/* Value input */}
-                                        <input
-                                            className={
-                                                style.filterPanel__valueTextbox
-                                            }
-                                            value={String(filter.value) ?? ""}
-                                            onChange={(e) =>
-                                                updateFilter(
-                                                    i,
-                                                    "value",
-                                                    e.target.value,
-                                                )
-                                            }
-                                            placeholder="Value"
-                                        />
+                                            {/* Dropdown Value */}
+                                            {config?.type === "select" ? (
+                                                <select
+                                                    className={
+                                                        style.filterPanel__valueDropdown
+                                                    }
+                                                    value={filter.value}
+                                                    onChange={(e) =>
+                                                        updateFilter(
+                                                            i,
+                                                            "value",
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                >
+                                                    <option value="">
+                                                        Select value
+                                                    </option>
+                                                    {config.options?.map(
+                                                        (opt) => (
+                                                            <option
+                                                                key={opt}
+                                                                value={opt}
+                                                            >
+                                                                {opt}
+                                                            </option>
+                                                        ),
+                                                    )}
+                                                </select>
+                                            ) : // Number Value
+                                            config?.type === "number" ? (
+                                                <>
+                                                    {/* Operator dropdown */}
+                                                    <select
+                                                        className={
+                                                            style.filterPanel__operatorDropdown
+                                                        }
+                                                        value={
+                                                            filter.operator ??
+                                                            "="
+                                                        }
+                                                        onChange={(e) =>
+                                                            setDraftFilters(
+                                                                (old) =>
+                                                                    old.map(
+                                                                        (
+                                                                            f,
+                                                                            idx,
+                                                                        ) =>
+                                                                            idx ===
+                                                                            i
+                                                                                ? {
+                                                                                      ...f,
+                                                                                      operator:
+                                                                                          e
+                                                                                              .target
+                                                                                              .value as ActiveFilter["operator"],
+                                                                                  }
+                                                                                : f,
+                                                                    ),
+                                                            )
+                                                        }
+                                                    >
+                                                        <option value="=">
+                                                            =
+                                                        </option>
+                                                        <option value=">">
+                                                            {">"}
+                                                        </option>
+                                                        <option value="<">
+                                                            {"<"}
+                                                        </option>
+                                                        <option value=">=">
+                                                            {">="}
+                                                        </option>
+                                                        <option value="<=">
+                                                            {"<="}
+                                                        </option>
+                                                    </select>
 
-                                        <button
-                                            className={
-                                                style.filterPanel__deleteFilterButton
-                                            }
-                                            onClick={() => removeFilter(i)}
-                                        >
-                                            ✕
-                                        </button>
-                                    </div>
-                                ))}
+                                                    {/* Number input */}
+                                                    <input
+                                                        type="number"
+                                                        className={
+                                                            style.filterPanel__valueTextbox
+                                                        }
+                                                        value={filter.value}
+                                                        onChange={(e) =>
+                                                            updateFilter(
+                                                                i,
+                                                                "value",
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        placeholder="Value"
+                                                    />
+                                                </>
+                                            ) : (
+                                                //String value textbox
+                                                <input
+                                                    className={
+                                                        style.filterPanel__valueTextbox
+                                                    }
+                                                    value={filter.value}
+                                                    onChange={(e) =>
+                                                        updateFilter(
+                                                            i,
+                                                            "value",
+                                                            e.target.value,
+                                                        )
+                                                    }
+                                                    placeholder="Value"
+                                                />
+                                            )}
+                                            <button
+                                                className={
+                                                    style.filterPanel__deleteFilterButton
+                                                }
+                                                onClick={() => removeFilter(i)}
+                                            >
+                                                ✕
+                                            </button>
+                                        </div>
+                                    );
+                                })}
                             </div>
+
+                            {/* Add Filter button */}
                             <button
                                 className={style.filterPanel__addFilterButton}
                                 onClick={addFilter}
@@ -138,12 +259,26 @@ const FilterPanel = <TData,>({ table }: FilterPanelProps<TData>) => {
                                 + Add Filter
                             </button>
 
-                            <button
-                                className={style.filterPanel__filterAllButton}
-                                onClick={submitTableFilters}
-                            >
-                                Filter Table
-                            </button>
+                            <div className={style.filterPanel__bottomButtons}>
+                                {/* Filter All button */}
+                                <button
+                                    className={
+                                        style.filterPanel__bottomFilterButton
+                                    }
+                                    onClick={applyFilters}
+                                >
+                                    Apply Filters
+                                </button>
+                                {/* Clear Filters button */}
+                                <button
+                                    className={
+                                        style.filterPanel__bottomFilterButton
+                                    }
+                                    onClick={clearFilters}
+                                >
+                                    Clear Filters
+                                </button>
+                            </div>
                         </div>
                     </Modal.Body>
                 </Modal>
