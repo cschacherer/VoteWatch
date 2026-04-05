@@ -13,7 +13,15 @@
 .collapsibleCell_showMoreButton {
     color: #2563eb;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
+    padding-left: 10px;
+}
+
+.collapsibleCell_showMoreButtonText {
+    color: #2563eb;
+    cursor: pointer;
+    font-size: 14px;
+    padding-left: 10px;
 }
 
 .collapsibleCell__container {

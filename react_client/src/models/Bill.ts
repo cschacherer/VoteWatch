@@ -8,9 +8,10 @@ export type Bill = {
     year: number;
     sessionId: string;
     link: string;
-    subjects: string;
+    subjects: string[];
     houseVoteUrl: string;
     senateVoteUrl: string;
+    passed: string;
 };
 
 export const normalizeBillText = (text?: string): string => {
@@ -42,10 +43,12 @@ export const createBill = (raw: any): Bill => {
         sessionId: String(raw.sessionId ?? ""),
 
         link: String(raw.link ?? ""),
-        subjects: String(raw.subjects ?? ""),
+        subjects: raw.subjects?.split(",").map((s: string) => s.trim()),
 
         houseVoteUrl: String(raw.houseVoteUrl ?? ""),
         senateVoteUrl: String(raw.senateVoteUrl ?? ""),
+
+        passed: String(raw.passed ?? "yes"),
     };
 };
 
@@ -68,9 +71,11 @@ export const createBillFromVote = (raw: any): Bill => {
         sessionId: String(raw.sessionId ?? ""),
 
         link: String(raw.link ?? ""),
-        subjects: String(raw.subjects ?? ""),
+        subjects: raw.subjects?.split(",").map((s: string) => s.trim()),
 
         houseVoteUrl: String(raw.houseVoteUrl ?? ""),
         senateVoteUrl: String(raw.senateVoteUrl ?? ""),
+
+        passed: String(raw.passed ?? ""),
     };
 };

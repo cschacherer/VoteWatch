@@ -10,8 +10,49 @@
 }
 
 .legislators__nameCell {
-    display: flex; 
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
+        display: flex;
+        align-items: center;
+        /* vertical alignment */
+        gap: 12px;
+        /* spacing between image + name */
+        text-decoration: none;
+}
+
+.legislators__image {
+    width: 50px;
+    border-radius: 10px;
+}
+
+.legislators__name{
+    color: #2563eb;
+    text-decoration: underline;
+    font-size: 15px; 
+    font-weight:600; 
+}
+
+.legislator__badge {
+    display: inline-block;
+    padding: 8px 20px;
+    border-radius: 40px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Democrat */
+.legislator__dem {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+
+/* Republican */
+.legislator__rep {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+/* Independent */
+.legislator__ind {
+    background-color: #e5e7eb;
+    color: #374151;
 }

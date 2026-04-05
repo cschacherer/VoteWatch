@@ -9,12 +9,14 @@ type GeneralTableProps<T> = {
     data: T[];
     columns: any[];
     filters: any[];
+    defaultSortId: string;
 };
 
 export default function GeneralTable<T>({
     data,
     columns,
     filters,
+    defaultSortId,
 }: GeneralTableProps<T>) {
     const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
     const [filterText, setFilterText] = useState("");
@@ -104,12 +106,14 @@ export default function GeneralTable<T>({
                 <DataTable
                     columns={columns}
                     data={filteredData}
+                    defaultSortFieldId={defaultSortId}
+                    defaultSortAsc={true}
                     customStyles={customStyles}
                     responsive
                     highlightOnHover
                     striped
                     fixedHeader
-                    fixedHeaderScrollHeight="600px"
+                    fixedHeaderScrollHeight="100%"
                     pagination
                     paginationPerPage={10}
                     paginationRowsPerPageOptions={[10, 20, 50]}

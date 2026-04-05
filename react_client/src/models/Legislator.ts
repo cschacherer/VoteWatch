@@ -23,8 +23,8 @@ export const createLegislator = (raw: any): Legislator => {
         fullName: String(raw.fullName ?? ""),
         formatName: String(raw.formatName ?? ""),
         image: String(raw.image ?? ""),
-        house: String(raw.house ?? ""),
-        party: String(raw.party ?? ""),
+        house: normalizeHouse(raw.house),
+        party: normalizeParty(raw.party),
         district: Number(raw.district ?? 0),
         counties: String(raw.counties ?? ""),
         email: String(raw.email ?? ""),
@@ -32,4 +32,21 @@ export const createLegislator = (raw: any): Legislator => {
         serviceStart: String(raw.serviceStart ?? ""),
         link: String(raw.link ?? ""),
     };
+};
+
+const normalizeHouse = (text?: string): string => {
+    if (!text) return "";
+    if (text.toUpperCase() == "H") {
+        return "House";
+    } else if (text.toUpperCase() == "S") return "Senate";
+    else return "";
+};
+
+const normalizeParty = (text?: string): string => {
+    if (!text) return "";
+    if (text.toUpperCase() == "R") {
+        return "Republican";
+    } else if (text.toUpperCase() == "D") return "Democrat";
+    else if (text.toUpperCase() == "I") return "Independent";
+    else return "";
 };

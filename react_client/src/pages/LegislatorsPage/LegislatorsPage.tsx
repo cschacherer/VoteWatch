@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { getAllLegislators } from "../../services/legislatorService";
 import type { Legislator } from "../../models/Legislator";
-
-import style from "./LegislatorsPage.module.css";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
+import Badge from "../../components/Badge/Badge";
+
+import "../../styles/global.css";
+import style from "./LegislatorsPage.module.css";
 
 const LegislatorsPage = () => {
     const [legislators, setLegislators] = useState<Legislator[]>([]);
@@ -31,63 +33,72 @@ const LegislatorsPage = () => {
     //Set up columns
     const columns = [
         {
+            id: "name",
             name: "Name",
             selector: (row: Legislator) => row.fullName,
             sortable: true,
+            wrap: true,
             grow: 1,
-            minWidth: "180px",
+            minWidth: "250px",
             cell: (row: Legislator) => (
-                <div className={style.legislators__nameCell}>
+                <a
+                    href={`legislators/${row.id}`}
+                    className={style.legislators__nameCell}
+                >
                     <img
                         src={row.image}
                         alt={row.fullName}
-                        style={{ width: "100", borderRadius: "10px" }}
+                        className={style.legislators__image}
                     />
-                    <a
-                        href={`legislators/${row.id}`}
-                        style={{
-                            color: "#2563eb",
-                            textDecoration: "underline",
-                        }}
-                    >
+
+                    <div className={style.legislators__name}>
                         {row.fullName}
-                    </a>
-                </div>
+                    </div>
+                </a>
             ),
         },
         {
-            name: "House",
+            id: "chamber",
+            name: "Chamber",
             selector: (row: Legislator) => row.house,
             sortable: true,
+            wrap: true,
             grow: 1,
             minWidth: "120px",
         },
         {
+            id: "party",
             name: "Party",
             selector: (row: Legislator) => row.party,
             sortable: true,
             grow: 1,
-            minWidth: "120px",
+            minWidth: "180px",
+            cell: (row: Legislator) => <Badge type="party" value={row.party} />,
         },
         {
+            id: "district",
             name: "District",
             selector: (row: Legislator) => row.district,
             sortable: true,
+            wrap: true,
             grow: 1,
             minWidth: "120px",
         },
         {
+            id: "counties",
             name: "Counties",
             selector: (row: Legislator) => row.counties,
             sortable: true,
+            wrap: true,
             grow: 1,
             minWidth: "180px",
-            wrap: true,
         },
         {
+            id: "email",
             name: "Email",
             selector: (row: Legislator) => row.email,
             sortable: true,
+            wrap: true,
             grow: 1,
             minWidth: "220px",
             cell: (row: Legislator) => (
@@ -95,30 +106,36 @@ const LegislatorsPage = () => {
             ),
         },
         {
-            name: "Cell Phone",
+            id: "phone",
+            name: "Phone",
             selector: (row: Legislator) => row.cell,
             sortable: true,
+            wrap: true,
             grow: 1,
             minWidth: "150px",
         },
         {
+            id: "serviceStart",
             name: "Service Start",
             selector: (row: Legislator) => row.serviceStart,
             sortable: true,
             grow: 1,
             minWidth: "150px",
+            wrap: true,
         },
         {
+            id: "link",
             name: "Link",
             selector: (row: Legislator) => row.link,
             sortable: false,
+            wrap: true,
             width: "150px",
             cell: (row: Legislator) => (
                 <a
                     href={row.link}
                     style={{ color: "#2563eb", textDecoration: "underline" }}
                 >
-                    Government Link
+                    Government Page
                 </a>
             ),
         },
@@ -132,7 +149,7 @@ const LegislatorsPage = () => {
         },
         {
             key: "house",
-            label: "House",
+            label: "Chamber",
             type: "select",
             options: ["House", "Senate"], // adjust to your data
         },
@@ -179,6 +196,7 @@ const LegislatorsPage = () => {
                 columns={columns}
                 data={legislators}
                 filters={filters}
+                defaultSortId="name"
             ></GeneralTable>
         </div>
     );

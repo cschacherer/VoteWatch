@@ -9,6 +9,7 @@ import { Container, Col, Row } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
+import Badge from "../../components/Badge/Badge";
 
 import style from "./LegislatorDetailsPage.module.css";
 
@@ -44,6 +45,7 @@ const LegislatorDetailsPage = () => {
 
     const columns = [
         {
+            id: "billId",
             name: "Bill Id",
             selector: (row: LegislatorVote) => row.bill.id,
             sortable: true,
@@ -64,7 +66,24 @@ const LegislatorDetailsPage = () => {
             wrap: true,
             grow: 1,
             minWidth: "170px",
-            maxWidth: "250px",
+        },
+        {
+            name: "Vote",
+            selector: (row: LegislatorVote) => row.vote,
+            sortable: true,
+            width: "120px",
+            cell: (row: LegislatorVote) => (
+                <Badge type="vote" value={row.vote} />
+            ),
+        },
+        {
+            name: "Passed",
+            selector: (row: LegislatorVote) => row.vote,
+            sortable: true,
+            width: "150px",
+            cell: (row: LegislatorVote) => (
+                <Badge type="passed" value={row.vote} />
+            ),
         },
         {
             name: "General Provisions",
@@ -85,12 +104,7 @@ const LegislatorDetailsPage = () => {
                 <CollapsibleCell text={row.bill.highlightedProvisions} />
             ),
         },
-        {
-            name: "Vote",
-            selector: (row: LegislatorVote) => row.vote,
-            sortable: true,
-            width: "120px",
-        },
+
         {
             name: "Last Action",
             selector: (row: LegislatorVote) => row.bill.lastAction,
@@ -114,15 +128,18 @@ const LegislatorDetailsPage = () => {
             name: "Session Id",
             selector: (row: LegislatorVote) => row.bill.sessionId,
             sortable: true,
-            width: "150px",
+            width: "130px",
         },
         {
             name: "Subjects",
             selector: (row: LegislatorVote) => row.bill.subjects,
             sortable: true,
-            grow: 2,
-            minWidth: "150px",
+            grow: 1,
+            minWidth: "250px",
             wrap: true,
+            cell: (row: LegislatorVote) => (
+                <CollapsibleCell items={row.bill.subjects} />
+            ),
         },
         {
             name: "Utah Gov Link",
@@ -194,9 +211,7 @@ const LegislatorDetailsPage = () => {
         <>
             <div className={style.legislatorDetailsPage__pageContainer}>
                 <div>
-                    <h1 className={style.legislatorDetailsPage__header}>
-                        Legislator's Details !
-                    </h1>
+                    <h1>Legislator's Details !</h1>
                 </div>
                 {/* Legislator Details */}
                 <Container
@@ -248,7 +263,12 @@ const LegislatorDetailsPage = () => {
                                 >
                                     Party
                                 </div>
-                                <div>{legislatorDetails?.party}</div>
+                                <div>
+                                    <Badge
+                                        type="party"
+                                        value={legislatorDetails?.party}
+                                    ></Badge>
+                                </div>
                             </Row>
                         </Col>
                         {/* Counties */}
@@ -349,6 +369,7 @@ const LegislatorDetailsPage = () => {
                     columns={columns}
                     data={legislatorVotes}
                     filters={filters}
+                    defaultSortId="billId"
                 ></GeneralTable>
             </div>
         </>

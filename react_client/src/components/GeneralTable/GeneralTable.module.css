@@ -1,8 +1,15 @@
 .generalTable__container {
     border: 3px solid black;
     box-sizing: border-box;
-    width: 100%; 
-    overflow-x: auto; 
+
+    flex: 1;
+    /* 🔥 THIS is what makes it fill remaining space */
+    display: flex;
+    /* 🔥 required */
+    flex-direction: column;
+
+    min-height: 0;
+    /* 🔥 VERY IMPORTANT (fixes overflow bugs) */
 }
 
 .generalTable__searchBar {
@@ -18,4 +25,40 @@
 
 .generalTable__container :global(header[align="right"]) {
     padding: 0px 10px; 
+}
+
+/* .generalTable__tableWrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column; 
+}
+
+.generalTable__tableWrapper :global(.rdt_Table) {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.generalTable__tableWrapper :global(.rdt_TableBody) {
+    flex: 1;
+} */
+
+.generalTable__tableWrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+
+    min-height: 0;
+    /* 🔥 prevents overflow issues */
+}
+
+.generalTable__tableWrapper :global(.rdt_Table) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.generalTable__tableWrapper :global(.rdt_TableBody) {
+    flex: 1;
+    overflow-y: auto;
 }

@@ -1,8 +1,8 @@
 .bills__pageContainer {
     display: flex;
     flex-direction: column;
-    padding: 15px 25px; 
-    box-sizing: border-box;  
+    margin: 15px 25px;
+    box-sizing: border-box;
 }
 
 .bills__header {
@@ -12,16 +12,12 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* vertical alignment */
     gap: 4px;
-    /* 🔥 adds space between items */
 }
 
 .bills__govLinksCell {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* vertical alignment */
     gap: 8px;
-    /* 🔥 adds space between items */
 }

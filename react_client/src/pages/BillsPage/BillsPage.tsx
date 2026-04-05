@@ -3,6 +3,7 @@ import { getAllBills } from "../../services/billService";
 import type { Bill } from "../../models/Bill";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
+import Badge from "../../components/Badge/Badge";
 
 import style from "./BillsPage.module.css";
 
@@ -30,6 +31,7 @@ const BillsPage = () => {
     //set all column tables here
     const columns = [
         {
+            id: "id",
             name: "Bill Id",
             selector: (row: Bill) => row.id,
             sortable: true,
@@ -37,13 +39,14 @@ const BillsPage = () => {
             cell: (row: Bill) => (
                 <a
                     href={`/bills/${row.id}`}
-                    style={{ color: "#2563eb", textDecoration: "underline" }}
+                    style={{ color: "#2563eb", textDecoration: "none" }}
                 >
-                    {row.id}
+                    <Badge type="billId" value={row.id}></Badge>
                 </a>
             ),
         },
         {
+            id: "title",
             name: "Title",
             selector: (row: Bill) => row.shortTitle,
             sortable: true,
@@ -53,6 +56,7 @@ const BillsPage = () => {
             wrap: true,
         },
         {
+            id: "generalProvisions",
             name: "General Provisions",
             selector: (row: Bill) => row.generalProvisions,
             sortable: true,
@@ -61,6 +65,7 @@ const BillsPage = () => {
             wrap: true,
         },
         {
+            id: "highlightedProvisions",
             name: "Highlighted Provisions",
             selector: (row: Bill) => row.highlightedProvisions,
             sortable: true,
@@ -72,6 +77,14 @@ const BillsPage = () => {
             ),
         },
         {
+            name: "Passed",
+            selector: (row: Bill) => row.passed,
+            sortable: true,
+            width: "150px",
+            cell: (row: Bill) => <Badge type="passed" value={row.passed} />,
+        },
+        {
+            id: "lastAction",
             name: "Last Action",
             selector: (row: Bill) => row.lastAction,
             sortable: true,
@@ -85,27 +98,31 @@ const BillsPage = () => {
             ),
         },
         {
+            id: "year",
             name: "Year",
             selector: (row: Bill) => row.year,
             sortable: true,
             width: "100px",
         },
         {
+            id: "sessionId",
             name: "Session Id",
             selector: (row: Bill) => row.sessionId,
             sortable: true,
-            width: "150px",
+            width: "130px",
         },
         {
+            id: "subjects",
             name: "Subjects",
             selector: (row: Bill) => row.subjects,
             sortable: true,
             grow: 2,
-            minWidth: "250px",
+            minWidth: "200px",
             wrap: true,
-            cell: (row: Bill) => <CollapsibleCell text={row.subjects} />,
+            cell: (row: Bill) => <CollapsibleCell items={row.subjects} />,
         },
         {
+            id: "officialLinks",
             name: "Official Links",
             selector: (row: Bill) => row.houseVoteUrl,
             sortable: false,
@@ -148,48 +165,6 @@ const BillsPage = () => {
                 </div>
             ),
         },
-        // {
-        //     name: "House Vote URL",
-        //     selector: (row: Bill) => row.houseVoteUrl,
-        //     sortable: false,
-        //     width: "150px",
-        //     cell: (row: Bill) => (
-        //         <a
-        //             href={row.houseVoteUrl}
-        //             style={{ color: "#2563eb", textDecoration: "underline" }}
-        //         >
-        //             House Vote
-        //         </a>
-        //     ),
-        // },
-        // {
-        //     name: "Senate Vote URL",
-        //     selector: (row: Bill) => row.senateVoteUrl,
-        //     sortable: false,
-        //     width: "150px",
-        //     cell: (row: Bill) => (
-        //         <a
-        //             href={row.senateVoteUrl}
-        //             style={{ color: "#2563eb", textDecoration: "underline" }}
-        //         >
-        //             Senate Vote
-        //         </a>
-        //     ),
-        // },
-        // {
-        //     name: "Utah Gov Link",
-        //     selector: (row: Bill) => row.link,
-        //     sortable: false,
-        //     width: "150px",
-        //     cell: (row: Bill) => (
-        //         <a
-        //             href={row.link}
-        //             style={{ color: "#2563eb", textDecoration: "underline" }}
-        //         >
-        //             Official Link
-        //         </a>
-        //     ),
-        // },
     ];
 
     const filters = [
@@ -249,6 +224,7 @@ const BillsPage = () => {
                 columns={columns}
                 data={bills}
                 filters={filters}
+                defaultSortId="id"
             ></GeneralTable>
         </div>
     );
