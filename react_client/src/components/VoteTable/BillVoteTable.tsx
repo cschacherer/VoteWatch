@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
-import Container from "react-bootstrap/Container";
 import type { Vote, VoteValue } from "../../models/Vote";
 
 import style from "./BillVoteTable.module.css";

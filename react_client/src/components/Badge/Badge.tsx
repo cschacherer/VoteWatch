@@ -16,9 +16,9 @@ export type BadgeType = (typeof BadgeType)[keyof typeof BadgeType];
 type BadgeProps = {
     type: BadgeType;
     value?: string;
+    onClick?: (value: string) => void;
 };
-
-const Badge = ({ type, value }: BadgeProps) => {
+const Badge = ({ type, value, onClick }: BadgeProps) => {
     if (!value) return null;
 
     const v = value.toLowerCase();
@@ -60,7 +60,7 @@ const Badge = ({ type, value }: BadgeProps) => {
     const className = `${style.badge__default} ${valueStyle}`;
 
     return (
-        <span className={className}>
+        <span className={className} onClick={() => onClick?.(value)}>
             {Icon && <Icon className={style.badge__icon} />}
             {value}
         </span>

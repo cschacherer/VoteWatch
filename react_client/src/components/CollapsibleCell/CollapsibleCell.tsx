@@ -1,14 +1,20 @@
 import { useState } from "react";
 import Badge from "../../components/Badge/Badge";
+import { BadgeType } from "../../components/Badge/Badge";
 
 import style from "./CollapsibleCell.module.css";
 
 type CollapsibleCellProps = {
     text?: string;
     items?: string[];
+    onBadgeClick?: (value: string) => void;
 };
 
-const CollapsibleCell = ({ text, items }: CollapsibleCellProps) => {
+const CollapsibleCell = ({
+    text,
+    items,
+    onBadgeClick,
+}: CollapsibleCellProps) => {
     const [expanded, setExpanded] = useState(false);
 
     if (text) {
@@ -56,7 +62,11 @@ const CollapsibleCell = ({ text, items }: CollapsibleCellProps) => {
                     }}
                 >
                     {visibleItems.map((item) => (
-                        <Badge type="subjects" value={item} />
+                        <Badge
+                            type={BadgeType.Subjects}
+                            value={item}
+                            onClick={(value) => onBadgeClick?.(value)}
+                        />
                     ))}
                 </div>
 

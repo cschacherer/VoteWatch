@@ -2,12 +2,16 @@ import { useState } from "react";
 import DataTable from "react-data-table-component";
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
 import type { ActiveFilter } from "../../models/DataTableUtils";
+import { BadgeType } from "../Badge/Badge";
+import type { DataTableColumn } from "../../models/DataTableUtils";
 
 import style from "./GeneralTable.module.css";
 
 type GeneralTableProps<T> = {
     data: T[];
-    columns: any[];
+    columns: (helpers: {
+        filterBadgeClick: (key: string, value: string) => void;
+    }) => any[];
     defaultSortId: string;
 };
 
@@ -19,13 +23,33 @@ export default function GeneralTable<T>({
     const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
     const [filterText, setFilterText] = useState("");
 
-    const filters = columns
+    function filterBadgeClick(key: string, value: string) {
+        setActiveFilters([{ key, value }]);
+        // setActiveFilters((prev) => {
+        //     const exists = prev.find((f) => f.key === key && f.value === value);
+
+        //     if (exists) {
+        //         return prev.filter(
+        //             (f) => !(f.key === key && f.value === value),
+        //         );
+        //     }
+
+        //     return [...prev, { key, value }];
+        // });
+    }
+
+    const builtColumns = columns({
+        filterBadgeClick,
+    });
+
+    const filters = builtColumns
         .filter((col) => col.filterConfig)
         .map((col) => ({
             key: col.id,
             label: col.name,
             type: col.filterConfig!.type,
             options: col.filterConfig!.options!,
+            onApplyFilters: setActiveFilters,
         }));
 
     function matchesSearch(obj: any, search: string): boolean {
@@ -51,10 +75,6 @@ export default function GeneralTable<T>({
         return false;
     }
 
-    function getValue(obj: any, path: string) {
-        return path.split(".").reduce((acc, key) => acc?.[key], obj);
-    }
-
     //this is the data that will actually appear in the DataTable - we pre filter it.
     const filteredData = data
         .filter((row) => matchesSearch(row, filterText.toLowerCase()))
@@ -62,7 +82,7 @@ export default function GeneralTable<T>({
             activeFilters.every((filter) => {
                 if (!filter.key || !filter.value) return true;
 
-                const column = columns.find((c) => c.id === filter.key);
+                const column = builtColumns.find((c) => c.id === filter.key);
                 if (!column) return true;
 
                 const value = column.selector(row);
@@ -84,6 +104,15 @@ export default function GeneralTable<T>({
                         case "<=":
                             return rowVal <= filterVal;
                     }
+                }
+
+                // array filter (for subjects)
+                if (Array.isArray(value)) {
+                    return value.some(
+                        (v) =>
+                            String(v).toLowerCase() ===
+                            filter.value.toLowerCase(),
+                    );
                 }
 
                 //string filter
@@ -114,7 +143,7 @@ export default function GeneralTable<T>({
         <div className={style.generalTable__container}>
             <div className={style.generalTable__tableWrapper}>
                 <DataTable
-                    columns={columns}
+                    columns={builtColumns}
                     data={filteredData}
                     defaultSortFieldId={defaultSortId}
                     defaultSortAsc={true}

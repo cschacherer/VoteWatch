@@ -11,6 +11,12 @@ export type FilterConfig = {
     label?: string;
     type: FilterType;
     options?: string[];
+    onApplyFilters?: (filters: ActiveFilter[]) => void;
+};
+
+export type FilterableBadge = {
+    key?: string;
+    value: string;
 };
 
 export type ActiveFilter = {
@@ -60,4 +66,9 @@ export function createDataTableColumn<T>(
               }
             : undefined,
     };
+}
+
+export function sendBadgeFilter(key: string, value: string) {
+    const newFilters = [{ key, value }];
+    return newFilters;
 }

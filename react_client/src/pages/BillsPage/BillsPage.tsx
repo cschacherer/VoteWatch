@@ -4,33 +4,20 @@ import type { Bill } from "../../models/Bill";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import Badge from "../../components/Badge/Badge";
+import { BadgeType } from "../../components/Badge/Badge";
+
 import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
 
 import style from "./BillsPage.module.css";
 
-const BillsPage = () => {
-    const [bills, setBills] = useState<Bill[]>([]);
-
-    useEffect(() => {
-        const fetchBills = async () => {
-            try {
-                const response = await getAllBills();
-                console.log(response);
-                setBills(response);
-            } catch (e) {
-                if (e instanceof Error) {
-                    console.error(`Error getting all bills: ${e.message}`);
-                } else {
-                    console.error("Unknown error getting all bills", e);
-                }
-            }
-        };
-
-        fetchBills();
-    }, []);
-
-    //set all column tables here
-    const columns = [
+//set all column tables here
+// 🔥 Column factory
+function createBillColumns({
+    filterBadgeClick,
+}: {
+    filterBadgeClick: (key: string, value: string) => void;
+}) {
+    return [
         createDataTableColumn<Bill>({
             id: "id",
             name: "Bill Id",
@@ -92,7 +79,15 @@ const BillsPage = () => {
             selector: (row) => row.passed,
             sortable: true,
             width: "150px",
-            cell: (row) => <Badge type="passed" value={row.passed} />,
+            cell: (row) => (
+                <Badge
+                    type={BadgeType.Passed}
+                    value={row.passed}
+                    onClick={(value) =>
+                        filterBadgeClick("passed", value.toLowerCase())
+                    }
+                />
+            ),
             filterConfig: {
                 type: FilterType.Select,
                 options: ["Passed", "Failed"],
@@ -143,7 +138,14 @@ const BillsPage = () => {
             grow: 2,
             minWidth: "200px",
             wrap: true,
-            cell: (row: Bill) => <CollapsibleCell items={row.subjects} />,
+            cell: (row: Bill) => (
+                <CollapsibleCell
+                    items={row.subjects}
+                    onBadgeClick={(value) =>
+                        filterBadgeClick("subjects", value.toLowerCase())
+                    }
+                />
+            ),
             filterConfig: {
                 type: FilterType.Text,
             },
@@ -193,6 +195,28 @@ const BillsPage = () => {
             ),
         }),
     ];
+}
+
+const BillsPage = () => {
+    const [bills, setBills] = useState<Bill[]>([]);
+
+    useEffect(() => {
+        const fetchBills = async () => {
+            try {
+                const response = await getAllBills();
+                console.log(response);
+                setBills(response);
+            } catch (e) {
+                if (e instanceof Error) {
+                    console.error(`Error getting all bills: ${e.message}`);
+                } else {
+                    console.error("Unknown error getting all bills", e);
+                }
+            }
+        };
+
+        fetchBills();
+    }, []);
 
     return (
         <div className={style.bills__pageContainer}>
@@ -200,7 +224,7 @@ const BillsPage = () => {
                 <h1 className={style.bills__header}>Bills Bills Bills!</h1>
             </div>
             <GeneralTable
-                columns={columns}
+                columns={(helpers) => createBillColumns(helpers)}
                 data={bills}
                 defaultSortId="id"
             ></GeneralTable>

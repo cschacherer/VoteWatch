@@ -9,44 +9,22 @@ import { Container, Col, Row } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
-import Badge from "../../components/Badge/Badge";
 import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
+import Badge from "../../components/Badge/Badge";
+import { BadgeType } from "../../components/Badge/Badge";
 
 import style from "./LegislatorDetailsPage.module.css";
 
-const LegislatorDetailsPage = () => {
-    const [legislatorDetails, setLegislatorDetails] = useState<Legislator>();
-    const [legislatorVotes, setLegislatorVotes] = useState<LegislatorVote[]>(
-        [],
-    );
-
-    let { legislatorId } = useParams<string>();
-    if (!legislatorId) {
-        legislatorId = "";
-    }
-
-    useEffect(() => {
-        const fetchLegislatorDetails = async () => {
-            try {
-                const detailsResponse =
-                    await getLegislatorDetails(legislatorId);
-                console.log(detailsResponse);
-                setLegislatorDetails(detailsResponse);
-
-                const votesResponse = await getLegislatorVotes(legislatorId);
-                console.log(votesResponse);
-                setLegislatorVotes(votesResponse);
-            } catch (error) {
-                console.log(error);
-            }
-        };
-
-        fetchLegislatorDetails();
-    }, []);
-
-    const columns = [
+//set all column tables here
+// 🔥 Column factory
+function createLegislatorDetailsColumns({
+    filterBadgeClick,
+}: {
+    filterBadgeClick: (key: string, value: string) => void;
+}) {
+    return [
         createDataTableColumn<LegislatorVote>({
-            id: "billId",
+            id: "id",
             name: "Bill Id",
             selector: (row: LegislatorVote) => row.bill.id,
             width: "120px",
@@ -77,7 +55,13 @@ const LegislatorDetailsPage = () => {
             selector: (row: LegislatorVote) => row.vote,
             width: "120px",
             cell: (row: LegislatorVote) => (
-                <Badge type="vote" value={row.vote} />
+                <Badge
+                    type="vote"
+                    value={row.vote}
+                    onClick={(value) =>
+                        filterBadgeClick("vote", value.toLowerCase())
+                    }
+                />
             ),
             filterConfig: {
                 type: FilterType.Select,
@@ -85,12 +69,18 @@ const LegislatorDetailsPage = () => {
             },
         }),
         createDataTableColumn<LegislatorVote>({
-            id: "passed",
+            id: "vote",
             name: "Passed",
             selector: (row: LegislatorVote) => row.vote,
             width: "150px",
             cell: (row: LegislatorVote) => (
-                <Badge type="passed" value={row.vote} />
+                <Badge
+                    type="passed"
+                    value={row.vote}
+                    onClick={(value) =>
+                        filterBadgeClick("passed", value.toLowerCase())
+                    }
+                />
             ),
             filterConfig: {
                 type: FilterType.Select,
@@ -98,7 +88,7 @@ const LegislatorDetailsPage = () => {
             },
         }),
         createDataTableColumn<LegislatorVote>({
-            id: "billGeneralProvision",
+            id: "generalProvisions",
             name: "General Provisions",
             selector: (row: LegislatorVote) => row.bill.generalProvisions,
             grow: 2,
@@ -108,7 +98,7 @@ const LegislatorDetailsPage = () => {
             },
         }),
         createDataTableColumn<LegislatorVote>({
-            id: "billHighlightedProvisions",
+            id: "highlightedProvisions",
             name: "Highlighted Provisions",
             selector: (row: LegislatorVote) => row.bill.highlightedProvisions,
             grow: 2,
@@ -121,7 +111,7 @@ const LegislatorDetailsPage = () => {
             },
         }),
         createDataTableColumn<LegislatorVote>({
-            id: "billLastAction",
+            id: "lastAction",
             name: "Last Action",
             selector: (row: LegislatorVote) =>
                 `${row.bill.lastAction} ${row.bill.lastActionDate}`,
@@ -137,7 +127,7 @@ const LegislatorDetailsPage = () => {
             },
         }),
         createDataTableColumn<LegislatorVote>({
-            id: "billYear",
+            id: "year",
             name: "Year",
             selector: (row: LegislatorVote) => row.bill.year,
             width: "100px",
@@ -146,7 +136,7 @@ const LegislatorDetailsPage = () => {
             },
         }),
         createDataTableColumn<LegislatorVote>({
-            id: "billSessionId",
+            id: "sessionId",
             name: "Session Id",
             selector: (row: LegislatorVote) => row.bill.sessionId,
             width: "130px",
@@ -155,19 +145,24 @@ const LegislatorDetailsPage = () => {
             },
         }),
         createDataTableColumn<LegislatorVote>({
-            id: "billSubjects",
+            id: "subjects",
             name: "Subjects",
             selector: (row: LegislatorVote) => row.bill.subjects,
             minWidth: "250px",
             cell: (row: LegislatorVote) => (
-                <CollapsibleCell items={row.bill.subjects} />
+                <CollapsibleCell
+                    items={row.bill.subjects}
+                    onBadgeClick={(value) =>
+                        filterBadgeClick("subjects", value.toLowerCase())
+                    }
+                />
             ),
             filterConfig: {
                 type: FilterType.Text,
             },
         }),
         createDataTableColumn<LegislatorVote>({
-            id: "billLink",
+            id: "link",
             name: "Utah Gov Link",
             selector: (row) => row.bill.link,
             sortable: false,
@@ -182,6 +177,37 @@ const LegislatorDetailsPage = () => {
             ),
         }),
     ];
+}
+
+const LegislatorDetailsPage = () => {
+    const [legislatorDetails, setLegislatorDetails] = useState<Legislator>();
+    const [legislatorVotes, setLegislatorVotes] = useState<LegislatorVote[]>(
+        [],
+    );
+
+    let { legislatorId } = useParams<string>();
+    if (!legislatorId) {
+        legislatorId = "";
+    }
+
+    useEffect(() => {
+        const fetchLegislatorDetails = async () => {
+            try {
+                const detailsResponse =
+                    await getLegislatorDetails(legislatorId);
+                console.log(detailsResponse);
+                setLegislatorDetails(detailsResponse);
+
+                const votesResponse = await getLegislatorVotes(legislatorId);
+                console.log(votesResponse);
+                setLegislatorVotes(votesResponse);
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
+        fetchLegislatorDetails();
+    }, []);
 
     return (
         <>
@@ -342,7 +368,9 @@ const LegislatorDetailsPage = () => {
                 </Container>
                 {/* Legislator Voting History Table */}
                 <GeneralTable
-                    columns={columns}
+                    columns={(helpers) =>
+                        createLegislatorDetailsColumns(helpers)
+                    }
                     data={legislatorVotes}
                     defaultSortId="billId"
                 ></GeneralTable>
