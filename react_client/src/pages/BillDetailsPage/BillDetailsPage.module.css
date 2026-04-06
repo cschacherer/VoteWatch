@@ -1,66 +1,39 @@
-.billDetailsPage__rowContainer {
-    display: flex;
-    align-items: stretch;
+.billDetails__pageContainer {
+    padding: 20px;
+    overflow-y: scroll; 
+}
+
+.billDetails__header {
+    margin-bottom: 20px;
+    font-weight:600;
+}
+
+.billDetails__detailsContainer {
     border: 1px solid black;
 }
 
-.billDetailsPage__naysRowContainer {
-    border-left: 1px solid black;
-    border-right: 1px solid black;
+.billDetails__title {
+    font-weight: 500;
+    font-size: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    background-color: black;
+    color: white;
 }
 
-.billDetailsPage__rowHeader {
-    background-color: rgb(175, 175, 175); 
-    color: black;
-    font-weight:500; 
-    font-size: 20px;  
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    padding: 20px;
-    border-right: 1px solid black;
-    
-}
-
-.billDetailsPage__voteCell {
-    padding: 0px;
-}
-
-.billDetailsPage__rowContent {
-    padding: 20px;
-}
-
-
-.billDetailsPage__detailsContainer{
-    padding: 20px 0px;
-}
-
-.billDetailsPage__pageContainer {
-    padding: 20px;
-}
-
-.billDetailsPage__title {
-    font-weight: 800; 
-    font-size: x-large;
-}
-
-.billDetailsPage__sectionTitle {
-    font-weight: 800;
-    font-size: large;
-    padding: 0px;
-}
-
-.billDetailsPage__preSection {
-    padding-top: 20px;
-}
-
-.billDetailsPage__rowPadding {
+.billDetails__rowPadding {
     padding: 10px 0px;
 }
 
-
-
-.row {
-    --bs-gutter-x: 0;
-    --bs-gutter-y: 0;
+.billDetails__sectionTitle {
+    font-weight: 700;
+    font-size: 20px;
+    padding: 0px;
 }
+
+.billDetails__preSection {
+    padding-top: 20px;
+    font-size: 14px; 
+}
+

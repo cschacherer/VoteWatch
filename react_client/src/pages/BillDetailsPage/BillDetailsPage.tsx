@@ -4,6 +4,7 @@ import type { Bill } from "../../models/Bill";
 import { type Vote, VoteValue } from "../../models/Vote";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
+import Col from "react-bootstrap/Col";
 
 import BillVoteTable from "../../components/VoteTable/BillVoteTable";
 
@@ -41,73 +42,122 @@ const BillDetailsPage = () => {
 
     return (
         <>
-            <div className={style.billDetailsPage__pageContainer}>
+            <div className={style.billDetails__pageContainer}>
+                <h2 className={style.billDetails__header}>Bill Details</h2>
                 {/* Bill Details */}
                 <Container
                     fluid
-                    className={style.billDetailsPage__detailsContainer}
+                    className={style.billDetails__detailsContainer}
                 >
-                    <Row
-                        className={`${style.billDetailsPage__title} ${style.billDetailsPage__rowPadding}`}
-                    >
-                        <div>
+                    <Row>
+                        <div className={style.billDetails__title}>
                             {billDetails?.id} - {billDetails?.shortTitle}
                         </div>
                     </Row>
-                    <Row className={style.billDetailsPage__rowPadding}>
-                        <a
-                            href={billDetails?.link}
-                            style={{
-                                color: "#2563eb",
-                                textDecoration: "underline",
-                            }}
-                        >
-                            Government Bill Link
-                        </a>
+                    <Row>
+                        <Col>
+                            <Row className={style.billDetails__rowPadding}>
+                                <div
+                                    className={style.billDetails__sectionTitle}
+                                >
+                                    Year
+                                </div>
+                                <div>{billDetails?.year}</div>
+                            </Row>
+                            <Row className={style.billDetails__rowPadding}>
+                                <div
+                                    className={style.billDetails__sectionTitle}
+                                >
+                                    Session Id
+                                </div>
+                                <div>{billDetails?.sessionId}</div>
+                            </Row>
+                        </Col>
+                        <Col>
+                            <Row className={style.billDetails__rowPadding}>
+                                <div
+                                    className={style.billDetails__sectionTitle}
+                                >
+                                    Passed
+                                </div>
+                                <div>{billDetails?.passed}</div>
+                            </Row>
+                            <Row className={style.billDetails__rowPadding}>
+                                <div
+                                    className={style.billDetails__sectionTitle}
+                                >
+                                    Last Action
+                                </div>
+                                <div>
+                                    {`${billDetails?.lastAction} - ${billDetails?.lastActionDate}`}
+                                </div>
+                            </Row>
+                        </Col>
+                        <Col>
+                            <Row className={style.billDetails__rowPadding}>
+                                <div
+                                    className={style.billDetails__sectionTitle}
+                                >
+                                    Official Links
+                                </div>
+                                <a
+                                    href={billDetails?.houseVoteUrl}
+                                    style={{
+                                        color: "#2563eb",
+                                        textDecoration: "underline",
+                                    }}
+                                >
+                                    House Vote
+                                </a>
+                                <a
+                                    href={billDetails?.senateVoteUrl}
+                                    style={{
+                                        color: "#2563eb",
+                                        textDecoration: "underline",
+                                    }}
+                                >
+                                    Senate Vote
+                                </a>
+                                <a
+                                    href={billDetails?.link}
+                                    style={{
+                                        color: "#2563eb",
+                                        textDecoration: "underline",
+                                    }}
+                                >
+                                    Government Bill
+                                </a>
+                            </Row>
+                        </Col>
                     </Row>
-                    <Row className={style.billDetailsPage__rowPadding}>
-                        <div className={style.billDetailsPage__sectionTitle}>
-                            Session Id
-                        </div>
-                        <div>{billDetails?.sessionId}</div>
-                    </Row>
-                    <Row className={style.billDetailsPage__rowPadding}>
-                        <div className={style.billDetailsPage__sectionTitle}>
-                            General Provisions
-                        </div>
-                        <div>{billDetails?.generalProvisions}</div>
-                    </Row>
-                    <Row className={style.billDetailsPage__rowPadding}>
-                        <div className={style.billDetailsPage__sectionTitle}>
-                            Highlighted Provisions
-                        </div>
-                        <pre className={style.billDetailsPage__preSection}>
-                            {billDetails?.highlightedProvisions}
-                        </pre>
-                    </Row>
-                    <Row className={style.billDetailsPage__rowPadding}>
-                        <div className={style.billDetailsPage__sectionTitle}>
-                            Last Action
-                        </div>
-                        <div>
-                            {`${billDetails?.lastAction} - ${billDetails?.lastActionDate}`}
-                        </div>
-                    </Row>
-                    <Row className={style.billDetailsPage__rowPadding}>
-                        <div className={style.billDetailsPage__sectionTitle}>
+                    <Row className={style.billDetails__rowPadding}>
+                        <div className={style.billDetails__sectionTitle}>
                             Subjects
                         </div>
                         <div>{billDetails?.subjects}</div>
                     </Row>
 
+                    <Row className={style.billDetails__rowPadding}>
+                        <div className={style.billDetails__sectionTitle}>
+                            General Provisions
+                        </div>
+                        <div>{billDetails?.generalProvisions}</div>
+                    </Row>
+                    <Row className={style.billDetails__rowPadding}>
+                        <div className={style.billDetails__sectionTitle}>
+                            Highlighted Provisions
+                        </div>
+                        <pre className={style.billDetails__preSection}>
+                            {billDetails?.highlightedProvisions}
+                        </pre>
+                    </Row>
+
                     {/* House Vote Table */}
-                    <Row className={`${style.billDetailsPage__rowPadding} g-0`}>
+                    <Row className={`${style.billDetails__rowPadding} g-0`}>
                         <Container fluid className="p-0">
                             <Row>
                                 <text
-                                    className={
-                                        style.billDetailsPage__sectionTitle
-                                    }
+                                    className={style.billDetails__sectionTitle}
                                 >
                                     House Vote
                                 </text>
@@ -137,13 +187,11 @@ const BillDetailsPage = () => {
                     </Row>
 
                     {/* Senate Vote Table */}
-                    <Row Row className={style.billDetailsPage__rowPadding}>
+                    <Row Row className={style.billDetails__rowPadding}>
                         <Container fluid>
                             <Row>
                                 <div
-                                    className={
-                                        style.billDetailsPage__sectionTitle
-                                    }
+                                    className={style.billDetails__sectionTitle}
                                 >
                                     Senate Vote
                                 </div>

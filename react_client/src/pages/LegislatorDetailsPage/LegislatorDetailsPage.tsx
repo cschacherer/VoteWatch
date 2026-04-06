@@ -221,7 +221,7 @@ const LegislatorDetailsPage = () => {
                     className={style.legislatorDetails__detailsContainer}
                 >
                     <Row>
-                        <div className={`${style.legislatorDetails__title}`}>
+                        <div className={style.legislatorDetails__title}>
                             {legislatorDetails?.formatName}
                         </div>
                     </Row>
