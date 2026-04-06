@@ -11,7 +11,7 @@ import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
 import Badge from "../../components/Badge/Badge";
-import { BadgeType } from "../../components/Badge/Badge";
+import PropertyGroup from "../../components/PropertyGroup/PropertyGroup";
 
 import style from "./LegislatorDetailsPage.module.css";
 
@@ -211,151 +211,106 @@ const LegislatorDetailsPage = () => {
 
     return (
         <>
-            <div className={style.legislatorDetails__pageContainer}>
-                <h2 className={style.legislatorDetails__header}>
-                    Legislator Details
-                </h2>
-                {/* Legislator Details Container*/}
-                <Container
-                    fluid
-                    className={style.legislatorDetails__detailsContainer}
-                >
-                    <Row>
-                        <div className={style.legislatorDetails__title}>
-                            {legislatorDetails?.formatName}
-                        </div>
-                    </Row>
-                    <Row className={`${style.legislatorDetails__rowPadding}`}>
-                        {/* Name and Profile Pic */}
-                        <Col>
-                            <img
-                                src={legislatorDetails?.image}
-                                alt={legislatorDetails?.fullName}
-                                style={{ width: 100, borderRadius: "10%" }}
-                            />
-                        </Col>
-                        {/* House and Party */}
-                        <Col>
-                            <Row
-                                className={style.legislatorDetails__rowPadding}
-                            >
-                                <div
-                                    className={
-                                        style.legislatorDetails__sectionTitle
-                                    }
-                                >
-                                    Chamber
-                                </div>
-                                <div>{legislatorDetails?.house}</div>
-                            </Row>
+            <div className="page pageScroll">
+                <div className="pageTitle">Legislator Details</div>
 
-                            <Row
-                                className={style.legislatorDetails__rowPadding}
+                {/* Legislator Details Container*/}
+                <div className="section outline">
+                    <div className="filledHeader">
+                        {legislatorDetails?.formatName}
+                    </div>
+                    <Container fluid>
+                        <Row
+                            className={`${style.legislatorDetails__rowPadding}`}
+                        >
+                            {/* Profile Pic */}
+                            <Col
+                                className={style.legislatorDetails__centerImage}
                             >
-                                <div
+                                <img
                                     className={
-                                        style.legislatorDetails__sectionTitle
+                                        style.legislativeDetails__profileImg
                                     }
-                                >
-                                    Party
-                                </div>
-                                <div>
-                                    <Badge
-                                        type="party"
-                                        value={legislatorDetails?.party}
-                                    ></Badge>
-                                </div>
-                            </Row>
-                        </Col>
-                        {/* Counties */}
-                        <Col>
-                            <Row
-                                className={style.legislatorDetails__rowPadding}
-                            >
-                                <div
-                                    className={
-                                        style.legislatorDetails__sectionTitle
+                                    src={legislatorDetails?.image}
+                                    alt={legislatorDetails?.fullName}
+                                />
+                            </Col>
+                            {/* House and Party */}
+                            <Col>
+                                <PropertyGroup
+                                    title="Chamber"
+                                    value={legislatorDetails?.house}
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="Party"
+                                    value={
+                                        <Badge
+                                            type="party"
+                                            value={legislatorDetails?.party}
+                                        ></Badge>
                                     }
-                                >
-                                    District
-                                </div>
-                                <div>{legislatorDetails?.district}</div>
-                            </Row>
-                            <Row
-                                className={style.legislatorDetails__rowPadding}
-                            >
-                                <div
-                                    className={
-                                        style.legislatorDetails__sectionTitle
+                                ></PropertyGroup>
+                            </Col>
+                            {/* Counties */}
+                            <Col>
+                                <PropertyGroup
+                                    title="District"
+                                    value={legislatorDetails?.district}
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="Counties"
+                                    value={legislatorDetails?.counties}
+                                ></PropertyGroup>
+                            </Col>
+                            <Col>
+                                <PropertyGroup
+                                    title="Email"
+                                    value={legislatorDetails?.email}
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="Phone"
+                                    value={legislatorDetails?.cell}
+                                ></PropertyGroup>
+                            </Col>
+                            <Col>
+                                <PropertyGroup
+                                    title="Service Start"
+                                    value={legislatorDetails?.serviceStart}
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="Official Link"
+                                    value={
+                                        <a
+                                            href={legislatorDetails?.link}
+                                            style={{
+                                                color: "#2563eb",
+                                                textDecoration: "underline",
+                                            }}
+                                        >
+                                            Government Bio
+                                        </a>
                                     }
-                                >
-                                    Counties
-                                </div>
-                                <div>{legislatorDetails?.counties}</div>
-                            </Row>
-                        </Col>
-                        <Col>
-                            <Row
-                                className={style.legislatorDetails__rowPadding}
-                            >
-                                <div
-                                    className={
-                                        style.legislatorDetails__sectionTitle
-                                    }
-                                >
-                                    Email
-                                </div>
-                                <div>{legislatorDetails?.email}</div>
-                            </Row>
-                            <Row
-                                className={style.legislatorDetails__rowPadding}
-                            >
-                                <div
-                                    className={
-                                        style.legislatorDetails__sectionTitle
-                                    }
-                                >
-                                    Cell
-                                </div>
-                                <div>{legislatorDetails?.cell}</div>
-                            </Row>
-                        </Col>
-                        <Col>
-                            <Row
-                                className={style.legislatorDetails__rowPadding}
-                            >
-                                <div
-                                    className={
-                                        style.legislatorDetails__sectionTitle
-                                    }
-                                >
-                                    Service Start
-                                </div>
-                                <div>{legislatorDetails?.serviceStart}</div>
-                            </Row>
-                            <Row
-                                className={style.legislatorDetails__rowPadding}
-                            >
-                                <div
-                                    className={
-                                        style.legislatorDetails__sectionTitle
-                                    }
-                                >
-                                    Official Link
-                                </div>
-                                <div>{legislatorDetails?.link}</div>
-                            </Row>
-                        </Col>
-                    </Row>
-                </Container>
-                {/* Legislator Voting History Table */}
-                <GeneralTable
-                    columns={(helpers) =>
-                        createLegislatorDetailsColumns(helpers)
-                    }
-                    data={legislatorVotes}
-                    defaultSortId="billId"
-                ></GeneralTable>
+                                ></PropertyGroup>
+                            </Col>
+                        </Row>
+                    </Container>
+                </div>
+
+                <div className="section">
+                    {/* Legislator Voting History Table */}
+                    <div
+                        className={style.legislativeDetails__votingHistoryTitle}
+                    >
+                        Voting History
+                    </div>
+                    <GeneralTable
+                        columns={(helpers) =>
+                            createLegislatorDetailsColumns(helpers)
+                        }
+                        data={legislatorVotes}
+                        defaultSortId="billId"
+                    ></GeneralTable>
+                </div>
             </div>
         </>
     );

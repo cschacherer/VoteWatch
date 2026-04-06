@@ -1,4 +1,4 @@
-.billVoteTable__rowContainer {
+.billVoteTable__container {
     display: flex;
     align-items: stretch;
     border: 1px solid black;
@@ -6,16 +6,9 @@
     --bs-gutter-y: 0 !important;
 }
 
-.billbillVoteTable__voteCell {
-    padding: 0px;
-}
-
-.billVoteTable__rowContent {
-    padding: 20px;
-}
-
-.billVoteTable__rowPadding {
-    padding: 10px 0px;
+/* remove bottom border on all but last */
+.billVoteTable__container:not(:last-of-type) {
+    border-bottom: none;
 }
 
 .billVoteTable__rowHeader {
@@ -26,10 +19,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-
 }
 
-.row {
-    --bs-gutter-x: 0;
-    --bs-gutter-y: 0;
+.billVoteTable__rowContent {
+    padding: 20px;
 }

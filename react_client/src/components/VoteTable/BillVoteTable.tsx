@@ -33,11 +33,11 @@ const BillVoteTable = ({
     }, [voteList]);
 
     return (
-        <Row className={style.billVoteTable__rowContainer}>
+        <Row className={style.billVoteTable__container}>
             <Col xs={2} className={style.billVoteTable__rowHeader}>
                 {title}
             </Col>
-            <Col xs={10} className="p-0">
+            <Col xs={10}>
                 <Row className={`${style.billVoteTable__rowContent} g-0`}>
                     {voteData.map((vote) => (
                         <Col

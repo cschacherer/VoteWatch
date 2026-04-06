@@ -3,11 +3,8 @@ import { getAllLegislators } from "../../services/legislatorService";
 import type { Legislator } from "../../models/Legislator";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
-
 import Badge from "../../components/Badge/Badge";
-import { BadgeType } from "../../components/Badge/Badge";
 
-import "../../styles/global.css";
 import style from "./LegislatorsPage.module.css";
 
 //set all column tables here
@@ -165,8 +162,8 @@ const LegislatorsPage = () => {
     }, []);
 
     return (
-        <div className={style.legislators__pageContainer}>
-            <h2 className={style.legislators__header}>Current Legislators</h2>
+        <div className="page">
+            <div className="pageTitle">Current Legislators</div>
             <GeneralTable
                 columns={(helpers) => createLegislatorColumns(helpers)}
                 data={legislators}

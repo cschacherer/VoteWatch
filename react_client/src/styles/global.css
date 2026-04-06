@@ -1,45 +1,68 @@
-/* Base badge */
-.globalBadge {
-    display: inline-block;
-    padding: 6px 14px;
-    border-radius: 999px;
-    font-size: 14px;
-    font-weight: 600;
-    text-align: center;
+/* For Create React App, the root container is usually #root */
+:root {
+    --gray-background: #f5f5f5;
+    --darker-gray: #888888;
+    --gradient-blue: rgb(33, 212, 252);
+    --gradient-mid-blue: rgb(98, 134, 253);
+    --gradient-purple: rgb(162, 56, 254);
+
+    /* --color-datatable-header-bg: #525252; */
+    --color-datatable-header-bg: #525252;
+    --color-datatable-header-font: white;
+    --color-datatable-outline: gray; 
+
+
+    --padding-datatable-header: 16px; 
+    --font-size-datatable-header: 16px; 
+    
+    --font-size-default: 14px; 
+
+    --padding-default: 16px; 
+    --padding-sm: 10px; 
+    --padding-medium: 20px; 
+    --padding-large: 30px; 
+
+    --pading-datatable-cell: 16px; 
+
+
 }
 
-/* Party styles */
-.badgeDem {
-    background-color: #dbeafe;
-    color: #1d4ed8;
-}
+:root {
+    /* === COLORS === */
+    --color-bg: #ffffff;
+    --color-text: #111827;
 
-.badgeRep {
-    background-color: #fee2e2;
-    color: #b91c1c;
-}
+    --color-sub-header-bg: #525252; 
 
-.badgeInd {
-    background-color: #e5e7eb;
-    color: #374151;
-}
+    --color-filled-header-bg: rgb(32, 32, 32); 
+    --color-filled-header-text: white;
 
-.badgeSubjects {
-    color:black;
-    border: 1px solid black; 
-}
+    --color-datatable-header-bg: #525252;
+    --color-datatable-header-text: #ffffff;
+    --color-datatable-outline: gray;
 
-.badgeYes {
-    background-color: #e5e7eb;
-    color: #374151;
-}
+    /* === SPACING === */
+    /* Base scale */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-7: 28px;
+    --space-8: 32px;
 
-.badgeNo {
-    background-color: #e5e7eb;
-    color: #374151;
-}
 
-.badgeAbsent {
-    background-color: #e5e7eb;
-    color: #374151;
+    /* === FONT SIZES === */
+    --font-size-default: 14px; 
+    --font-size-sm: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 20px;
+    --font-size-title: 25px; 
+
+    /* === FONT WEIGHTS === */
+    --font-weight-bold: 600; 
+
+    /* === BORDER RADIUS === */
+    --border-radius-profile-img: 10%;
 }

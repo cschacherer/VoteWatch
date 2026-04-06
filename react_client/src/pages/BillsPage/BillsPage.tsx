@@ -219,8 +219,8 @@ const BillsPage = () => {
     }, []);
 
     return (
-        <div className={style.bills__pageContainer}>
-            <h2 className={style.bills__header}>Bills Bills Bills!</h2>
+        <div className="page">
+            <div className="pageTitle">Bills Bills Bills!</div>
             <GeneralTable
                 columns={(helpers) => createBillColumns(helpers)}
                 data={bills}

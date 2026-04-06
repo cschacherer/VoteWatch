@@ -5,10 +5,9 @@ import { type Vote, VoteValue } from "../../models/Vote";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-
 import BillVoteTable from "../../components/VoteTable/BillVoteTable";
-
 import { useParams } from "react-router-dom";
+import PropertyGroup from "../../components/PropertyGroup/PropertyGroup";
 
 import style from "./BillDetailsPage.module.css";
 
@@ -42,184 +41,149 @@ const BillDetailsPage = () => {
 
     return (
         <>
-            <div className={style.billDetails__pageContainer}>
-                <h2 className={style.billDetails__header}>Bill Details</h2>
-                {/* Bill Details */}
-                <Container
-                    fluid
-                    className={style.billDetails__detailsContainer}
-                >
-                    <Row>
-                        <div className={style.billDetails__title}>
-                            {billDetails?.id} - {billDetails?.shortTitle}
-                        </div>
-                    </Row>
-                    <Row>
-                        <Col>
-                            <Row className={style.billDetails__rowPadding}>
-                                <div
-                                    className={style.billDetails__sectionTitle}
-                                >
-                                    Year
-                                </div>
-                                <div>{billDetails?.year}</div>
-                            </Row>
-                            <Row className={style.billDetails__rowPadding}>
-                                <div
-                                    className={style.billDetails__sectionTitle}
-                                >
-                                    Session Id
-                                </div>
-                                <div>{billDetails?.sessionId}</div>
-                            </Row>
-                        </Col>
-                        <Col>
-                            <Row className={style.billDetails__rowPadding}>
-                                <div
-                                    className={style.billDetails__sectionTitle}
-                                >
-                                    Passed
-                                </div>
-                                <div>{billDetails?.passed}</div>
-                            </Row>
-                            <Row className={style.billDetails__rowPadding}>
-                                <div
-                                    className={style.billDetails__sectionTitle}
-                                >
-                                    Last Action
-                                </div>
-                                <div>
-                                    {`${billDetails?.lastAction} - ${billDetails?.lastActionDate}`}
-                                </div>
-                            </Row>
-                        </Col>
-                        <Col>
-                            <Row className={style.billDetails__rowPadding}>
-                                <div
-                                    className={style.billDetails__sectionTitle}
-                                >
-                                    Official Links
-                                </div>
-                                <a
-                                    href={billDetails?.houseVoteUrl}
-                                    style={{
-                                        color: "#2563eb",
-                                        textDecoration: "underline",
-                                    }}
-                                >
-                                    House Vote
-                                </a>
-                                <a
-                                    href={billDetails?.senateVoteUrl}
-                                    style={{
-                                        color: "#2563eb",
-                                        textDecoration: "underline",
-                                    }}
-                                >
-                                    Senate Vote
-                                </a>
-                                <a
-                                    href={billDetails?.link}
-                                    style={{
-                                        color: "#2563eb",
-                                        textDecoration: "underline",
-                                    }}
-                                >
-                                    Government Bill
-                                </a>
-                            </Row>
-                        </Col>
-                    </Row>
-                    <Row className={style.billDetails__rowPadding}>
-                        <div className={style.billDetails__sectionTitle}>
-                            Subjects
-                        </div>
-                        <div>{billDetails?.subjects}</div>
-                    </Row>
-
-                    <Row className={style.billDetails__rowPadding}>
-                        <div className={style.billDetails__sectionTitle}>
-                            General Provisions
-                        </div>
-                        <div>{billDetails?.generalProvisions}</div>
-                    </Row>
-                    <Row className={style.billDetails__rowPadding}>
-                        <div className={style.billDetails__sectionTitle}>
-                            Highlighted Provisions
-                        </div>
-                        <pre className={style.billDetails__preSection}>
-                            {billDetails?.highlightedProvisions}
-                        </pre>
-                    </Row>
-
-                    {/* House Vote Table */}
-                    <Row className={`${style.billDetails__rowPadding} g-0`}>
-                        <Container fluid className="p-0">
-                            <Row>
-                                <text
-                                    className={style.billDetails__sectionTitle}
-                                >
-                                    House Vote
-                                </text>
-                            </Row>
-                            {/* YEAS */}
-                            <BillVoteTable
-                                voteList={billVotes}
-                                house="H"
-                                voteValue={VoteValue.Yes}
-                                title="Yeas"
-                            ></BillVoteTable>
-                            {/* NAYS */}
-                            <BillVoteTable
-                                voteList={billVotes}
-                                house="H"
-                                voteValue={VoteValue.No}
-                                title="Nays"
-                            ></BillVoteTable>
-                            {/* ABSENT */}
-                            <BillVoteTable
-                                voteList={billVotes}
-                                house="H"
-                                voteValue={VoteValue.Absent}
-                                title="Absent / Abstained"
-                            ></BillVoteTable>
-                        </Container>
-                    </Row>
-
-                    {/* Senate Vote Table */}
-                    <Row Row className={style.billDetails__rowPadding}>
-                        <Container fluid>
-                            <Row>
-                                <div
-                                    className={style.billDetails__sectionTitle}
-                                >
-                                    Senate Vote
-                                </div>
-                            </Row>
-                            {/* YEAS */}
-                            <BillVoteTable
-                                voteList={billVotes}
-                                house="S"
-                                voteValue={VoteValue.Yes}
-                                title="Yeas"
-                            ></BillVoteTable>
-                            {/* NAYS */}
-                            <BillVoteTable
-                                voteList={billVotes}
-                                house="S"
-                                voteValue={VoteValue.No}
-                                title="Nays"
-                            ></BillVoteTable>
-                            {/* ABSENT */}
-                            <BillVoteTable
-                                voteList={billVotes}
-                                house="S"
-                                voteValue={VoteValue.Absent}
-                                title="Absent / Abstained"
-                            ></BillVoteTable>
-                        </Container>
-                    </Row>
-                </Container>
+            <div className="page pageScroll">
+                <div className="pageTitle">Bill Details</div>
+                <div className="section outline">
+                    <div className="filledHeader">
+                        {billDetails?.id} - {billDetails?.shortTitle}
+                    </div>
+                    {/* Bill Details */}
+                    <Container fluid>
+                        <Row>
+                            <Col>
+                                <PropertyGroup
+                                    title="Year"
+                                    value={billDetails?.year}
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="Session Id"
+                                    value={billDetails?.sessionId}
+                                ></PropertyGroup>
+                            </Col>
+                            <Col>
+                                <PropertyGroup
+                                    title="Passed"
+                                    value={billDetails?.passed}
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="Last Action"
+                                    value={`${billDetails?.lastAction} - ${billDetails?.lastActionDate}`}
+                                ></PropertyGroup>
+                            </Col>
+                            <Col>
+                                <PropertyGroup
+                                    title="Offical Links"
+                                    value={
+                                        <div className="verticalStack">
+                                            <a
+                                                href={billDetails?.houseVoteUrl}
+                                                style={{
+                                                    color: "#2563eb",
+                                                    textDecoration: "underline",
+                                                }}
+                                            >
+                                                House Vote
+                                            </a>
+                                            <a
+                                                href={
+                                                    billDetails?.senateVoteUrl
+                                                }
+                                                style={{
+                                                    color: "#2563eb",
+                                                    textDecoration: "underline",
+                                                }}
+                                            >
+                                                Senate Vote
+                                            </a>
+                                            <a
+                                                href={billDetails?.link}
+                                                style={{
+                                                    color: "#2563eb",
+                                                    textDecoration: "underline",
+                                                }}
+                                            >
+                                                Government Bill
+                                            </a>
+                                        </div>
+                                    }
+                                ></PropertyGroup>
+                            </Col>
+                        </Row>
+                        <Row>
+                            <Col>
+                                <PropertyGroup
+                                    title="Subjects"
+                                    value={billDetails?.subjects}
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="General Provisions"
+                                    value={billDetails?.generalProvisions}
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="Highlighted Provisions"
+                                    value={billDetails?.highlightedProvisions}
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="House Vote"
+                                    value={
+                                        <div className="verticalStack">
+                                            {/* YEAS */}
+                                            <BillVoteTable
+                                                voteList={billVotes}
+                                                house="H"
+                                                voteValue={VoteValue.Yes}
+                                                title="Yeas"
+                                            ></BillVoteTable>
+                                            {/* NAYS */}
+                                            <BillVoteTable
+                                                voteList={billVotes}
+                                                house="H"
+                                                voteValue={VoteValue.No}
+                                                title="Nays"
+                                            ></BillVoteTable>
+                                            {/* ABSENT */}
+                                            <BillVoteTable
+                                                voteList={billVotes}
+                                                house="H"
+                                                voteValue={VoteValue.Absent}
+                                                title="Absent / Abstained"
+                                            ></BillVoteTable>
+                                        </div>
+                                    }
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="Senate Vote"
+                                    value={
+                                        <div className="verticalStack">
+                                            {" "}
+                                            {/* YEAS */}
+                                            <BillVoteTable
+                                                voteList={billVotes}
+                                                house="S"
+                                                voteValue={VoteValue.Yes}
+                                                title="Yeas"
+                                            ></BillVoteTable>
+                                            {/* NAYS */}
+                                            <BillVoteTable
+                                                voteList={billVotes}
+                                                house="S"
+                                                voteValue={VoteValue.No}
+                                                title="Nays"
+                                            ></BillVoteTable>
+                                            {/* ABSENT */}
+                                            <BillVoteTable
+                                                voteList={billVotes}
+                                                house="S"
+                                                voteValue={VoteValue.Absent}
+                                                title="Absent / Abstained"
+                                            ></BillVoteTable>
+                                        </div>
+                                    }
+                                ></PropertyGroup>
+                            </Col>
+                        </Row>
+                    </Container>
+                </div>
             </div>
         </>
     );

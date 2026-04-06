@@ -2,9 +2,8 @@ import { useState } from "react";
 import DataTable from "react-data-table-component";
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
 import type { ActiveFilter } from "../../models/DataTableUtils";
-import { BadgeType } from "../Badge/Badge";
-import type { DataTableColumn } from "../../models/DataTableUtils";
 
+import "../../styles/global.css";
 import style from "./GeneralTable.module.css";
 
 type GeneralTableProps<T> = {
@@ -122,19 +121,21 @@ export default function GeneralTable<T>({
             }),
         );
 
+    //Have to use the styles because using styles.generalTable wipe out a lot of the defaults
+    //and we just want a couple of properties changes
     const customStyles = {
         headCells: {
             style: {
-                padding: "16px",
-                color: "white",
-                backgroundColor: "#525252",
-                fontSize: "16px",
+                padding: "var(--padding-datatable-header)",
+                color: "var(--color-datatable-header-font)",
+                backgroundColor: "var(--color-datatable-header-bg)",
+                fontSize: "var(--font-size-datatable-header)",
             },
         },
         cells: {
             style: {
-                padding: "16px",
-                fontSize: "14px",
+                padding: "var(--padding-datatable-header)",
+                fontSize: "var(--font-size-default)",
             },
         },
     };
@@ -143,7 +144,6 @@ export default function GeneralTable<T>({
         <div className={style.generalTable__container}>
             <div className={style.generalTable__subHeader}>
                 <input
-                    className={style.generalTable__searchBar}
                     type="text"
                     placeholder="Search..."
                     value={filterText}

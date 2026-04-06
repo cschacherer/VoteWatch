@@ -1,0 +1,10 @@
+.propertyGroup__container {
+    width: 100%;
+    padding: var(--space-2)
+}
+
+.propertyGroup__title {
+    font-weight: 700;
+    font-size: var(--font-size-lg);
+    padding: 0px;
+}

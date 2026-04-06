@@ -6,34 +6,27 @@
     min-height: 0;
     padding: 20px; 
     padding-top: 10px; 
-}
-
-.legislatorDetails__header {
-    margin-bottom: 20px;
-    font-weight:600;
-}
-
-.legislatorDetails__detailsContainer {
-    border: 1px solid black;
+    overflow-y: scroll; 
 }
 
 .legislatorDetails__rowPadding {
-    padding: 10px 0px;
+    padding: var(--space-3) 0px;
 }
 
-.legislatorDetails__title {
-    font-weight: 500;
-    font-size: 30px;
-    display: flex;
+.legislatorDetails__centerImage{
+    display: flex; 
     flex-direction: column;
-    align-items: left;
-    background-color: black; 
-    color: white; 
-
+    align-items: center;
 }
 
-.legislatorDetails__sectionTitle {
-    font-weight: 800;
-    font-size: large;
-    padding: 0px;
+.legislativeDetails__profileImg {
+    border-radius: var(--border-radius-profile-img); 
+    height: 170px; 
+}
+
+.legislativeDetails__votingHistoryTitle {
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-title); 
+    padding-top: var(--space-2);
+    padding-bottom: var(--space-1);
 }
