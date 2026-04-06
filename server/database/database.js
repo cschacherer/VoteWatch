@@ -201,7 +201,8 @@ class Database {
                                 bills.lastActionDate, 
                                 bills.sessionId, 
                                 bills.shortTitle, 
-                                bills.subjects
+                                bills.subjects,
+                                bills.link
                             FROM legislators 
                             INNER JOIN votes 
                                 ON votes.legislatorId = legislators.id 

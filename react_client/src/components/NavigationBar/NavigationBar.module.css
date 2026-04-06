@@ -3,12 +3,12 @@
 }
 
 .navigationBar__container {
-    display: flex;
+    /* display: flex; */
     justify-content: space-between;
     align-content: center;
-    width: 100%;
-    margin-right: 15px;
-    min-width: max-content; 
+    /* flex: 0 0 auto; 
+    min-width: fit-content;  
+    min-height: max-content;  */
 }
 
 .navigationBar__link {
@@ -29,7 +29,7 @@
 
 .navigationBar__brand {
     font-size: 40px !important;
-    margin-left: 25px;
+    margin-left: 20px;
     display: flex; 
     align-items: center;
 }
@@ -39,5 +39,5 @@
     height: 50px;
     border: none;
     border-radius: 0px;
-    margin-right: 5px;
+    margin-right: 10px;
 }

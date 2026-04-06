@@ -163,7 +163,7 @@ function createLegislatorDetailsColumns({
         }),
         createDataTableColumn<LegislatorVote>({
             id: "link",
-            name: "Utah Gov Link",
+            name: "Official Links",
             selector: (row) => row.bill.link,
             sortable: false,
             width: "150px",
@@ -172,7 +172,7 @@ function createLegislatorDetailsColumns({
                     href={row.bill.link}
                     style={{ color: "#2563eb", textDecoration: "underline" }}
                 >
-                    Official Link
+                    Government Bill
                 </a>
             ),
         }),
@@ -211,41 +211,37 @@ const LegislatorDetailsPage = () => {
 
     return (
         <>
-            <div className={style.legislatorDetailsPage__pageContainer}>
-                <div>
-                    <h1>Legislator's Details !</h1>
-                </div>
-                {/* Legislator Details */}
+            <div className={style.legislatorDetails__pageContainer}>
+                <h2 className={style.legislatorDetails__header}>
+                    Legislator Details
+                </h2>
+                {/* Legislator Details Container*/}
                 <Container
                     fluid
-                    className={style.legislatorDetailsPage__detailsContainer}
+                    className={style.legislatorDetails__detailsContainer}
                 >
-                    <Row
-                        className={`${style.legislatorDetailsPage__rowPadding}`}
-                    >
+                    <Row>
+                        <div className={`${style.legislatorDetails__title}`}>
+                            {legislatorDetails?.formatName}
+                        </div>
+                    </Row>
+                    <Row className={`${style.legislatorDetails__rowPadding}`}>
                         {/* Name and Profile Pic */}
                         <Col>
-                            <div
-                                className={`${style.legislatorDetailsPage__title}`}
-                            >
-                                {legislatorDetails?.fullName}
-                                <img
-                                    src={legislatorDetails?.image}
-                                    alt={legislatorDetails?.fullName}
-                                    style={{ width: 100, borderRadius: "10%" }}
-                                />
-                            </div>
+                            <img
+                                src={legislatorDetails?.image}
+                                alt={legislatorDetails?.fullName}
+                                style={{ width: 100, borderRadius: "10%" }}
+                            />
                         </Col>
                         {/* House and Party */}
                         <Col>
                             <Row
-                                className={
-                                    style.legislatorDetailsPage__rowPadding
-                                }
+                                className={style.legislatorDetails__rowPadding}
                             >
                                 <div
                                     className={
-                                        style.legislatorDetailsPage__sectionTitle
+                                        style.legislatorDetails__sectionTitle
                                     }
                                 >
                                     Chamber
@@ -254,13 +250,11 @@ const LegislatorDetailsPage = () => {
                             </Row>
 
                             <Row
-                                className={
-                                    style.legislatorDetailsPage__rowPadding
-                                }
+                                className={style.legislatorDetails__rowPadding}
                             >
                                 <div
                                     className={
-                                        style.legislatorDetailsPage__sectionTitle
+                                        style.legislatorDetails__sectionTitle
                                     }
                                 >
                                     Party
@@ -276,13 +270,11 @@ const LegislatorDetailsPage = () => {
                         {/* Counties */}
                         <Col>
                             <Row
-                                className={
-                                    style.legislatorDetailsPage__rowPadding
-                                }
+                                className={style.legislatorDetails__rowPadding}
                             >
                                 <div
                                     className={
-                                        style.legislatorDetailsPage__sectionTitle
+                                        style.legislatorDetails__sectionTitle
                                     }
                                 >
                                     District
@@ -290,13 +282,11 @@ const LegislatorDetailsPage = () => {
                                 <div>{legislatorDetails?.district}</div>
                             </Row>
                             <Row
-                                className={
-                                    style.legislatorDetailsPage__rowPadding
-                                }
+                                className={style.legislatorDetails__rowPadding}
                             >
                                 <div
                                     className={
-                                        style.legislatorDetailsPage__sectionTitle
+                                        style.legislatorDetails__sectionTitle
                                     }
                                 >
                                     Counties
@@ -306,13 +296,11 @@ const LegislatorDetailsPage = () => {
                         </Col>
                         <Col>
                             <Row
-                                className={
-                                    style.legislatorDetailsPage__rowPadding
-                                }
+                                className={style.legislatorDetails__rowPadding}
                             >
                                 <div
                                     className={
-                                        style.legislatorDetailsPage__sectionTitle
+                                        style.legislatorDetails__sectionTitle
                                     }
                                 >
                                     Email
@@ -320,13 +308,11 @@ const LegislatorDetailsPage = () => {
                                 <div>{legislatorDetails?.email}</div>
                             </Row>
                             <Row
-                                className={
-                                    style.legislatorDetailsPage__rowPadding
-                                }
+                                className={style.legislatorDetails__rowPadding}
                             >
                                 <div
                                     className={
-                                        style.legislatorDetailsPage__sectionTitle
+                                        style.legislatorDetails__sectionTitle
                                     }
                                 >
                                     Cell
@@ -336,13 +322,11 @@ const LegislatorDetailsPage = () => {
                         </Col>
                         <Col>
                             <Row
-                                className={
-                                    style.legislatorDetailsPage__rowPadding
-                                }
+                                className={style.legislatorDetails__rowPadding}
                             >
                                 <div
                                     className={
-                                        style.legislatorDetailsPage__sectionTitle
+                                        style.legislatorDetails__sectionTitle
                                     }
                                 >
                                     Service Start
@@ -350,13 +334,11 @@ const LegislatorDetailsPage = () => {
                                 <div>{legislatorDetails?.serviceStart}</div>
                             </Row>
                             <Row
-                                className={
-                                    style.legislatorDetailsPage__rowPadding
-                                }
+                                className={style.legislatorDetails__rowPadding}
                             >
                                 <div
                                     className={
-                                        style.legislatorDetailsPage__sectionTitle
+                                        style.legislatorDetails__sectionTitle
                                     }
                                 >
                                     Official Link

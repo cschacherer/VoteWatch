@@ -265,7 +265,7 @@ const LegislatorsPage = () => {
         }),
         createDataTableColumn<Legislator>({
             id: "link",
-            name: "Link",
+            name: "Official Links",
             selector: (row: Legislator) => row.link,
             sortable: false,
             width: "150px",
@@ -282,10 +282,7 @@ const LegislatorsPage = () => {
 
     return (
         <div className={style.legislators__pageContainer}>
-            <div>
-                <h1 className={style.legislators__header}>Legislators!</h1>
-            </div>
-
+            <h2 className={style.legislators__header}>Current Legislators</h2>
             <GeneralTable
                 columns={(helpers) => createLegislatorColumns(helpers)}
                 data={legislators}

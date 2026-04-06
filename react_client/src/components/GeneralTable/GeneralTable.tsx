@@ -141,6 +141,22 @@ export default function GeneralTable<T>({
 
     return (
         <div className={style.generalTable__container}>
+            <div className={style.generalTable__subHeader}>
+                <input
+                    className={style.generalTable__searchBar}
+                    type="text"
+                    placeholder="Search..."
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                    style={{ flex: 1 }}
+                />
+
+                <FilterPanel
+                    filters={filters}
+                    activeFilters={activeFilters}
+                    onApplyFilters={setActiveFilters}
+                />
+            </div>
             <div className={style.generalTable__tableWrapper}>
                 <DataTable
                     columns={builtColumns}
@@ -152,29 +168,9 @@ export default function GeneralTable<T>({
                     highlightOnHover
                     striped
                     fixedHeader
-                    fixedHeaderScrollHeight="100%"
                     pagination
                     paginationPerPage={10}
                     paginationRowsPerPageOptions={[10, 20, 50]}
-                    subHeader
-                    subHeaderComponent={
-                        <div className={style.generalTable__subHeader}>
-                            <input
-                                className={style.generalTable__searchBar}
-                                type="text"
-                                placeholder="Search..."
-                                value={filterText}
-                                onChange={(e) => setFilterText(e.target.value)}
-                                style={{ flex: 1 }}
-                            />
-
-                            <FilterPanel
-                                filters={filters}
-                                activeFilters={activeFilters}
-                                onApplyFilters={setActiveFilters}
-                            />
-                        </div>
-                    }
                 />
             </div>
         </div>

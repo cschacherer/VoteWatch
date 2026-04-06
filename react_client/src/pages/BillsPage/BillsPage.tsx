@@ -5,7 +5,7 @@ import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import Badge from "../../components/Badge/Badge";
 import { BadgeType } from "../../components/Badge/Badge";
-
+import { Container, Col, Row } from "react-bootstrap";
 import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
 
 import style from "./BillsPage.module.css";
@@ -220,9 +220,7 @@ const BillsPage = () => {
 
     return (
         <div className={style.bills__pageContainer}>
-            <div>
-                <h1 className={style.bills__header}>Bills Bills Bills!</h1>
-            </div>
+            <h2 className={style.bills__header}>Bills Bills Bills!</h2>
             <GeneralTable
                 columns={(helpers) => createBillColumns(helpers)}
                 data={bills}
