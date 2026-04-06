@@ -55,6 +55,17 @@ const BillDetailsPage = () => {
                         </div>
                     </Row>
                     <Row className={style.billDetailsPage__rowPadding}>
+                        <a
+                            href={billDetails?.link}
+                            style={{
+                                color: "#2563eb",
+                                textDecoration: "underline",
+                            }}
+                        >
+                            Government Bill Link
+                        </a>
+                    </Row>
+                    <Row className={style.billDetailsPage__rowPadding}>
                         <div className={style.billDetailsPage__sectionTitle}>
                             Session Id
                         </div>

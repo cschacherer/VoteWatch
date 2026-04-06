@@ -1,20 +1,8 @@
 import { useState } from "react";
 import { Modal } from "react-bootstrap";
+import type { FilterConfig, ActiveFilter } from "../../models/DataTableUtils";
 
 import style from "./FilterPanel.module.css";
-
-type FilterConfig = {
-    key: string;
-    label: string;
-    type: "text" | "select" | "number";
-    options?: string[];
-};
-
-export type ActiveFilter = {
-    key: string;
-    value: string;
-    operator?: "contains" | "=" | ">" | "<" | ">=" | "<=";
-};
 
 type FilterPanelProps = {
     filters: FilterConfig[];
@@ -22,11 +10,11 @@ type FilterPanelProps = {
     onApplyFilters: (filters: ActiveFilter[]) => void;
 };
 
-const FilterPanel = ({
+export default function FilterPanel({
     filters,
     activeFilters,
     onApplyFilters,
-}: FilterPanelProps) => {
+}: FilterPanelProps) {
     const [open, setOpen] = useState(false);
     const [draftFilters, setDraftFilters] = useState<ActiveFilter[]>(
         activeFilters.length ? activeFilters : [{ key: "", value: "" }],
@@ -58,7 +46,8 @@ const FilterPanel = ({
     };
 
     const clearFilters = () => {
-        setDraftFilters([{ key: "", value: "" }]);
+        onApplyFilters([]);
+        setOpen(false);
     };
 
     return (
@@ -285,6 +274,4 @@ const FilterPanel = ({
             )}
         </div>
     );
-};
-
-export default FilterPanel;
+}

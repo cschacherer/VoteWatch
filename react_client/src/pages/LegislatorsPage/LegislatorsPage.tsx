@@ -3,6 +3,7 @@ import { getAllLegislators } from "../../services/legislatorService";
 import type { Legislator } from "../../models/Legislator";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import Badge from "../../components/Badge/Badge";
+import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
 
 import "../../styles/global.css";
 import style from "./LegislatorsPage.module.css";
@@ -32,13 +33,10 @@ const LegislatorsPage = () => {
 
     //Set up columns
     const columns = [
-        {
-            id: "name",
+        createDataTableColumn<Legislator>({
+            id: "fullName",
             name: "Name",
-            selector: (row: Legislator) => row.fullName,
-            sortable: true,
-            wrap: true,
-            grow: 1,
+            selector: (row) => row.fullName,
             minWidth: "250px",
             cell: (row: Legislator) => (
                 <a
@@ -56,134 +54,97 @@ const LegislatorsPage = () => {
                     </div>
                 </a>
             ),
-        },
-        {
-            id: "chamber",
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Legislator>({
+            id: "house",
             name: "Chamber",
             selector: (row: Legislator) => row.house,
-            sortable: true,
-            wrap: true,
-            grow: 1,
             minWidth: "120px",
-        },
-        {
+            filterConfig: {
+                type: FilterType.Select,
+                options: ["House", "Senate"],
+            },
+        }),
+        createDataTableColumn<Legislator>({
             id: "party",
             name: "Party",
             selector: (row: Legislator) => row.party,
-            sortable: true,
-            grow: 1,
             minWidth: "180px",
             cell: (row: Legislator) => <Badge type="party" value={row.party} />,
-        },
-        {
+            filterConfig: {
+                type: FilterType.Select,
+                options: ["Republican", "Democrat", "Independent"],
+            },
+        }),
+        createDataTableColumn<Legislator>({
             id: "district",
             name: "District",
             selector: (row: Legislator) => row.district,
-            sortable: true,
-            wrap: true,
-            grow: 1,
             minWidth: "120px",
-        },
-        {
+            filterConfig: {
+                type: FilterType.Number,
+            },
+        }),
+        createDataTableColumn<Legislator>({
             id: "counties",
             name: "Counties",
             selector: (row: Legislator) => row.counties,
-            sortable: true,
-            wrap: true,
-            grow: 1,
             minWidth: "180px",
-        },
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Legislator>({
             id: "email",
             name: "Email",
             selector: (row: Legislator) => row.email,
-            sortable: true,
-            wrap: true,
-            grow: 1,
             minWidth: "220px",
             cell: (row: Legislator) => (
                 <a href={`mailto:${row.email}`}>{row.email}</a>
             ),
-        },
-        {
-            id: "phone",
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Legislator>({
+            id: "cell",
             name: "Phone",
             selector: (row: Legislator) => row.cell,
-            sortable: true,
-            wrap: true,
-            grow: 1,
             minWidth: "150px",
-        },
-        {
+            cell: (row: Legislator) => (
+                <a href={`tel:+1${row.cell}`}>{row.cell}</a>
+            ),
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Legislator>({
             id: "serviceStart",
             name: "Service Start",
             selector: (row: Legislator) => row.serviceStart,
-            sortable: true,
-            grow: 1,
             minWidth: "150px",
-            wrap: true,
-        },
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Legislator>({
             id: "link",
             name: "Link",
             selector: (row: Legislator) => row.link,
             sortable: false,
-            wrap: true,
             width: "150px",
             cell: (row: Legislator) => (
                 <a
                     href={row.link}
                     style={{ color: "#2563eb", textDecoration: "underline" }}
                 >
-                    Government Page
+                    Government Bio
                 </a>
             ),
-        },
-    ];
-
-    const filters = [
-        {
-            key: "fullName",
-            label: "Name",
-            type: "text",
-        },
-        {
-            key: "house",
-            label: "Chamber",
-            type: "select",
-            options: ["House", "Senate"], // adjust to your data
-        },
-        {
-            key: "party",
-            label: "Party",
-            type: "select",
-            options: ["Republican", "Democrat", "Independent"], // adjust
-        },
-        {
-            key: "district",
-            label: "District",
-            type: "number", // 🔥 allows > < =
-        },
-        {
-            key: "counties",
-            label: "Counties",
-            type: "text",
-        },
-        {
-            key: "email",
-            label: "Email",
-            type: "text",
-        },
-        {
-            key: "cell",
-            label: "Cell Phone",
-            type: "text",
-        },
-        {
-            key: "serviceStart",
-            label: "Service Start",
-            type: "text", // can upgrade to date later
-        },
+        }),
     ];
 
     return (
@@ -195,7 +156,6 @@ const LegislatorsPage = () => {
             <GeneralTable
                 columns={columns}
                 data={legislators}
-                filters={filters}
                 defaultSortId="name"
             ></GeneralTable>
         </div>

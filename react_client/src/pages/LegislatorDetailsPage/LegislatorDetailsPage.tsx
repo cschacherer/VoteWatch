@@ -10,6 +10,7 @@ import { useParams } from "react-router-dom";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import Badge from "../../components/Badge/Badge";
+import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
 
 import style from "./LegislatorDetailsPage.module.css";
 
@@ -44,105 +45,133 @@ const LegislatorDetailsPage = () => {
     }, []);
 
     const columns = [
-        {
+        createDataTableColumn<LegislatorVote>({
             id: "billId",
             name: "Bill Id",
             selector: (row: LegislatorVote) => row.bill.id,
-            sortable: true,
-            width: "100px",
+            width: "120px",
             cell: (row: LegislatorVote) => (
                 <a
                     href={`/bills/${row.bill.id}`}
-                    style={{ color: "#2563eb", textDecoration: "underline" }}
+                    style={{ color: "#2563eb", textDecoration: "none" }}
                 >
-                    {row.bill.id}
+                    <Badge type="billId" value={row.bill.id}></Badge>
                 </a>
             ),
-        },
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<LegislatorVote>({
+            id: "shortTitle",
             name: "Title",
             selector: (row: LegislatorVote) => row.bill.shortTitle,
-            sortable: true,
-            wrap: true,
-            grow: 1,
             minWidth: "170px",
-        },
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<LegislatorVote>({
+            id: "vote",
             name: "Vote",
             selector: (row: LegislatorVote) => row.vote,
-            sortable: true,
             width: "120px",
             cell: (row: LegislatorVote) => (
                 <Badge type="vote" value={row.vote} />
             ),
-        },
-        {
+            filterConfig: {
+                type: FilterType.Select,
+                options: ["Yes", "No", "Absent"],
+            },
+        }),
+        createDataTableColumn<LegislatorVote>({
+            id: "passed",
             name: "Passed",
             selector: (row: LegislatorVote) => row.vote,
-            sortable: true,
             width: "150px",
             cell: (row: LegislatorVote) => (
                 <Badge type="passed" value={row.vote} />
             ),
-        },
-        {
+            filterConfig: {
+                type: FilterType.Select,
+                options: ["Passed", "Failed"],
+            },
+        }),
+        createDataTableColumn<LegislatorVote>({
+            id: "billGeneralProvision",
             name: "General Provisions",
             selector: (row: LegislatorVote) => row.bill.generalProvisions,
-            sortable: true,
-            wrap: true,
             grow: 2,
             minWidth: "250px",
-        },
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<LegislatorVote>({
+            id: "billHighlightedProvisions",
             name: "Highlighted Provisions",
             selector: (row: LegislatorVote) => row.bill.highlightedProvisions,
-            sortable: true,
             grow: 2,
             minWidth: "350px",
-            wrap: true,
             cell: (row: LegislatorVote) => (
                 <CollapsibleCell text={row.bill.highlightedProvisions} />
             ),
-        },
-
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<LegislatorVote>({
+            id: "billLastAction",
             name: "Last Action",
-            selector: (row: LegislatorVote) => row.bill.lastAction,
-            sortable: true,
+            selector: (row: LegislatorVote) =>
+                `${row.bill.lastAction} ${row.bill.lastActionDate}`,
             width: "150px",
-            wrap: true,
             cell: (row: LegislatorVote) => (
                 <div className={style.bills__lastActionCell}>
                     <div>{row.bill.lastAction}</div>
                     <div>{row.bill.lastActionDate}</div>
                 </div>
             ),
-        },
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<LegislatorVote>({
+            id: "billYear",
             name: "Year",
             selector: (row: LegislatorVote) => row.bill.year,
-            sortable: true,
             width: "100px",
-        },
-        {
+            filterConfig: {
+                type: FilterType.Number,
+            },
+        }),
+        createDataTableColumn<LegislatorVote>({
+            id: "billSessionId",
             name: "Session Id",
             selector: (row: LegislatorVote) => row.bill.sessionId,
-            sortable: true,
             width: "130px",
-        },
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<LegislatorVote>({
+            id: "billSubjects",
             name: "Subjects",
             selector: (row: LegislatorVote) => row.bill.subjects,
-            sortable: true,
-            grow: 1,
             minWidth: "250px",
-            wrap: true,
             cell: (row: LegislatorVote) => (
                 <CollapsibleCell items={row.bill.subjects} />
             ),
-        },
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<LegislatorVote>({
+            id: "billLink",
             name: "Utah Gov Link",
+            selector: (row) => row.bill.link,
+            sortable: false,
+            width: "150px",
             cell: (row: LegislatorVote) => (
                 <a
                     href={row.bill.link}
@@ -151,60 +180,7 @@ const LegislatorDetailsPage = () => {
                     Official Link
                 </a>
             ),
-            ignoreRowClick: true,
-            allowOverflow: true,
-            button: true,
-            width: "150px",
-        },
-    ];
-
-    const filters = [
-        {
-            key: "bill.id",
-            label: "Bill Id",
-            type: "text",
-        },
-        {
-            key: "bill.shortTitle",
-            label: "Title",
-            type: "text",
-        },
-        {
-            key: "bill.generalProvisions",
-            label: "General Provisions",
-            type: "text",
-        },
-        {
-            key: "vote",
-            label: "Vote",
-            type: "select",
-            options: ["Yes", "No", "Absent"], // adjust if needed
-        },
-        {
-            key: "bill.lastAction",
-            label: "Last Action",
-            type: "text",
-        },
-        {
-            key: "bill.lastActionDate",
-            label: "Last Action Date",
-            type: "text",
-        },
-        {
-            key: "bill.year",
-            label: "Year",
-            type: "number",
-        },
-        {
-            key: "bill.sessionId",
-            label: "Session Id",
-            type: "text",
-        },
-        {
-            key: "bill.subjects",
-            label: "Subjects",
-            type: "text",
-        },
+        }),
     ];
 
     return (
@@ -246,7 +222,7 @@ const LegislatorDetailsPage = () => {
                                         style.legislatorDetailsPage__sectionTitle
                                     }
                                 >
-                                    House
+                                    Chamber
                                 </div>
                                 <div>{legislatorDetails?.house}</div>
                             </Row>
@@ -368,7 +344,6 @@ const LegislatorDetailsPage = () => {
                 <GeneralTable
                     columns={columns}
                     data={legislatorVotes}
-                    filters={filters}
                     defaultSortId="billId"
                 ></GeneralTable>
             </div>

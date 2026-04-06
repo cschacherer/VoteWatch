@@ -4,6 +4,7 @@ import type { Bill } from "../../models/Bill";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import Badge from "../../components/Badge/Badge";
+import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
 
 import style from "./BillsPage.module.css";
 
@@ -30,13 +31,12 @@ const BillsPage = () => {
 
     //set all column tables here
     const columns = [
-        {
+        createDataTableColumn<Bill>({
             id: "id",
             name: "Bill Id",
-            selector: (row: Bill) => row.id,
-            sortable: true,
+            selector: (row) => row.id,
             width: "120px",
-            cell: (row: Bill) => (
+            cell: (row) => (
                 <a
                     href={`/bills/${row.id}`}
                     style={{ color: "#2563eb", textDecoration: "none" }}
@@ -44,74 +44,98 @@ const BillsPage = () => {
                     <Badge type="billId" value={row.id}></Badge>
                 </a>
             ),
-        },
-        {
-            id: "title",
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Bill>({
+            id: "shortTitle",
             name: "Title",
-            selector: (row: Bill) => row.shortTitle,
+            selector: (row) => row.shortTitle,
             sortable: true,
             grow: 1,
             minWidth: "170px",
             maxWidth: "250px",
             wrap: true,
-        },
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Bill>({
             id: "generalProvisions",
             name: "General Provisions",
-            selector: (row: Bill) => row.generalProvisions,
+            selector: (row) => row.generalProvisions,
             sortable: true,
             grow: 2,
             minWidth: "250px",
             wrap: true,
-        },
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Bill>({
             id: "highlightedProvisions",
             name: "Highlighted Provisions",
-            selector: (row: Bill) => row.highlightedProvisions,
+            selector: (row) => row.highlightedProvisions,
             sortable: true,
             grow: 2,
             minWidth: "350px",
             wrap: true,
-            cell: (row: Bill) => (
-                <CollapsibleCell text={row.highlightedProvisions} />
-            ),
-        },
-        {
+            cell: (row) => <CollapsibleCell text={row.highlightedProvisions} />,
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Bill>({
+            id: "passed",
             name: "Passed",
-            selector: (row: Bill) => row.passed,
+            selector: (row) => row.passed,
             sortable: true,
             width: "150px",
-            cell: (row: Bill) => <Badge type="passed" value={row.passed} />,
-        },
-        {
+            cell: (row) => <Badge type="passed" value={row.passed} />,
+            filterConfig: {
+                type: FilterType.Select,
+                options: ["Passed", "Failed"],
+            },
+        }),
+        createDataTableColumn<Bill>({
             id: "lastAction",
             name: "Last Action",
-            selector: (row: Bill) => row.lastAction,
+            selector: (row) => `${row.lastAction} ${row.lastActionDate}`,
             sortable: true,
             width: "150px",
             wrap: true,
-            cell: (row: Bill) => (
+            cell: (row) => (
                 <div className={style.bills__lastActionCell}>
                     <div>{row.lastAction}</div>
                     <div>{row.lastActionDate}</div>
                 </div>
             ),
-        },
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Bill>({
             id: "year",
             name: "Year",
-            selector: (row: Bill) => row.year,
+            selector: (row) => row.year,
             sortable: true,
             width: "100px",
-        },
-        {
+            filterConfig: {
+                type: FilterType.Number,
+            },
+        }),
+        createDataTableColumn<Bill>({
             id: "sessionId",
             name: "Session Id",
-            selector: (row: Bill) => row.sessionId,
+            selector: (row) => row.sessionId,
             sortable: true,
             width: "130px",
-        },
-        {
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Bill>({
             id: "subjects",
             name: "Subjects",
             selector: (row: Bill) => row.subjects,
@@ -120,14 +144,17 @@ const BillsPage = () => {
             minWidth: "200px",
             wrap: true,
             cell: (row: Bill) => <CollapsibleCell items={row.subjects} />,
-        },
-        {
-            id: "officialLinks",
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Bill>({
+            id: "houseVoteUrl",
             name: "Official Links",
-            selector: (row: Bill) => row.houseVoteUrl,
+            selector: (row) => row.houseVoteUrl,
             sortable: false,
             width: "150px",
-            cell: (row: Bill) => (
+            cell: (row) => (
                 <div className={style.bills__lastActionCell}>
                     <div>
                         <a
@@ -164,55 +191,7 @@ const BillsPage = () => {
                     </div>
                 </div>
             ),
-        },
-    ];
-
-    const filters = [
-        {
-            key: "id",
-            label: "Bill Id",
-            type: "text",
-        },
-        {
-            key: "shortTitle",
-            label: "Title",
-            type: "text",
-        },
-        {
-            key: "generalProvisions",
-            label: "General Provisions",
-            type: "text",
-        },
-        {
-            key: "highlightedProvisions",
-            label: "Highlighted Provisions",
-            type: "text",
-        },
-        {
-            key: "lastAction",
-            label: "Last Action",
-            type: "text",
-        },
-        {
-            key: "lastActionDate",
-            label: "Last Action Date",
-            type: "text", // could upgrade to date later
-        },
-        {
-            key: "year",
-            label: "Year",
-            type: "number", // 🔥 numeric filter enabled
-        },
-        {
-            key: "sessionId",
-            label: "Session Id",
-            type: "text",
-        },
-        {
-            key: "subjects",
-            label: "Subjects",
-            type: "text",
-        },
+        }),
     ];
 
     return (
@@ -223,7 +202,6 @@ const BillsPage = () => {
             <GeneralTable
                 columns={columns}
                 data={bills}
-                filters={filters}
                 defaultSortId="id"
             ></GeneralTable>
         </div>

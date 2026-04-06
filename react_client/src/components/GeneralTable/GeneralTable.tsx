@@ -1,25 +1,32 @@
 import { useState } from "react";
 import DataTable from "react-data-table-component";
-import type { ActiveFilter } from "../FilterPanel/FilterPanel";
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
+import type { ActiveFilter } from "../../models/DataTableUtils";
 
 import style from "./GeneralTable.module.css";
 
 type GeneralTableProps<T> = {
     data: T[];
     columns: any[];
-    filters: any[];
     defaultSortId: string;
 };
 
 export default function GeneralTable<T>({
     data,
     columns,
-    filters,
     defaultSortId,
 }: GeneralTableProps<T>) {
     const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
     const [filterText, setFilterText] = useState("");
+
+    const filters = columns
+        .filter((col) => col.filterConfig)
+        .map((col) => ({
+            key: col.id,
+            label: col.name,
+            type: col.filterConfig!.type,
+            options: col.filterConfig!.options!,
+        }));
 
     function matchesSearch(obj: any, search: string): boolean {
         if (!obj) return false;
@@ -55,11 +62,14 @@ export default function GeneralTable<T>({
             activeFilters.every((filter) => {
                 if (!filter.key || !filter.value) return true;
 
-                const rawValue = getValue(row, filter.key);
+                const column = columns.find((c) => c.id === filter.key);
+                if (!column) return true;
+
+                const value = column.selector(row);
 
                 //number filter
-                if (filter.operator && !isNaN(Number(rawValue))) {
-                    const rowVal = Number(rawValue);
+                if (filter.operator && !isNaN(Number(value))) {
+                    const rowVal = Number(value);
                     const filterVal = Number(filter.value);
 
                     switch (filter.operator) {
@@ -76,8 +86,8 @@ export default function GeneralTable<T>({
                     }
                 }
 
-                //test
-                return String(rawValue ?? "")
+                //string filter
+                return String(value ?? "")
                     .toLowerCase()
                     .includes(filter.value.toLowerCase());
             }),
