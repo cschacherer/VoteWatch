@@ -140,22 +140,50 @@ export default function GeneralTable<T>({
         },
     };
 
+    function formatLabel(key: string) {
+        return key.charAt(0).toUpperCase() + key.slice(1);
+    }
+
     return (
         <div className={style.generalTable__container}>
             <div className={style.generalTable__subHeader}>
-                <input
-                    type="text"
-                    placeholder="Search..."
-                    value={filterText}
-                    onChange={(e) => setFilterText(e.target.value)}
-                    style={{ flex: 1 }}
-                />
+                <div className="horizontalRowGap">
+                    <input
+                        type="text"
+                        placeholder="Search..."
+                        value={filterText}
+                        onChange={(e) => setFilterText(e.target.value)}
+                        style={{ flex: 1 }}
+                    />
+                    <button>Clear</button>
+                </div>
 
-                <FilterPanel
-                    filters={filters}
-                    activeFilters={activeFilters}
-                    onApplyFilters={setActiveFilters}
-                />
+                <div className="horizontalRowGap">
+                    <FilterPanel
+                        filters={filters}
+                        activeFilters={activeFilters}
+                        onApplyFilters={setActiveFilters}
+                    />
+                    {activeFilters.length > 0 && (
+                        <div
+                            className={`horizontalRowGap ${style.generalTable__activeFilterText}`}
+                        >
+                            <span className="bold">Active Filters:</span>{" "}
+                            <div className="horizontalRowGap">
+                                {activeFilters.map((f) => (
+                                    <div>
+                                        <span
+                                            key={f.key}
+                                            className={style.filterChip}
+                                        >
+                                            {formatLabel(f.key)}: {f.value}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
             <div className={style.generalTable__tableWrapper}>
                 <DataTable

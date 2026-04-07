@@ -13,8 +13,7 @@
 }
 
 .pageTitle {
-    font-weight: 600;
-    font-size: var(--font-size-title); 
+    font-size: var(--font-size-page-title); 
     font-weight: var(--font-weight-bold); 
 }
 

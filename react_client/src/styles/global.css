@@ -9,25 +9,23 @@
     /* --color-datatable-header-bg: #525252; */
     --color-datatable-header-bg: #525252;
     --color-datatable-header-font: white;
-    --color-datatable-outline: gray; 
+    --color-datatable-outline: gray;
 
 
-    --padding-datatable-header: 16px; 
-    --font-size-datatable-header: 16px; 
-    
-    --font-size-default: 14px; 
+    --padding-datatable-header: 16px;
+    --font-size-datatable-header: 16px;
 
-    --padding-default: 16px; 
-    --padding-sm: 10px; 
-    --padding-medium: 20px; 
-    --padding-large: 30px; 
+    --font-size-default: 14px;
 
-    --pading-datatable-cell: 16px; 
+    --padding-default: 16px;
+    --padding-sm: 10px;
+    --padding-medium: 20px;
+    --padding-large: 30px;
+
+    --pading-datatable-cell: 16px;
 
 
-}
-
-:root {
+}:root {
     /* === COLORS === */
     --color-bg: #ffffff;
     --color-text: #111827;
@@ -58,7 +56,8 @@
     --font-size-sm: 14px;
     --font-size-md: 16px;
     --font-size-lg: 20px;
-    --font-size-title: 25px; 
+    --font-size-title: 28px; 
+    --font-size-page-title: 32px;
 
     /* === FONT WEIGHTS === */
     --font-weight-bold: 600; 
@@ -66,3 +65,7 @@
     /* === BORDER RADIUS === */
     --border-radius-profile-img: 10%;
 }
+
+.bold {
+    font-weight: 600; 
+} 
