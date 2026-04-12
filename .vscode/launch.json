@@ -6,7 +6,8 @@
             "type": "node",
             "request": "launch",
             "runtimeExecutable": "nodemon",
-            "program": "${workspaceFolder}/server/server.js",
+            // "program": "${workspaceFolder}/server/server.js",
+            "program": "${workspaceFolder}/server/database/fillDatabase.js",
             "cwd": "${workspaceFolder}/server",
             "restart": true,
             "console": "integratedTerminal",
@@ -24,7 +25,7 @@
             "request": "launch",
             "url": "http://localhost:5173",
             "webRoot": "${workspaceFolder}/react_client",
-        }
+        },
     ],
     "compounds": [
         {

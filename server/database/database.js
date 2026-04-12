@@ -16,9 +16,9 @@ class Database {
     }
 
     //external methods
-    async createNewDatabase(name) {
+    async createNewDatabase() {
         try {
-            this._dbName = name;
+            // this._dbName = name;
             if (fs.existsSync(this._dbName)) {
                 fs.unlinkSync(this._dbName);
             }
@@ -56,24 +56,40 @@ class Database {
 
     async addToBills(bill) {
         try {
-            const sqlCommand = `INSERT INTO bills (
-                id, shortTitle, generalProvisions, highlightedProvisions, lastAction,
-                lastActionDate, year, sessionId, link, subjects, houseVoteUrl, senateVoteUrl
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+            const sqlCommand = `INSERT OR IGNORE INTO bills (
+                id, 
+                short_title, 
+                general_provisions,
+                highlighted_provisions,
+                year, 
+                session_id, 
+                last_action,
+                last_action_date, 
+                subjects, 
+                bill_sponsor, 
+                floor_sponsor,
+                tracking_id,
+                house_vote_url, 
+                senate_vote_url,
+                link
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
             const values = [
                 bill.id,
                 bill.shortTitle,
                 bill.generalProvisions,
                 bill.highlightedProvisions,
-                bill.lastAction,
-                bill.lastActionDate,
                 bill.year,
                 bill.sessionId,
-                bill.link,
+                bill.lastAction,
+                bill.lastActionDate,
                 bill.subjects,
+                bill.billSponsor,
+                bill.floorSponsor,
+                bill.trackingId,
                 bill.houseVoteUrl,
                 bill.senateVoteUrl,
+                bill.link,
             ];
 
             const result = await this._execute(sqlCommand, values);
@@ -86,10 +102,10 @@ class Database {
 
     async addToLegislators(legislator) {
         try {
-            const sqlCommand = `INSERT INTO legislators (
-                id, fullName, formatName, image, house,
-                party, district, counties, email, cell,
-                serviceStart, link
+            const sqlCommand = `INSERT OR IGNORE INTO legislators (
+                id, full_name, format_name, image, house,
+                party, district, counties, email, phone,
+                service_start, link
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
             const values = [
@@ -117,16 +133,14 @@ class Database {
 
     async addToVotes(vote) {
         try {
-            const insertSql = `INSERT INTO votes (
-                billId, legislatorId, legislatorName, vote, year, house
-              )  VALUES (?, ?, ?, ?, ?, ?)`;
+            const insertSql = `INSERT OR IGNORE INTO votes (
+                session_id, bill_id, legislator_id, vote
+              )  VALUES (?, ?, ?, ?)`;
             const values = [
+                vote.sessionId,
                 vote.billId,
                 vote.legislatorId,
-                vote.legislatorName,
                 vote.vote,
-                vote.year,
-                vote.house,
             ];
 
             return await this._execute(insertSql, values);
@@ -137,9 +151,9 @@ class Database {
         }
     }
 
-    async getAllBills(year = 2025) {
-        const sqlCommand = `SELECT * FROM bills WHERE year = ?`;
-        const values = [year];
+    async getAllBills(sessionId) {
+        const sqlCommand = `SELECT * FROM bills WHERE session_id = ?`;
+        const values = [sessionId];
         return await this._getAllRows(sqlCommand, values);
     }
 
@@ -148,9 +162,9 @@ class Database {
         return await this._getAllRows(sqlCommand);
     }
 
-    async getBill(id, year = 2025) {
-        const sqlCommand = `SELECT * FROM bills WHERE (id = ? AND year = ?)`;
-        const values = [id, year];
+    async getBill(id, sessionId) {
+        const sqlCommand = `SELECT * FROM bills WHERE (id = ? AND session_id = ?)`;
+        const values = [id, sessionId];
         return await this._getFirstRow(sqlCommand, values);
     }
 
@@ -160,54 +174,55 @@ class Database {
         return await this._getFirstRow(sqlCommand, values);
     }
 
-    async getAllVotesOnBill(billId, year) {
-        const sqlCommand = `SELECT * FROM votes WHERE (billId = ? AND year = ?)`;
-        const values = [billId, year];
+    async getAllVotesOnBill(billId, sessionId) {
+        const sqlCommand = `SELECT * FROM votes WHERE (bill_id = ? AND session_id = ?)`;
+        const values = [billId, sessionId];
         return await this._getAllRows(sqlCommand, values);
     }
 
-    async getAllHouseVotesOnBill(billId, year) {
-        const sqlCommand = `SELECT * FROM votes WHERE (billId = ? AND year = ? AND house = ?)`;
-        const values = [billId, year, "H"];
-        return await this._getAllRows(sqlCommand, values);
-    }
+    // async getAllHouseVotesOnBill(billId, sessionId) {
+    //     const sqlCommand = `SELECT * FROM votes WHERE (billId = ? AND sessionId = ? AND house = ?)`;
+    //     const values = [billId, sessionId, "H"];
+    //     return await this._getAllRows(sqlCommand, values);
+    // }
 
-    async getAllSenateVotesOnBill(billId, year) {
-        const sqlCommand = `SELECT * FROM votes WHERE (billId = ? AND year = ? AND house = ?)`;
-        const values = [billId, year, "S"];
-        return await this._getAllRows(sqlCommand, values);
-    }
+    // async getAllSenateVotesOnBill(billId, sessionId) {
+    //     const sqlCommand = `SELECT * FROM votes WHERE (billId = ? AND sessionId = ? AND house = ?)`;
+    //     const values = [billId, sessionId, "S"];
+    //     return await this._getAllRows(sqlCommand, values);
+    // }
 
-    async getVotesForAllBills(year) {
-        const allBillsForYear = await this.getAllBills(year);
+    async getVotesForAllBills(sessionId) {
+        const allBillsForSessionId = await this.getAllBills(sessionId);
 
-        const joinCommand = `SELECT * FROM bills JOIN votes ON bills.id = votes.billId AND bills.year = votes.year AND (bills.year = ?)`;
-        const values = [year];
+        const joinCommand = `SELECT * FROM bills JOIN votes ON bills.id = votes.bill_id AND bills.session_id = votes.session_id AND (bills.session_id = ?)`;
+        const values = [sessionId];
 
         return await this._getAllRows(joinCommand, values);
     }
 
     async getAllBillsAndVotesForLegislator(legislatorId) {
         const joinCommand = `SELECT 
-                                votes.legislatorId,
-                                votes.legislatorName,
-                                votes.billId, 
-                                votes.house,
-                                votes.year,
+                                votes.legislator_id,
+                                votes.bill_id, 
+                                votes.session_id,
                                 votes.vote, 
-                                bills.generalProvisions, 
-                                bills.highlightedProvisions, 
-                                bills.lastAction, 
-                                bills.lastActionDate, 
-                                bills.sessionId, 
-                                bills.shortTitle, 
+                                bills.short_title,
+                                bills.general_provisions, 
+                                bills.highlighted_provisions, 
+                                bill.year,
+                                bills.passed,
+                                bills.date_passed,
+                                bills.effective_date, 
+                                bills.last_action,
+                                bills.last_action_date, 
                                 bills.subjects,
                                 bills.link
                             FROM legislators 
                             INNER JOIN votes 
-                                ON votes.legislatorId = legislators.id 
+                                ON votes.legislator_id = legislators.id 
                             INNER JOIN bills 
-                                ON (bills.id = votes.billId AND bills.year = votes.year)
+                                ON (bills.id = votes.bill_id AND bills.session_id = votes.session_id)
                             WHERE legislators.id = ?`;
 
         const values = [legislatorId];
@@ -270,46 +285,50 @@ class Database {
 
     async _createTables() {
         try {
-            const createBillsTable = await this
-                ._execute(`CREATE TABLE IF NOT EXISTS bills (
-                                        id TEXT PRIMARY KEY, 
-                                        shortTitle TEXT, 
-                                        generalProvisions TEXT, 
-                                        highlightedProvisions TEXT, 
-                                        lastAction TEXT,
-                                        lastActionDate TEXT, 
-                                        year TEXT, 
-                                        sessionId TEXT, 
-                                        subjects TEXT, 
-                                        houseVoteUrl TEXT, 
-                                        senateVoteURL TEXT,  
-                                        link TEXT)`);
-
             const createLegislatorsTable = await this
                 ._execute(`CREATE TABLE IF NOT EXISTS legislators (
                                             id TEXT PRIMARY KEY, 
-                                            fullName TEXT NOT NULL, 
-                                            formatName TEXT NOT NULL, 
+                                            full_name TEXT NOT NULL, 
+                                            format_name TEXT NOT NULL, 
                                             image TEXT, 
                                             house TEXT, 
                                             party TEXT, 
                                             district INTEGER, 
                                             counties TEXT, 
                                             email TEXT, 
-                                            cell TEXT, 
-                                            serviceStart TEXT, 
+                                            phone TEXT, 
+                                            service_start TEXT, 
                                             link TEXT)`);
+
+            const createBillsTable = await this
+                ._execute(`CREATE TABLE IF NOT EXISTS bills (
+                                        id TEXT, 
+                                        short_title TEXT, 
+                                        general_provisions TEXT, 
+                                        highlighted_provisions TEXT, 
+                                        year TEXT, 
+                                        session_id TEXT, 
+                                        passed BOOLEAN,
+                                        date_passed DATE,
+                                        effective_date DATE,
+                                        last_action TEXT,
+                                        last_action_date DATE, 
+                                        subjects TEXT, 
+                                        bill_sponsor TEXT, 
+                                        floor_sponsor TEXT,
+                                        tracking_id TEXT,
+                                        house_vote_url TEXT, 
+                                        senate_vote_url TEXT,  
+                                        link TEXT,
+                                        PRIMARY KEY(id, session_id))`);
 
             const createVotesTable = await this
                 ._execute(`CREATE TABLE IF NOT EXISTS votes (
-                                                    voteId TEXT PRIMARY KEY,
-                                                    billId TEXT NOT NULL, 
-                                                    legislatorId TEXT NOT NULL, 
-                                                    legislatorName TEXT NOT NULL,
+                                                    session_id TEXT,
+                                                    bill_id TEXT, 
+                                                    legislator_id TEXT, 
                                                     vote TEXT NOT NULL,
-                                                    year INTEGER,
-                                                    house TEXT,
-                                                    FOREIGN KEY(billId) REFERENCES bills(id))`);
+                                                    PRIMARY KEY(session_id, bill_id, legislator_id))`);
         } catch (err) {
             console.log(`Error creating tables: ${err.stack}`);
         }

@@ -1,12 +1,25 @@
 import * as cheerio from "cheerio";
 import { VoteValue } from "../classes/vote.js";
+import https from "https";
+import { Agent } from "undici";
 
-const scrapeBillVote = async (sessionId, billId, voteUrl) => {
+const dispatcher = new Agent({
+    connect: {
+        rejectUnauthorized: false,
+    },
+});
+
+export const scrapeBillVote = async (sessionId, billId, voteUrl) => {
     try {
         if (!voteUrl) {
             return [];
         }
-        const response = await fetch(voteUrl, { method: "GET" });
+
+        const response = await fetch(voteUrl, { method: "GET", dispatcher });
+        if (!response.ok) {
+            console.log(`error with fetch: ${sessionId} ${billId} ${voteUrl}`);
+            return;
+        }
         const htmlData = await response.text();
         const $ = cheerio.load(htmlData);
 
@@ -124,15 +137,36 @@ const getIds = async (arr) => {
                 const baseUrl = "https://le.utah.gov";
                 try {
                     const newUrl = baseUrl + vote.link;
-                    const response = await fetch(newUrl, { method: "GET" });
-                    const idUrl = response.url;
-                    const id = idUrl
-                        ?.split("/")
-                        ?.filter(
-                            (item) => item !== "" && item !== "le.utah.gov",
-                        )
-                        ?.pop();
-                    return id;
+                    const response = await fetch(newUrl, {
+                        dispatcher,
+                        redirect: "manual",
+                    });
+
+                    let finalUrl = response.headers.get("location");
+
+                    if (!finalUrl) {
+                        const html = await response.text();
+
+                        // look for redirect in HTML
+                        const match = html.match(/url=([^"']+)/i);
+                        if (match) {
+                            finalUrl = match[1];
+                        }
+                    }
+
+                    return finalUrl;
+                    // const response = await fetch(newUrl, {
+                    //     method: "GET",
+                    //     dispatcher,
+                    // });
+                    // const idUrl = response.url;
+                    // const id = idUrl
+                    //     ?.split("/")
+                    //     ?.filter(
+                    //         (item) => item !== "" && item !== "le.utah.gov",
+                    //     )
+                    //     ?.pop();
+                    // return id;
                 } catch (err) {
                     //we do not allow for null values in the legislator id column in the database, so
                     //use a -1 value instead
@@ -148,5 +182,3 @@ const getIds = async (arr) => {
         return [];
     }
 };
-
-export { scrapeBillVote };
