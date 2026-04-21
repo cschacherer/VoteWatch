@@ -29,6 +29,7 @@
     /* === COLORS === */
     --color-bg: #ffffff;
     --color-text: #111827;
+    --color-link: #2563eb;
 
     --color-sub-header-bg: #525252; 
 
@@ -66,6 +67,101 @@
     --border-radius-profile-img: 10%;
 }
 
+
+/* TYPOGRAPHY */
+.pageTitle {
+    font-size: var(--font-size-page-title);
+    font-weight: var(--font-weight-bold);
+}
+
+.subHeader {
+    font-size: 25px;
+}
+
 .bold {
-    font-weight: 600; 
-} 
+    font-weight: 600;
+}
+
+.pre-wrap {
+    white-space: pre-wrap;
+}
+
+/* VISUALS */
+.section {
+    background: var(--color-bg);
+    border-radius: var(--radius-md);
+}
+
+.outline {
+    border: 1px solid black;
+}
+
+.filledHeader {
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-title);
+    background-color: var(--color-filled-header-bg);
+    color: var(--color-filled-header-text);
+    padding: var(--space-3);
+}
+
+.link {
+    color: var(--color-link);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.showMore {
+    color: var(--color-link);
+    cursor: pointer;
+}
+
+.subjectBadgeList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+/* SPACING */
+.smallGap {
+    gap: var(--space-2);
+}
+
+.defaultGap {
+    gap: var(--space-3);
+}
+
+.largeGap {
+    gap: var(--space-4);
+}
+
+.smallPadding {
+    padding: var(--space-2)
+}
+
+.defaultPadding {
+    padding: var(--space-4);
+}
+
+/* BUTTONS */
+.defaultButton {
+    box-sizing: border-box; 
+}
+
+
+
+.alignStart {
+    align-self: start; 
+}
+
+/* VALUE INPUT */
+.widthLong {
+    width: 400px; 
+}
+
+.flexFillSpace {
+    flex: 1; 
+}
+
+.width100 {
+    width: 100%; 
+}

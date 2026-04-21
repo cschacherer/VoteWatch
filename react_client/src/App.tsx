@@ -18,7 +18,10 @@ function App() {
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/bills" element={<BillsPage />} />
                 <Route path="/legislators" element={<LegislatorsPage />} />
-                <Route path="/bills/:billId" element={<BillDetailsPage />} />
+                <Route
+                    path="/bills/:sessionId/:billId"
+                    element={<BillDetailsPage />}
+                />
                 <Route
                     path="/legislators/:legislatorId"
                     element={<LegislatorDetailsPage />}

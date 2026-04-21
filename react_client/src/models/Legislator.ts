@@ -8,7 +8,7 @@ export type Legislator = {
     district: number;
     counties: string;
     email: string;
-    cell: string;
+    phone: string;
     serviceStart: string;
     link: string;
 };
@@ -20,16 +20,16 @@ export const createLegislator = (raw: any): Legislator => {
 
     return {
         id: String(raw.id ?? ""),
-        fullName: String(raw.fullName ?? ""),
-        formatName: String(raw.formatName ?? ""),
+        fullName: String(raw.full_name ?? ""),
+        formatName: String(raw.format_name ?? ""),
         image: String(raw.image ?? ""),
         house: normalizeHouse(raw.house),
         party: normalizeParty(raw.party),
         district: Number(raw.district ?? 0),
         counties: String(raw.counties ?? ""),
         email: String(raw.email ?? ""),
-        cell: String(raw.cell ?? ""),
-        serviceStart: String(raw.serviceStart ?? ""),
+        phone: String(raw.phone ?? ""),
+        serviceStart: String(raw.service_start ?? ""),
         link: String(raw.link ?? ""),
     };
 };

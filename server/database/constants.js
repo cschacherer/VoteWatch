@@ -1,5 +1,5 @@
 export const SESSION_LIST = [
-    "2026GS",
+    //"2026GS",
     "2025S2",
     // "2025S1",
     // "2025GS",

@@ -28,6 +28,20 @@ const currentFillBillsTable = async () => {
         try {
             const sessionBillObjects = await getBillData(session);
             await writeBillsToDb(sessionBillObjects);
+            console.log("finished session id: " + session);
+        } catch (e) {
+            console.log("error - ", e.message);
+        }
+    }
+};
+
+const currentFillVotesTable = async () => {
+    db = new Database();
+
+    await db.openDatabase();
+    for (const session of SESSION_LIST) {
+        try {
+            const sessionBillObjects = await getBillData(session);
             await writeVotesToDb(sessionBillObjects);
             console.log("finished session id: " + session);
         } catch (e) {
@@ -76,19 +90,13 @@ const getBillData = async (sessionId) => {
             const billToAdd = new Bill(billInfo);
 
             let passedBillData = passedBills?.find(
-                (bill) => bill.number == billId,
+                (bill) => String(bill.number) == String(billId),
             );
             if (passedBillData) {
                 billToAdd.setPassed(passedBillData);
             } else {
-                let x = 0;
+                billToAdd.passed = false;
             }
-            // if (passedBillIds.contains(billId)) {
-            //     let billData = passedBills.find(
-            //         (bill) => bill.number == billId,
-            //     );
-            //     billToAdd.addPassedData(billData);
-            // }
             return billToAdd;
         }),
     );
@@ -123,7 +131,7 @@ const writeVotesToDb = async (allBills) => {
                         currentBill.houseVoteUrl,
                     );
                     const addHouseVotesToDb = await Promise.all(
-                        allHouseVotes.map((x) => db.addToVotes(x)),
+                        allHouseVotes?.map((x) => db.addToVotes(x)),
                     );
                 }
                 if (currentBill.senateVoteUrl) {
@@ -133,7 +141,7 @@ const writeVotesToDb = async (allBills) => {
                         currentBill.senateVoteUrl,
                     );
                     const addSenateVotesToDb = await Promise.all(
-                        allSenateVotes.map((x) => db.addToVotes(x)),
+                        allSenateVotes?.map((x) => db.addToVotes(x)),
                     );
                 }
             } catch (err) {
@@ -152,4 +160,5 @@ const writeVotesToDb = async (allBills) => {
 
 //await createNewEmptyDatabase();
 //await currentFillLegislatorsTable();
-await currentFillBillsTable();
+//await currentFillBillsTable();
+await currentFillVotesTable();

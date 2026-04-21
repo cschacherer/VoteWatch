@@ -269,7 +269,7 @@ const LegislatorDetailsPage = () => {
                                 ></PropertyGroup>
                                 <PropertyGroup
                                     title="Phone"
-                                    value={legislatorDetails?.cell}
+                                    value={legislatorDetails?.phone}
                                 ></PropertyGroup>
                             </Col>
                             <Col>

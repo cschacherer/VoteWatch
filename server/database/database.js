@@ -63,6 +63,9 @@ class Database {
                 highlighted_provisions,
                 year, 
                 session_id, 
+                passed, 
+                date_passed, 
+                effective_date,
                 last_action,
                 last_action_date, 
                 subjects, 
@@ -72,7 +75,7 @@ class Database {
                 house_vote_url, 
                 senate_vote_url,
                 link
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
             const values = [
                 bill.id,
@@ -81,6 +84,9 @@ class Database {
                 bill.highlightedProvisions,
                 bill.year,
                 bill.sessionId,
+                bill.passed,
+                bill.datePassed,
+                bill.effectiveDate,
                 bill.lastAction,
                 bill.lastActionDate,
                 bill.subjects,
@@ -151,7 +157,12 @@ class Database {
         }
     }
 
-    async getAllBills(sessionId) {
+    async getAllBills() {
+        const sqlCommand = `SELECT * FROM bills`;
+        return await this._getAllRows(sqlCommand);
+    }
+
+    async getAllBillsForSession(sessionId) {
         const sqlCommand = `SELECT * FROM bills WHERE session_id = ?`;
         const values = [sessionId];
         return await this._getAllRows(sqlCommand, values);
@@ -193,7 +204,8 @@ class Database {
     // }
 
     async getVotesForAllBills(sessionId) {
-        const allBillsForSessionId = await this.getAllBills(sessionId);
+        const allBillsForSessionId =
+            await this.getAllBillsForSession(sessionId);
 
         const joinCommand = `SELECT * FROM bills JOIN votes ON bills.id = votes.bill_id AND bills.session_id = votes.session_id AND (bills.session_id = ?)`;
         const values = [sessionId];

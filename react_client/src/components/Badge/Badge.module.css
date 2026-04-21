@@ -34,12 +34,7 @@
     color: #374151;
 }
 
-.badge__subjects {
-    color: black;
-    border: 1px solid black;
-}
-
-.badge__billId {
+.badge__basic {
     color: black;
     border: 1px solid black;
 }

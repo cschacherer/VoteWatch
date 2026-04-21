@@ -144,17 +144,29 @@ const getIds = async (arr) => {
 
                     let finalUrl = response.headers.get("location");
 
-                    if (!finalUrl) {
-                        const html = await response.text();
+                    const urlObj = new URL(finalUrl, baseUrl);
+                    const lastSegment = urlObj.pathname
+                        .split("/")
+                        .filter(Boolean)
+                        .pop();
 
-                        // look for redirect in HTML
-                        const match = html.match(/url=([^"']+)/i);
-                        if (match) {
-                            finalUrl = match[1];
-                        }
+                    if (lastSegment == "" || lastSegment == null) {
+                        x = 0;
                     }
 
-                    return finalUrl;
+                    return lastSegment;
+
+                    // if (finalUrl) {
+                    //     const html = await response.text();
+
+                    //     // look for redirect in HTML
+                    //     const match = html.match(/url=([^"']+)/i);
+                    //     if (match) {
+                    //         finalUrl = match[1];
+                    //     }
+                    // }
+
+                    //return finalUrl;
                     // const response = await fetch(newUrl, {
                     //     method: "GET",
                     //     dispatcher,

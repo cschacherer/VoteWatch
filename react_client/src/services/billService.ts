@@ -16,9 +16,11 @@ export const getAllBills = async () => {
     }
 };
 
-export const getBillDetails = async (id: string) => {
+export const getBillDetails = async (sessionId: string, id: string) => {
     try {
-        const response = await apiClient.get(endpointsAPI.billDetails(id));
+        const response = await apiClient.get(
+            endpointsAPI.billDetails(sessionId, id),
+        );
         const bill = createBill(response.data);
         return bill;
     } catch (error) {
@@ -28,9 +30,11 @@ export const getBillDetails = async (id: string) => {
     }
 };
 
-export const getBillVotes = async (id: string, year: string) => {
+export const getBillVotes = async (sessionId: string, id: string) => {
     try {
-        const response = await apiClient.get(endpointsAPI.billVotes(id, year));
+        const response = await apiClient.get(
+            endpointsAPI.billVotes(sessionId, id),
+        );
         const voteArray = response.data.map(createVote);
         return voteArray;
     } catch (error) {

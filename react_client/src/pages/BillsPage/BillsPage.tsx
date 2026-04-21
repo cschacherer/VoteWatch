@@ -5,19 +5,33 @@ import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import Badge from "../../components/Badge/Badge";
 import { BadgeType } from "../../components/Badge/Badge";
-import { Container, Col, Row } from "react-bootstrap";
 import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
-
-import style from "./BillsPage.module.css";
 
 //set all column tables here
 // 🔥 Column factory
 function createBillColumns({
     filterBadgeClick,
 }: {
-    filterBadgeClick: (key: string, value: string) => void;
+    filterBadgeClick: (key: string, value: any) => void;
 }) {
     return [
+        createDataTableColumn<Bill>({
+            id: "year",
+            name: "Year",
+            selector: (row) => row.year,
+            sortable: true,
+            width: "100px",
+            cell: (row) => (
+                <Badge
+                    type="year"
+                    value={row.year}
+                    onClick={(value) => filterBadgeClick("year", value)}
+                ></Badge>
+            ),
+            filterConfig: {
+                type: FilterType.Number,
+            },
+        }),
         createDataTableColumn<Bill>({
             id: "id",
             name: "Bill Id",
@@ -25,7 +39,7 @@ function createBillColumns({
             width: "120px",
             cell: (row) => (
                 <a
-                    href={`/bills/${row.id}`}
+                    href={`/bills/${row.sessionId}/${row.id}`}
                     style={{ color: "#2563eb", textDecoration: "none" }}
                 >
                     <Badge type="billId" value={row.id}></Badge>
@@ -100,26 +114,20 @@ function createBillColumns({
             sortable: true,
             width: "150px",
             wrap: true,
-            cell: (row) => (
-                <div className={style.bills__lastActionCell}>
+            cell: (row) =>
+                row?.lastActionDate != "" ? (
+                    <div className="verticalStack smallGap">
+                        <div>{row.lastAction}</div>
+                        <div>{row.lastActionDate}</div>
+                    </div>
+                ) : (
                     <div>{row.lastAction}</div>
-                    <div>{row.lastActionDate}</div>
-                </div>
-            ),
+                ),
             filterConfig: {
                 type: FilterType.Text,
             },
         }),
-        createDataTableColumn<Bill>({
-            id: "year",
-            name: "Year",
-            selector: (row) => row.year,
-            sortable: true,
-            width: "100px",
-            filterConfig: {
-                type: FilterType.Number,
-            },
-        }),
+
         createDataTableColumn<Bill>({
             id: "sessionId",
             name: "Session Id",
@@ -157,37 +165,19 @@ function createBillColumns({
             sortable: false,
             width: "150px",
             cell: (row) => (
-                <div className={style.bills__lastActionCell}>
+                <div className="verticalStack defaultGap">
                     <div>
-                        <a
-                            href={row.houseVoteUrl}
-                            style={{
-                                color: "#2563eb",
-                                textDecoration: "underline",
-                            }}
-                        >
+                        <a className="link" href={row.houseVoteUrl}>
                             House Vote
                         </a>
                     </div>
                     <div>
-                        <a
-                            href={row.senateVoteUrl}
-                            style={{
-                                color: "#2563eb",
-                                textDecoration: "underline",
-                            }}
-                        >
+                        <a className="link" href={row.senateVoteUrl}>
                             Senate Vote
                         </a>
                     </div>
                     <div>
-                        <a
-                            href={row.link}
-                            style={{
-                                color: "#2563eb",
-                                textDecoration: "underline",
-                            }}
-                        >
+                        <a className="link" href={row.link}>
                             Government Bill
                         </a>
                     </div>

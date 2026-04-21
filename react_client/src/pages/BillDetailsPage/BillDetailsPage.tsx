@@ -14,21 +14,20 @@ import style from "./BillDetailsPage.module.css";
 const BillDetailsPage = () => {
     const [billDetails, setBillDetails] = useState<Bill>();
     const [billVotes, setBillVotes] = useState<Vote[]>([]);
-    let { billId } = useParams<string>();
-    if (!billId) {
+    let { sessionId, billId } = useParams<string>();
+    if (!sessionId || !billId) {
+        sessionId = "";
         billId = "";
     }
 
     useEffect(() => {
         const fetchBillDetails = async () => {
             try {
-                const detailsResponse = await getBillDetails(billId);
+                const detailsResponse = await getBillDetails(sessionId, billId);
                 console.log(detailsResponse);
                 setBillDetails(detailsResponse);
 
-                const year = String(detailsResponse.year);
-
-                const votesResponse = await getBillVotes(billId, year);
+                const votesResponse = await getBillVotes(sessionId, billId);
                 console.log(votesResponse);
                 setBillVotes(votesResponse);
             } catch (error) {

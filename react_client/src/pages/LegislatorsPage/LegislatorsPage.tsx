@@ -100,12 +100,12 @@ function createLegislatorColumns({
             },
         }),
         createDataTableColumn<Legislator>({
-            id: "cell",
+            id: "phone",
             name: "Phone",
-            selector: (row: Legislator) => row.cell,
+            selector: (row: Legislator) => row.phone,
             minWidth: "150px",
             cell: (row: Legislator) => (
-                <a href={`tel:+1${row.cell}`}>{row.cell}</a>
+                <a href={`tel:+1${row.phone}`}>{row.phone}</a>
             ),
             filterConfig: {
                 type: FilterType.Text,

@@ -9,19 +9,20 @@ export const BadgeType = {
     Subjects: "subjects",
     Passed: "passed",
     BillId: "billId",
+    Year: "year",
 } as const;
 
 export type BadgeType = (typeof BadgeType)[keyof typeof BadgeType];
 
 type BadgeProps = {
     type: BadgeType;
-    value?: string;
-    onClick?: (value: string) => void;
+    value?: any;
+    onClick?: (value: any) => void;
 };
 const Badge = ({ type, value, onClick }: BadgeProps) => {
     if (!value) return null;
 
-    const v = value.toLowerCase();
+    const v = String(value).toLowerCase();
 
     let valueStyle = `${style.badge__default} `;
     let Icon: React.ElementType | null = null;
@@ -44,17 +45,15 @@ const Badge = ({ type, value, onClick }: BadgeProps) => {
             valueStyle = style.badge__absent;
         }
     } else if (type == BadgeType.Passed) {
-        if (v == "yes") {
+        if (v == "true") {
             valueStyle = style.badge__yes;
             value = "PASSED";
-        } else if (v == "no") {
+        } else if (v == "failed") {
             valueStyle = style.badge__no;
             value = "FAILED";
         }
-    } else if (type == BadgeType.BillId) {
-        valueStyle = style.badge__billId;
-    } else if (type == BadgeType.Subjects) {
-        valueStyle = style.badge__subjects;
+    } else {
+        valueStyle = style.badge__basic;
     }
 
     const className = `${style.badge__default} ${valueStyle}`;

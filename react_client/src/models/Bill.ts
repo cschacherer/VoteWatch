@@ -11,7 +11,12 @@ export type Bill = {
     subjects: string[];
     houseVoteUrl: string;
     senateVoteUrl: string;
-    passed: string;
+    passed: boolean;
+    datePassed: string;
+    effectiveDate: string;
+    billSponsor: string;
+    floorSponsor: string;
+    trackingId: string;
 };
 
 export const normalizeBillText = (text?: string): string => {
@@ -31,24 +36,31 @@ export const createBill = (raw: any): Bill => {
 
     return {
         id: String(raw.id ?? ""),
-        shortTitle: String(raw.shortTitle ?? ""),
+        shortTitle: String(raw.short_title ?? ""),
 
-        generalProvisions: String(raw.generalProvisions ?? ""),
-        highlightedProvisions: normalizeBillText(raw.highlightedProvisions),
-
-        lastAction: String(raw.lastAction ?? ""),
-        lastActionDate: String(raw.lastActionDate ?? ""),
+        generalProvisions: String(raw.general_provisions ?? ""),
+        highlightedProvisions: normalizeBillText(raw.highlighted_provisions),
 
         year: Number(raw.year ?? 0),
-        sessionId: String(raw.sessionId ?? ""),
+        sessionId: String(raw.session_id ?? ""),
 
-        link: String(raw.link ?? ""),
+        passed: Boolean(raw.passed ?? false),
+        datePassed: String(raw.date_passed ?? ""),
+        effectiveDate: String(raw.effective_date ?? ""),
+
+        lastAction: String(raw.last_action ?? ""),
+        lastActionDate: String(raw.lastActionDate ?? ""),
+
         subjects: raw.subjects?.split(",").map((s: string) => s.trim()),
 
-        houseVoteUrl: String(raw.houseVoteUrl ?? ""),
-        senateVoteUrl: String(raw.senateVoteUrl ?? ""),
+        billSponsor: String(raw.bill_sponsor ?? ""),
+        floorSponsor: String(raw.floor_sponsor ?? ""),
+        trackingId: String(raw.tracking_id ?? ""),
 
-        passed: String(raw.passed ?? "yes"),
+        houseVoteUrl: String(raw.house_vote_url ?? ""),
+        senateVoteUrl: String(raw.senate_vote_url ?? ""),
+
+        link: String(raw.link ?? ""),
     };
 };
 
@@ -58,24 +70,31 @@ export const createBillFromVote = (raw: any): Bill => {
     }
 
     return {
-        id: String(raw.billId ?? ""),
-        shortTitle: String(raw.shortTitle ?? ""),
+        id: String(raw.id ?? ""),
+        shortTitle: String(raw.short_title ?? ""),
 
-        generalProvisions: String(raw.generalProvisions ?? ""),
-        highlightedProvisions: normalizeBillText(raw.highlightedProvisions),
-
-        lastAction: String(raw.lastAction ?? ""),
-        lastActionDate: String(raw.lastActionDate ?? ""),
+        generalProvisions: String(raw.general_provisions ?? ""),
+        highlightedProvisions: normalizeBillText(raw.highlighted_provisions),
 
         year: Number(raw.year ?? 0),
-        sessionId: String(raw.sessionId ?? ""),
+        sessionId: String(raw.session_id ?? ""),
 
-        link: String(raw.link ?? ""),
+        passed: Boolean(raw.passed ?? false),
+        datePassed: String(raw.date_passed ?? ""),
+        effectiveDate: String(raw.effective_date ?? ""),
+
+        lastAction: String(raw.last_action ?? ""),
+        lastActionDate: String(raw.lastActionDate ?? ""),
+
         subjects: raw.subjects?.split(",").map((s: string) => s.trim()),
 
-        houseVoteUrl: String(raw.houseVoteUrl ?? ""),
-        senateVoteUrl: String(raw.senateVoteUrl ?? ""),
+        billSponsor: String(raw.bill_sponsor ?? ""),
+        floorSponsor: String(raw.floor_sponsor ?? ""),
+        trackingId: String(raw.tracking_id ?? ""),
 
-        passed: String(raw.passed ?? ""),
+        houseVoteUrl: String(raw.house_vote_url ?? ""),
+        senateVoteUrl: String(raw.senate_vote_url ?? ""),
+
+        link: String(raw.link ?? ""),
     };
 };

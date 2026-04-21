@@ -24,17 +24,6 @@ export default function GeneralTable<T>({
 
     function filterBadgeClick(key: string, value: string) {
         setActiveFilters([{ key, value }]);
-        // setActiveFilters((prev) => {
-        //     const exists = prev.find((f) => f.key === key && f.value === value);
-
-        //     if (exists) {
-        //         return prev.filter(
-        //             (f) => !(f.key === key && f.value === value),
-        //         );
-        //     }
-
-        //     return [...prev, { key, value }];
-        // });
     }
 
     const builtColumns = columns({
@@ -44,7 +33,7 @@ export default function GeneralTable<T>({
     const filters = builtColumns
         .filter((col) => col.filterConfig)
         .map((col) => ({
-            key: col.id,
+            key: col.id + col.sessionId,
             label: col.name,
             type: col.filterConfig!.type,
             options: col.filterConfig!.options!,

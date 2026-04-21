@@ -2,8 +2,6 @@ import { useState } from "react";
 import Badge from "../../components/Badge/Badge";
 import { BadgeType } from "../../components/Badge/Badge";
 
-import style from "./CollapsibleCell.module.css";
-
 type CollapsibleCellProps = {
     text?: string;
     items?: string[];
@@ -23,20 +21,16 @@ const CollapsibleCell = ({
         const previewText = expanded ? text : text.slice(0, limit);
 
         return (
-            <div>
-                <div
-                    style={{
-                        whiteSpace: "pre-wrap",
-                    }}
-                >
+            <div className="verticalStack defaultGap">
+                <div className="preWrap">
                     {previewText}
                     {!expanded && isLong && "..."}
                 </div>
 
                 {isLong && (
-                    <div className={style.collapsibleCell__container}>
+                    <div>
                         <span
-                            className={style.collapsibleCell_showMoreButtonText}
+                            className="showMore"
                             onClick={() => setExpanded((prev) => !prev)}
                         >
                             {expanded ? "Show less" : "Show more"}
@@ -48,19 +42,13 @@ const CollapsibleCell = ({
     }
 
     if (items) {
-        const limit = 5;
+        const limit = 4;
         const isLong = items.length > limit;
         const visibleItems = expanded ? items : items.slice(0, limit);
 
         return (
-            <div>
-                <div
-                    style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: "6px",
-                    }}
-                >
+            <div className="verticalStack defaultGap">
+                <div className="subjectBadgeList">
                     {visibleItems.map((item) => (
                         <Badge
                             type={BadgeType.Subjects}
@@ -71,9 +59,9 @@ const CollapsibleCell = ({
                 </div>
 
                 {isLong && (
-                    <div className={style.collapsibleCell__container}>
+                    <div>
                         <span
-                            className={style.collapsibleCell_showMoreButton}
+                            className="showMore"
                             onClick={() => setExpanded((prev) => !prev)}
                         >
                             {expanded

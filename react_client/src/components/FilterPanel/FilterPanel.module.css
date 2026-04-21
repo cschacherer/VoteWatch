@@ -1,13 +1,13 @@
-.filterPanel__showFiltersButton {
-    padding: 5px;
-    margin: 10px 0px;
-    box-sizing: border-box;
-    width: 200px;
-}
-
 .filterPanel__headerText {
     font-size: 25px;
-    margin-left: 10px;
+    margin-left: var(--space-2);
+}
+
+.filterPanel__showFiltersButton {
+    padding: var(--space-2);
+    margin: var(--space-4) 0px;
+    box-sizing: border-box;
+    width: 200px;
 }
 
 .filterPanel__container {
@@ -32,59 +32,58 @@
     display: flex;
     justify-content: space-between;
     align-content: center;
-    padding: 5px;
+    padding: var(--space-3);
     box-sizing: border-box;
-    /* border: 5px solid purple; */
 }
 
 .filterPanel__columnSelector {
-    padding: 5px;
-    margin: 5px;
+    padding: var(--space-2);
+    margin: var(--space-2);
     box-sizing: border-box;
     width: max-content; 
     min-width: 200px
 }
 
 .filterPanel__valueDropdown {
-    padding: 5px;
-    margin: 5px;
+    padding: var(--space-2);
+    margin: var(--space-2);
     box-sizing: border-box;
     width: 100%;
     background-color: white;
 }
 
 .filterPanel__operatorDropdown {
-    padding: 5px;
-    margin: 5px;
+    padding: var(--space-2);
+    margin: var(--space-2);
     box-sizing: border-box;
     width: max-content;
 }
 
 .filterPanel__valueTextbox {
-    padding: 5px;
-    margin: 5px;
+    padding: var(--space-2);
+    margin: var(--space-2);
     box-sizing: border-box;
     width: 100%
 }
 
 .filterPanel__deleteFilterButton {
-    padding: 5px 10px;
-    margin: 5px;
+    padding: var(--space-2) var(--space-3);
+    margin: var(--space-2);
     box-sizing: border-box;
 
 }
 
 .filterPanel__addFilterButton {
-    padding: 5px;
-    margin: 10px;
+    padding: var(--space-2);
+    margin: 0px var(--space-5);
     box-sizing: border-box;
     width: 20%;
     align-self: start;
 }
 
 .filterPanel__bottomFilterButton {
-    padding: 5px;
-    margin: 5px;
+    padding: var(--space-2);
+    margin: var(--space-4) 0px;
     box-sizing: border-box;
     width: 200px;
 }
