@@ -36,6 +36,13 @@ const NavigationBar = () => {
                     >
                         Legislators
                     </Nav.Link>
+
+                    <Nav.Link
+                        className={style.navigationBar__link}
+                        href="/legislators"
+                    >
+                        Fun With Maps
+                    </Nav.Link>
                 </div>
             </Navbar.Collapse>
         </Navbar>

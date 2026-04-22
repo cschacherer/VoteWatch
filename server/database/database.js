@@ -185,6 +185,12 @@ class Database {
         return await this._getFirstRow(sqlCommand, values);
     }
 
+    async getLegislatorFromDistrict(chamber, district) {
+        const sqlCommand = `SELECT * FROM legislators WHERE house = ? AND district = ?`;
+        const values = [chamber, district];
+        return await this._getFirstRow(sqlCommand, values);
+    }
+
     async getAllVotesOnBill(billId, sessionId) {
         const sqlCommand = `SELECT * FROM votes WHERE (bill_id = ? AND session_id = ?)`;
         const values = [billId, sessionId];

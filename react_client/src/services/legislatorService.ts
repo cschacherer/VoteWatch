@@ -42,3 +42,20 @@ export const getLegislatorVotes = async (id: string) => {
         throw new Error(msg);
     }
 };
+
+export const getLegislatorByDistrict = async (
+    chamber: string,
+    district: string,
+) => {
+    try {
+        const response = await apiClient.get(
+            endpointsAPI.legislatorDistricts(chamber, district),
+        );
+        const legislator = createLegislator(response.data);
+        return legislator;
+    } catch (error) {
+        let msg = getErrorMessage(error);
+        console.log(msg);
+        throw new Error(msg);
+    }
+};

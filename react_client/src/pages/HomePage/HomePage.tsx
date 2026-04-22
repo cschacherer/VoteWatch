@@ -8,7 +8,7 @@ const HomePage = () => {
     const [answer, setAnswer] = useState("");
 
     return (
-        <div className="page">
+        <div className="page pageScroll">
             <div className="pageTitle">Home Page</div>
             <DistrictFinder></DistrictFinder>
         </div>

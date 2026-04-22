@@ -47,4 +47,22 @@ legislatorRouter.get("/:id/votes", async (req, res) => {
     }
 });
 
+legislatorRouter.get("/:chamber/:district", async (req, res) => {
+    //send back the legislator id information
+    try {
+        console.log("get legislator for chamber and district");
+
+        const chamber = req.params.chamber;
+        const district = req.params.district;
+        const legislatorData = await _db.getLegislatorFromDistrict(
+            chamber,
+            district,
+        );
+        res.json(legislatorData);
+    } catch (err) {
+        console.error("Error fetching legislator details:", err);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
 export { legislatorRouter };

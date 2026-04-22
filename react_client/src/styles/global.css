@@ -165,3 +165,14 @@
 .width100 {
     width: 100%; 
 }
+
+.legislatorIconAndName {
+
+}
+
+/* IMAGES */
+.legislatorIcons {
+    width: 50px;
+    border-radius: 10px;
+}
+

@@ -8,14 +8,17 @@ import {
     getHouseDistrictGeometry,
     getSenateDistrictGeometry,
 } from "../../services/mapService";
+import { getLegislatorByDistrict } from "../../services/legislatorService.ts";
 import type { LatLngTuple } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { type Address } from "../../models/MapUtils.ts";
 import { Polygon } from "react-leaflet";
 import { useMap, GeoJSON } from "react-leaflet";
+import { type Legislator } from "../../models/Legislator.ts";
 
 import style from "./DistrictFinder.module.css";
 import PropertyGroup from "../PropertyGroup/PropertyGroup.tsx";
+import L from "leaflet";
 
 const DistrictFinder = () => {
     const [streetName, setStreetName] = useState<string>("1962 E Redondo Ave");
@@ -29,35 +32,32 @@ const DistrictFinder = () => {
     } | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [housePolygon, setHousePolygon] = useState<any>(null);
-    const [senatePolygon, setSenatePolygon] = useState<any>(null);
+    const [houseDistrictPolygon, setHouseDistrictPolygon] = useState<any>(null);
+    const [senateDistrictPolygon, setSenateDistrictPolygon] =
+        useState<any>(null);
+    const [houseLegislator, setHouseLegislator] = useState<Legislator>();
+    const [senateLegislator, setSenateLegislator] = useState<Legislator>();
 
     const UTAH_CENTER: [number, number] = [39.32, -111.09];
-    const UTAH_ZOOM = 6;
 
-    // // 🔍 AUTOCOMPLETE EFFECT (debounced)
-    // useEffect(() => {
-    //     const timeout = setTimeout(async () => {
-    //         const results = await searchAddresses(streetName, zipCode);
-    //         setSuggestions(results);
-    //     }, 200);
-
-    //     return () => clearTimeout(timeout);
-    // }, [streetName]);
-
-    const convertRings = (rings: number[][][]) => {
-        return rings.map((ring) => ring.map(([lng, lat]) => [lat, lng]));
-    };
-
-    function FitBounds({ polygon }: { polygon: any }) {
+    //makes the map zoom in to focus on the geojson object
+    function FitBounds({ geojson }: { geojson: any }) {
         const map = useMap();
 
         useEffect(() => {
-            if (!polygon) return;
+            try {
+                if (!geojson) return;
+                console.log(geojson);
+                const layer = L.geoJSON(geojson);
+                const bounds = layer.getBounds();
 
-            const flat = polygon.flat(); // flatten rings
-            map.fitBounds(flat);
-        }, [polygon]);
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds, { padding: [20, 20] });
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }, [geojson]);
 
         return null;
     }
@@ -72,33 +72,29 @@ const DistrictFinder = () => {
                 streetName.trim(),
                 zipCode.trim(),
             );
-
             setCoords([lat, lng]);
 
             const districtResults = await getDistrictsFromCoordinates(lat, lng);
-            let x = await getHouseDistrictGeometry(districtResults.house);
-            setHousePolygon(x);
-            let y = await getSenateDistrictGeometry(districtResults.senate);
-            setSenatePolygon(y);
             setDistricts(districtResults);
+            const houseLeg = await getLegislatorByDistrict(
+                "H",
+                districtResults.house,
+            );
+            setHouseLegislator(houseLeg);
+            const senateLeg = await getLegislatorByDistrict(
+                "S",
+                districtResults.senate,
+            );
+            setSenateLegislator(senateLeg);
 
-            // if (result.houseGeometry?.rings) {
-            //     let converted = convertRings(result.houseGeometry.rings);
-            //     setHousePolygon(converted);
-            // } else {
-            //     console.log("No house geometry returned", result.houseGeometry);
-            // }
-
-            // if (result.senateGeometry?.rings) {
-            //     let converted = convertRings(result.senateGeometry.rings);
-            //     setSenatePolygon(converted);
-            // } else {
-            //     console.log(
-            //         "No senate geometry returned",
-            //         result.senateGeometry,
-            //     );
-            // }
-            //setDistricts(result);
+            let houseGeometry = await getHouseDistrictGeometry(
+                districtResults.house,
+            );
+            setHouseDistrictPolygon(houseGeometry);
+            let senateGeometry = await getSenateDistrictGeometry(
+                districtResults.senate,
+            );
+            setSenateDistrictPolygon(senateGeometry);
         } catch (e: any) {
             setError(e.message);
         } finally {
@@ -145,7 +141,6 @@ const DistrictFinder = () => {
                                         setStreetName(s.displayStreetName);
                                         setZipCode(s.zipCode);
                                         setSuggestions([]);
-                                        handleSearch();
                                     }}
                                     style={{
                                         padding: 8,
@@ -179,7 +174,7 @@ const DistrictFinder = () => {
             <div style={{ height: 400, marginTop: 20 }}>
                 <MapContainer
                     center={coords ?? UTAH_CENTER}
-                    zoom={10}
+                    zoom={6}
                     style={{ height: "100%", width: "100%" }}
                 >
                     <TileLayer
@@ -189,31 +184,107 @@ const DistrictFinder = () => {
 
                     {coords && <Marker position={coords} />}
 
-                    {housePolygon && (
-                        <GeoJSON
-                            data={housePolygon}
-                            style={{
-                                color: "blue",
-                                weight: 2,
-                                fillOpacity: 0.2,
-                            }}
-                        />
+                    {houseDistrictPolygon && (
+                        <>
+                            <GeoJSON
+                                key={JSON.stringify(houseDistrictPolygon)}
+                                data={houseDistrictPolygon}
+                                style={{
+                                    color: "blue",
+                                    weight: 2,
+                                    fillOpacity: 0.2,
+                                }}
+                                onEachFeature={(feature, layer) => {
+                                    const district: number =
+                                        feature.properties?.DIST;
+
+                                    if (district) {
+                                        layer.bindTooltip(`${district}`, {
+                                            permanent: true, // always visible
+                                            direction: "center",
+                                        });
+                                    }
+                                }}
+                            />
+                            <FitBounds geojson={houseDistrictPolygon} />
+                        </>
                     )}
-                    {senatePolygon && (
-                        <GeoJSON
-                            data={senatePolygon}
-                            style={{
-                                color: "red",
-                                weight: 2,
-                                fillOpacity: 0.2,
-                            }}
-                        />
+                    {senateDistrictPolygon && (
+                        <>
+                            <GeoJSON
+                                key={JSON.stringify(senateDistrictPolygon)}
+                                data={senateDistrictPolygon}
+                                style={{
+                                    color: "red",
+                                    weight: 2,
+                                    fillOpacity: 0.2,
+                                }}
+                                onEachFeature={(feature, layer) => {
+                                    const district: number =
+                                        feature.properties?.DIST;
+
+                                    if (district) {
+                                        layer.bindTooltip(`${district}`, {
+                                            permanent: true, // always visible
+                                            direction: "center",
+                                        });
+                                    }
+                                }}
+                            />
+                            <FitBounds geojson={senateDistrictPolygon} />
+                        </>
                     )}
                 </MapContainer>
             </div>
 
-            <PropertyGroup title="House District" value="23"></PropertyGroup>
-            <PropertyGroup title="Senate District" value="14"></PropertyGroup>
+            <div className="horizontalRow">
+                {houseLegislator && (
+                    <PropertyGroup
+                        title={`House District ${houseLegislator?.district}`}
+                        value={
+                            <div className="horizontalRow defaultGap">
+                                <img
+                                    className="legislatorIcons"
+                                    src={houseLegislator?.image}
+                                    alt={houseLegislator?.fullName}
+                                />
+                                <a
+                                    href={`/legislators/${houseLegislator?.id}`}
+                                    style={{
+                                        color: "#2563eb",
+                                        textDecoration: "underline",
+                                    }}
+                                >
+                                    {houseLegislator?.formatName}
+                                </a>
+                            </div>
+                        }
+                    ></PropertyGroup>
+                )}
+                {senateLegislator && (
+                    <PropertyGroup
+                        title={`Senate District ${senateLegislator?.district}`}
+                        value={
+                            <div className="horizontalRow defaultGap">
+                                <img
+                                    className="legislatorIcons"
+                                    src={senateLegislator?.image}
+                                    alt={senateLegislator?.fullName}
+                                />
+                                <a
+                                    href={`/legislators/${senateLegislator?.id}`}
+                                    style={{
+                                        color: "#2563eb",
+                                        textDecoration: "underline",
+                                    }}
+                                >
+                                    {senateLegislator?.formatName}
+                                </a>
+                            </div>
+                        }
+                    ></PropertyGroup>
+                )}
+            </div>
         </div>
     );
 };

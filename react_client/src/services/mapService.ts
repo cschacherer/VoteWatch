@@ -25,6 +25,7 @@ export const searchAddresses = async (streetName: string, zipCode: string) => {
     return addressArray;
 };
 
+//get latitude/longitude coordinates from street address
 export const getCoordinatesFromAddress = async (
     street: string,
     zone: string,
@@ -78,7 +79,6 @@ export const getDistrictsFromCoordinates = async (lat: number, lng: number) => {
         return {
             house: attrs.House,
             senate: attrs.Senate,
-            geometry: attrs.geometry,
         };
     } catch (error) {
         let msg = getErrorMessage(error);
