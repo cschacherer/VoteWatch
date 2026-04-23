@@ -2,6 +2,7 @@ import * as cheerio from "cheerio";
 import { VoteValue } from "../classes/vote.js";
 import https from "https";
 import { Agent } from "undici";
+import Database from "./database.js";
 
 const dispatcher = new Agent({
     connect: {
@@ -9,7 +10,12 @@ const dispatcher = new Agent({
     },
 });
 
-export const scrapeBillVote = async (sessionId, billId, voteUrl) => {
+export const scrapeBillVote = async (
+    sessionId,
+    billId,
+    voteUrl,
+    databaseObject,
+) => {
     try {
         if (!voteUrl) {
             return [];
@@ -59,9 +65,9 @@ export const scrapeBillVote = async (sessionId, billId, voteUrl) => {
         const noVotes = getLinksAndNames(noTable);
         const absentVotes = getLinksAndNames(absentTable);
 
-        const yesIds = getIds(yesVotes);
-        const noIds = getIds(noVotes);
-        const absentIds = getIds(absentVotes);
+        const yesIds = getIds(yesVotes, databaseObject);
+        const noIds = getIds(noVotes, databaseObject);
+        const absentIds = getIds(absentVotes, databaseObject);
 
         const promiseResult = await Promise.all([yesIds, noIds, absentIds]);
         const yesIdsArray = promiseResult[0];
@@ -113,12 +119,14 @@ const createVoteDatabaseObjects = (
             return [];
         }
         for (let i = 0; i < legislatorVoteArray.length; i++) {
-            voteArray.push({
-                sessionId: sessionId,
-                billId: billId,
-                legislatorId: idArray[i],
-                vote: vote,
-            });
+            if (idArray[i] != "") {
+                voteArray.push({
+                    sessionId: sessionId,
+                    billId: billId,
+                    legislatorId: idArray[i],
+                    vote: vote,
+                });
+            }
         }
         return voteArray;
     } catch (err) {
@@ -126,7 +134,7 @@ const createVoteDatabaseObjects = (
     }
 };
 
-const getIds = async (arr) => {
+const getIds = async (arr, databaseObject) => {
     try {
         const results = await Promise.all(
             arr.map(async (vote) => {
@@ -142,19 +150,38 @@ const getIds = async (arr) => {
                         redirect: "manual",
                     });
 
+                    //the urls should redirect to the legislators govenerment bio, but sometimes it doesn't
                     let finalUrl = response.headers.get("location");
 
-                    const urlObj = new URL(finalUrl, baseUrl);
-                    const lastSegment = urlObj.pathname
-                        .split("/")
-                        .filter(Boolean)
-                        .pop();
+                    //if it doesn't redirect, find the legislator by district
+                    if (finalUrl == null) {
+                        const urlObj = new URL(newUrl);
 
-                    if (lastSegment == "" || lastSegment == null) {
-                        x = 0;
+                        const chamber = urlObj.searchParams.get("house");
+                        const district = urlObj.searchParams.get("dist");
+
+                        if (chamber && district) {
+                            const legislator =
+                                await databaseObject.getLegislatorFromDistrict(
+                                    chamber,
+                                    district,
+                                );
+                            return legislator.id;
+                        }
+                    } else {
+                        const urlObj = new URL(finalUrl, baseUrl);
+
+                        const lastSegment = urlObj.pathname
+                            .split("/")
+                            .filter(Boolean)
+                            .pop();
+
+                        if (lastSegment == "" || lastSegment == null) {
+                            x = 0;
+                        }
+
+                        return lastSegment;
                     }
-
-                    return lastSegment;
 
                     // if (finalUrl) {
                     //     const html = await response.text();
@@ -194,3 +221,13 @@ const getIds = async (arr) => {
         return [];
     }
 };
+
+// let db = new Database();
+// await db.openDatabase();
+// const result = await scrapeBillVote(
+//     "2026GS",
+//     "HB001",
+//     "https://le.utah.gov/DynaBill/svotes.jsp?sessionid=2026GS&voteid=81&house=H",
+//     db,
+// );
+// console.log(result);

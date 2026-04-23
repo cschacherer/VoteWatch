@@ -70,7 +70,7 @@ export const createBillFromVote = (raw: any): Bill => {
     }
 
     return {
-        id: String(raw.id ?? ""),
+        id: String(raw.bill_id ?? ""),
         shortTitle: String(raw.short_title ?? ""),
 
         generalProvisions: String(raw.general_provisions ?? ""),

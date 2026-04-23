@@ -192,7 +192,7 @@ class Database {
     }
 
     async getAllVotesOnBill(billId, sessionId) {
-        const sqlCommand = `SELECT * FROM votes WHERE (bill_id = ? AND session_id = ?)`;
+        const sqlCommand = `SELECT session_id, bill_id, legislator_id, full_name, vote, house FROM votes JOIN legislators ON votes.legislator_id = legislators.id AND votes.bill_id = ? AND votes.session_id = ?`;
         const values = [billId, sessionId];
         return await this._getAllRows(sqlCommand, values);
     }
@@ -228,7 +228,7 @@ class Database {
                                 bills.short_title,
                                 bills.general_provisions, 
                                 bills.highlighted_provisions, 
-                                bill.year,
+                                bills.year,
                                 bills.passed,
                                 bills.date_passed,
                                 bills.effective_date, 

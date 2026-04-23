@@ -26,6 +26,7 @@ const currentFillBillsTable = async () => {
     await db.openDatabase();
     for (const session of SESSION_LIST) {
         try {
+            console.log("starting session id: " + session);
             const sessionBillObjects = await getBillData(session);
             await writeBillsToDb(sessionBillObjects);
             console.log("finished session id: " + session);
@@ -41,7 +42,9 @@ const currentFillVotesTable = async () => {
     await db.openDatabase();
     for (const session of SESSION_LIST) {
         try {
-            const sessionBillObjects = await getBillData(session);
+            console.log("starting session id: " + session);
+
+            const sessionBillObjects = await db.getAllBillsForSession(session);
             await writeVotesToDb(sessionBillObjects);
             console.log("finished session id: " + session);
         } catch (e) {
@@ -73,6 +76,13 @@ const writeLegislatorsToDb = async () => {
 };
 
 //takes the data from the gov api and creates the Bill object to be written to the database
+const getBillsFromDatabase = async (sessionId) => {
+    //only works for 2025 right now
+    const allBills = await db.getAllBillsBySession(sessionId);
+    return allBills;
+};
+
+//takes the data from the gov api and creates the Bill object to be written to the database
 const getBillData = async (sessionId) => {
     //only works for 2025 right now
     const allBills = await getAllBillsBySession(sessionId);
@@ -82,22 +92,24 @@ const getBillData = async (sessionId) => {
 
     const promiseResult = await Promise.all(
         Array.from(allBills).map(async (bill) => {
-            if (!bill.number) {
-                return;
-            }
-            const billId = bill.number;
-            const billInfo = await getBill(sessionId, billId);
-            const billToAdd = new Bill(billInfo);
+            try {
+                if (!bill.number) {
+                    return;
+                }
+                const billId = bill.number;
+                const billInfo = await getBill(sessionId, billId);
+                const billToAdd = new Bill(billInfo);
 
-            let passedBillData = passedBills?.find(
-                (bill) => String(bill.number) == String(billId),
-            );
-            if (passedBillData) {
-                billToAdd.setPassed(passedBillData);
-            } else {
-                billToAdd.passed = false;
-            }
-            return billToAdd;
+                let passedBillData = passedBills?.find(
+                    (bill) => String(bill.number) == String(billId),
+                );
+                if (passedBillData) {
+                    billToAdd.setPassed(passedBillData);
+                } else {
+                    billToAdd.passed = false;
+                }
+                return billToAdd;
+            } catch (e) {}
         }),
     );
 
@@ -129,6 +141,7 @@ const writeVotesToDb = async (allBills) => {
                         currentBill.sessionId,
                         currentBill.id,
                         currentBill.houseVoteUrl,
+                        db,
                     );
                     const addHouseVotesToDb = await Promise.all(
                         allHouseVotes?.map((x) => db.addToVotes(x)),
@@ -139,6 +152,7 @@ const writeVotesToDb = async (allBills) => {
                         currentBill.sessionId,
                         currentBill.id,
                         currentBill.senateVoteUrl,
+                        db,
                     );
                     const addSenateVotesToDb = await Promise.all(
                         allSenateVotes?.map((x) => db.addToVotes(x)),
@@ -150,7 +164,7 @@ const writeVotesToDb = async (allBills) => {
                 );
             }
         }
-
+        console.log("done writing bills");
         return true;
     } catch (err) {
         console.log(`Error filling votes table. ${err.stack}`);

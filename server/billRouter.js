@@ -49,7 +49,7 @@ billRouter.get("/:sessionId/:id", async (req, res) => {
     }
 });
 
-billRouter.get("/:session_id/:id/votes", async (req, res) => {
+billRouter.get("/:sessionId/:id/votes", async (req, res) => {
     try {
         //send back the bill id information
         const sessionId = req.params.sessionId;
@@ -57,7 +57,7 @@ billRouter.get("/:session_id/:id/votes", async (req, res) => {
         const allVotes = await _db.getAllVotesOnBill(id, sessionId);
         res.json(allVotes);
     } catch (err) {
-        console.error("Error fetching bill details:", error);
+        console.error("Error fetching bill details:", err);
         res.status(500).send("Internal Server Error");
     }
 });

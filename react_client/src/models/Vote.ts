@@ -7,7 +7,7 @@ export const VoteValue = {
 export type VoteValue = (typeof VoteValue)[keyof typeof VoteValue];
 
 export type Vote = {
-    year: string;
+    sessionId: string;
     billId: string;
     house: string;
     legislatorId: string;
@@ -27,11 +27,11 @@ export const createVote = (raw: any): Vote => {
     }
 
     return {
-        year: String(raw.year ?? ""),
-        billId: String(raw.billId ?? ""),
+        sessionId: String(raw.session_id ?? ""),
+        billId: String(raw.bill_id ?? ""),
         house: String(raw.house ?? ""),
-        legislatorId: String(raw.legislatorId ?? ""),
-        legislatorName: String(raw.legislatorName ?? ""),
+        legislatorId: String(raw.legislator_id ?? ""),
+        legislatorName: String(raw.full_name ?? ""),
         vote: voteValue as VoteValue,
     };
 };

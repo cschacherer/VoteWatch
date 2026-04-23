@@ -249,11 +249,8 @@ const DistrictFinder = () => {
                                     alt={houseLegislator?.fullName}
                                 />
                                 <a
+                                    className="link"
                                     href={`/legislators/${houseLegislator?.id}`}
-                                    style={{
-                                        color: "#2563eb",
-                                        textDecoration: "underline",
-                                    }}
                                 >
                                     {houseLegislator?.formatName}
                                 </a>
@@ -272,11 +269,8 @@ const DistrictFinder = () => {
                                     alt={senateLegislator?.fullName}
                                 />
                                 <a
+                                    className="link"
                                     href={`/legislators/${senateLegislator?.id}`}
-                                    style={{
-                                        color: "#2563eb",
-                                        textDecoration: "underline",
-                                    }}
                                 >
                                     {senateLegislator?.formatName}
                                 </a>

@@ -21,7 +21,7 @@ export const createLegislatorVote = (raw: any): LegislatorVote => {
     }
 
     return {
-        legislatorId: String(raw.legislatorId ?? ""),
+        legislatorId: String(raw.legislator_id ?? ""),
         legislatorName: String(raw.legislatorName ?? ""),
         vote: voteValue as VoteValue,
         bill: createBillFromVote(raw),

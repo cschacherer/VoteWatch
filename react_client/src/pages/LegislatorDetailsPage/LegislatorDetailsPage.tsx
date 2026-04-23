@@ -69,14 +69,14 @@ function createLegislatorDetailsColumns({
             },
         }),
         createDataTableColumn<LegislatorVote>({
-            id: "vote",
+            id: "passed",
             name: "Passed",
-            selector: (row: LegislatorVote) => row.vote,
+            selector: (row: LegislatorVote) => row.bill.passed,
             width: "150px",
             cell: (row: LegislatorVote) => (
                 <Badge
                     type="passed"
-                    value={row.vote}
+                    value={row.bill.passed}
                     onClick={(value) =>
                         filterBadgeClick("passed", value.toLowerCase())
                     }
@@ -308,7 +308,7 @@ const LegislatorDetailsPage = () => {
                             createLegislatorDetailsColumns(helpers)
                         }
                         data={legislatorVotes}
-                        defaultSortId="billId"
+                        defaultSortId="id"
                     ></GeneralTable>
                 </div>
             </div>
