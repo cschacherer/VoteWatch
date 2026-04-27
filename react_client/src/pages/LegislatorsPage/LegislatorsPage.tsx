@@ -120,21 +120,6 @@ function createLegislatorColumns({
                 type: FilterType.Text,
             },
         }),
-        createDataTableColumn<Legislator>({
-            id: "link",
-            name: "Official Links",
-            selector: (row: Legislator) => row.link,
-            sortable: false,
-            width: "150px",
-            cell: (row: Legislator) => (
-                <a
-                    href={row.link}
-                    style={{ color: "#2563eb", textDecoration: "underline" }}
-                >
-                    Government Bio
-                </a>
-            ),
-        }),
     ];
 }
 
@@ -168,6 +153,7 @@ const LegislatorsPage = () => {
                 columns={(helpers) => createLegislatorColumns(helpers)}
                 data={legislators}
                 defaultSortId="fullName"
+                defaultSortAscending={true}
             ></GeneralTable>
         </div>
     );

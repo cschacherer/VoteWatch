@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { getBillDetails, getBillVotes } from "../../services/billService";
+import { getLegislatorDetails } from "../../services/legislatorService";
 import type { Bill } from "../../models/Bill";
+import type { Legislator } from "../../models/Legislator";
 import { type Vote, VoteValue } from "../../models/Vote";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
@@ -8,12 +10,17 @@ import Col from "react-bootstrap/Col";
 import BillVoteTable from "../../components/VoteTable/BillVoteTable";
 import { useParams } from "react-router-dom";
 import PropertyGroup from "../../components/PropertyGroup/PropertyGroup";
+import Badge from "../../components/Badge/Badge";
+import { BadgeType } from "../../components/Badge/Badge";
 
 import style from "./BillDetailsPage.module.css";
 
 const BillDetailsPage = () => {
     const [billDetails, setBillDetails] = useState<Bill>();
     const [billVotes, setBillVotes] = useState<Vote[]>([]);
+    const [mainSponsor, setMainSponsor] = useState<Legislator>();
+    const [floorSponsor, setFloorSponsor] = useState<Legislator>();
+
     let { sessionId, billId } = useParams<string>();
     if (!sessionId || !billId) {
         sessionId = "";
@@ -30,6 +37,22 @@ const BillDetailsPage = () => {
                 const votesResponse = await getBillVotes(sessionId, billId);
                 console.log(votesResponse);
                 setBillVotes(votesResponse);
+
+                if (detailsResponse?.billSponsor) {
+                    const mainSponsor = await getLegislatorDetails(
+                        detailsResponse.billSponsor,
+                    );
+                    console.log(mainSponsor);
+                    setMainSponsor(mainSponsor);
+                }
+
+                if (detailsResponse?.floorSponsor) {
+                    const floorSponsor = await getLegislatorDetails(
+                        detailsResponse.floorSponsor,
+                    );
+                    console.log(floorSponsor);
+                    setFloorSponsor(floorSponsor);
+                }
             } catch (error) {
                 console.log(error);
             }
@@ -51,22 +74,53 @@ const BillDetailsPage = () => {
                         <Row>
                             <Col>
                                 <PropertyGroup
-                                    title="Year"
-                                    value={billDetails?.year}
-                                ></PropertyGroup>
-                                <PropertyGroup
                                     title="Session Id"
-                                    value={billDetails?.sessionId}
+                                    value={
+                                        <Badge
+                                            type="sessionId"
+                                            value={billDetails?.sessionId}
+                                        ></Badge>
+                                    }
                                 ></PropertyGroup>
                             </Col>
                             <Col>
                                 <PropertyGroup
-                                    title="Passed"
-                                    value={billDetails?.passed}
+                                    title={"Main Sponsor"}
+                                    value={
+                                        <div className="horizontalRow defaultGap">
+                                            <img
+                                                className="legislatorIcons"
+                                                src={mainSponsor?.image}
+                                                alt={mainSponsor?.fullName}
+                                            />
+                                            <a
+                                                className="link"
+                                                href={`/legislators/${mainSponsor?.id}`}
+                                            >
+                                                {mainSponsor?.formatName}
+                                            </a>
+                                        </div>
+                                    }
                                 ></PropertyGroup>
+                            </Col>
+                            <Col>
                                 <PropertyGroup
-                                    title="Last Action"
-                                    value={`${billDetails?.lastAction} - ${billDetails?.lastActionDate}`}
+                                    title={"Floor Sponsor"}
+                                    value={
+                                        <div className="horizontalRow defaultGap">
+                                            <img
+                                                className="legislatorIcons"
+                                                src={floorSponsor?.image}
+                                                alt={floorSponsor?.fullName}
+                                            />
+                                            <a
+                                                className="link"
+                                                href={`/legislators/${floorSponsor?.id}`}
+                                            >
+                                                {floorSponsor?.formatName}
+                                            </a>
+                                        </div>
+                                    }
                                 ></PropertyGroup>
                             </Col>
                             <Col>
@@ -75,31 +129,22 @@ const BillDetailsPage = () => {
                                     value={
                                         <div className="verticalStack">
                                             <a
+                                                className="link"
                                                 href={billDetails?.houseVoteUrl}
-                                                style={{
-                                                    color: "#2563eb",
-                                                    textDecoration: "underline",
-                                                }}
                                             >
                                                 House Vote
                                             </a>
                                             <a
+                                                className="link"
                                                 href={
                                                     billDetails?.senateVoteUrl
                                                 }
-                                                style={{
-                                                    color: "#2563eb",
-                                                    textDecoration: "underline",
-                                                }}
                                             >
                                                 Senate Vote
                                             </a>
                                             <a
+                                                className="link"
                                                 href={billDetails?.link}
-                                                style={{
-                                                    color: "#2563eb",
-                                                    textDecoration: "underline",
-                                                }}
                                             >
                                                 Government Bill
                                             </a>
@@ -111,8 +156,63 @@ const BillDetailsPage = () => {
                         <Row>
                             <Col>
                                 <PropertyGroup
+                                    title="Passed"
+                                    value={
+                                        <Badge
+                                            type="passed"
+                                            value={billDetails?.passed}
+                                        />
+                                    }
+                                ></PropertyGroup>
+                            </Col>
+                            <Col>
+                                <PropertyGroup
+                                    title="Last Action"
+                                    value={`${billDetails?.lastAction} ${billDetails?.lastActionDate}`}
+                                ></PropertyGroup>
+                            </Col>
+                            <Col>
+                                <PropertyGroup
+                                    title="Date Passed"
+                                    value={
+                                        billDetails?.datePassed == ""
+                                            ? "N/A"
+                                            : billDetails?.datePassed
+                                    }
+                                ></PropertyGroup>
+                            </Col>
+                            <Col>
+                                <PropertyGroup
+                                    title="Date Effective"
+                                    value={
+                                        billDetails?.effectiveDate == ""
+                                            ? "N/A"
+                                            : billDetails?.effectiveDate
+                                    }
+                                ></PropertyGroup>
+                            </Col>
+                        </Row>
+                        <Row>
+                            <Col>
+                                <PropertyGroup
                                     title="Subjects"
-                                    value={billDetails?.subjects}
+                                    // value={billDetails?.subjects}
+                                    value={
+                                        <div className="verticalStack defaultGap">
+                                            <div className="subjectBadgeList">
+                                                {billDetails?.subjects.map(
+                                                    (item) => (
+                                                        <Badge
+                                                            type={
+                                                                BadgeType.Subjects
+                                                            }
+                                                            value={item}
+                                                        />
+                                                    ),
+                                                )}
+                                            </div>
+                                        </div>
+                                    }
                                 ></PropertyGroup>
                                 <PropertyGroup
                                     title="General Provisions"
@@ -120,8 +220,13 @@ const BillDetailsPage = () => {
                                 ></PropertyGroup>
                                 <PropertyGroup
                                     title="Highlighted Provisions"
-                                    value={billDetails?.highlightedProvisions}
+                                    value={
+                                        <div className="preWrap">
+                                            {billDetails?.highlightedProvisions}
+                                        </div>
+                                    }
                                 ></PropertyGroup>
+
                                 <PropertyGroup
                                     title="House Vote"
                                     value={

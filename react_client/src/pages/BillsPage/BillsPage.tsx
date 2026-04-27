@@ -16,20 +16,20 @@ function createBillColumns({
 }) {
     return [
         createDataTableColumn<Bill>({
-            id: "year",
-            name: "Year",
-            selector: (row) => row.year,
+            id: "sessionId",
+            name: "Session Id",
+            selector: (row) => row.sessionId,
             sortable: true,
-            width: "100px",
+            width: "150px",
             cell: (row) => (
                 <Badge
-                    type="year"
-                    value={row.year}
-                    onClick={(value) => filterBadgeClick("year", value)}
+                    type="sessionId"
+                    value={row.sessionId}
+                    onClick={(value) => filterBadgeClick("sessionId", value)}
                 ></Badge>
             ),
             filterConfig: {
-                type: FilterType.Number,
+                type: FilterType.Text,
             },
         }),
         createDataTableColumn<Bill>({
@@ -54,9 +54,7 @@ function createBillColumns({
             name: "Title",
             selector: (row) => row.shortTitle,
             sortable: true,
-            grow: 1,
-            minWidth: "170px",
-            maxWidth: "250px",
+            width: "150px",
             wrap: true,
             filterConfig: {
                 type: FilterType.Text,
@@ -67,8 +65,8 @@ function createBillColumns({
             name: "General Provisions",
             selector: (row) => row.generalProvisions,
             sortable: true,
-            grow: 2,
-            minWidth: "250px",
+            grow: 1,
+            minWidth: "300px",
             wrap: true,
             filterConfig: {
                 type: FilterType.Text,
@@ -79,7 +77,7 @@ function createBillColumns({
             name: "Highlighted Provisions",
             selector: (row) => row.highlightedProvisions,
             sortable: true,
-            grow: 2,
+            grow: 1.5,
             minWidth: "350px",
             wrap: true,
             cell: (row) => <CollapsibleCell text={row.highlightedProvisions} />,
@@ -92,7 +90,7 @@ function createBillColumns({
             name: "Passed",
             selector: (row) => row.passed,
             sortable: true,
-            width: "150px",
+            width: "135px",
             cell: (row) => (
                 <Badge
                     type={BadgeType.Passed}
@@ -107,35 +105,15 @@ function createBillColumns({
                 options: ["Passed", "Failed"],
             },
         }),
+        //need this column for filtering, but it is redundant with the session id
         createDataTableColumn<Bill>({
-            id: "lastAction",
-            name: "Last Action",
-            selector: (row) => `${row.lastAction} ${row.lastActionDate}`,
+            id: "year",
+            name: "Year",
+            selector: (row) => row.year,
             sortable: true,
-            width: "150px",
-            wrap: true,
-            cell: (row) =>
-                row?.lastActionDate != "" ? (
-                    <div className="verticalStack smallGap">
-                        <div>{row.lastAction}</div>
-                        <div>{row.lastActionDate}</div>
-                    </div>
-                ) : (
-                    <div>{row.lastAction}</div>
-                ),
+            width: "0px",
             filterConfig: {
-                type: FilterType.Text,
-            },
-        }),
-
-        createDataTableColumn<Bill>({
-            id: "sessionId",
-            name: "Session Id",
-            selector: (row) => row.sessionId,
-            sortable: true,
-            width: "130px",
-            filterConfig: {
-                type: FilterType.Text,
+                type: FilterType.Number,
             },
         }),
         createDataTableColumn<Bill>({
@@ -143,8 +121,8 @@ function createBillColumns({
             name: "Subjects",
             selector: (row: Bill) => row.subjects,
             sortable: true,
-            grow: 2,
-            minWidth: "200px",
+            grow: 1,
+            minWidth: "300px",
             wrap: true,
             cell: (row: Bill) => (
                 <CollapsibleCell
@@ -157,32 +135,6 @@ function createBillColumns({
             filterConfig: {
                 type: FilterType.Text,
             },
-        }),
-        createDataTableColumn<Bill>({
-            id: "houseVoteUrl",
-            name: "Official Links",
-            selector: (row) => row.houseVoteUrl,
-            sortable: false,
-            width: "150px",
-            cell: (row) => (
-                <div className="verticalStack defaultGap">
-                    <div>
-                        <a className="link" href={row.houseVoteUrl}>
-                            House Vote
-                        </a>
-                    </div>
-                    <div>
-                        <a className="link" href={row.senateVoteUrl}>
-                            Senate Vote
-                        </a>
-                    </div>
-                    <div>
-                        <a className="link" href={row.link}>
-                            Government Bill
-                        </a>
-                    </div>
-                </div>
-            ),
         }),
     ];
 }
@@ -214,7 +166,8 @@ const BillsPage = () => {
             <GeneralTable
                 columns={(helpers) => createBillColumns(helpers)}
                 data={bills}
-                defaultSortId="id"
+                defaultSortId="sessionId"
+                defaultSortAscending={false}
             ></GeneralTable>
         </div>
     );

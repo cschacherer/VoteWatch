@@ -103,181 +103,183 @@ const DistrictFinder = () => {
     };
 
     return (
-        <div className="outline section verticalStack defaultGap defaultPadding">
-            <div className="pageTitle">Find Your Utah Representatives</div>
+        <div className="outline section verticalStack">
+            <div className="filledHeader">Find Your Utah Representatives</div>
 
-            {/* Address input + autocomplete */}
-            <div className="horizontalRow defaultGap">
-                <label className="bold">Street Name:</label>
-                <div className="relativePosition flexFillSpace">
-                    <input
-                        className="width100 flexFillSpace"
-                        value={streetName}
-                        onChange={(e) => setStreetName(e.target.value)}
-                        onBlur={() => {
-                            setTimeout(() => setSuggestions([]), 150);
-                        }}
-                    />
-                    {suggestions.length > 0 && (
-                        <ul
-                            style={{
-                                position: "absolute",
-                                top: "100%",
-                                width: "100%",
-                                background: "white",
-                                border: "1px solid #ccc",
-                                listStyle: "none",
-                                margin: 0,
-                                padding: 0,
-                                zIndex: 1000,
-                                maxHeight: 200,
-                                overflowY: "auto",
+            <div className="defaultPadding">
+                {/* Address input + autocomplete */}
+                <div className="horizontalRow defaultGap">
+                    <label className="bold">Street Name:</label>
+                    <div className="relativePosition flexFillSpace">
+                        <input
+                            className="width100 flexFillSpace"
+                            value={streetName}
+                            onChange={(e) => setStreetName(e.target.value)}
+                            onBlur={() => {
+                                setTimeout(() => setSuggestions([]), 150);
                             }}
-                        >
-                            {suggestions.map((s, i) => (
-                                <li
-                                    key={i}
-                                    onClick={() => {
-                                        setStreetName(s.displayStreetName);
-                                        setZipCode(s.zipCode);
-                                        setSuggestions([]);
-                                    }}
+                        />
+                        {suggestions.length > 0 && (
+                            <ul
+                                style={{
+                                    position: "absolute",
+                                    top: "100%",
+                                    width: "100%",
+                                    background: "white",
+                                    border: "1px solid #ccc",
+                                    listStyle: "none",
+                                    margin: 0,
+                                    padding: 0,
+                                    zIndex: 1000,
+                                    maxHeight: 200,
+                                    overflowY: "auto",
+                                }}
+                            >
+                                {suggestions.map((s, i) => (
+                                    <li
+                                        key={i}
+                                        onClick={() => {
+                                            setStreetName(s.displayStreetName);
+                                            setZipCode(s.zipCode);
+                                            setSuggestions([]);
+                                        }}
+                                        style={{
+                                            padding: 8,
+                                            cursor: "pointer",
+                                        }}
+                                    >
+                                        {s.displayFull}
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                    <label className="bold">Zipcode: </label>
+                    <input
+                        value={zipCode}
+                        onChange={(e) => setZipCode(e.target.value)}
+                    />
+
+                    <button
+                        className="defaultButton"
+                        onClick={() => handleSearch()}
+                        disabled={loading}
+                    >
+                        {loading ? "Searching..." : "Find"}
+                    </button>
+                </div>
+
+                {error && <p style={{ color: "red" }}>{error}</p>}
+
+                {/* Map */}
+                <div style={{ height: 400, marginTop: 20 }}>
+                    <MapContainer
+                        center={coords ?? UTAH_CENTER}
+                        zoom={6}
+                        style={{ height: "100%", width: "100%" }}
+                    >
+                        <TileLayer
+                            attribution="&copy; OpenStreetMap"
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+
+                        {coords && <Marker position={coords} />}
+
+                        {houseDistrictPolygon && (
+                            <>
+                                <GeoJSON
+                                    key={JSON.stringify(houseDistrictPolygon)}
+                                    data={houseDistrictPolygon}
                                     style={{
-                                        padding: 8,
-                                        cursor: "pointer",
+                                        color: "blue",
+                                        weight: 2,
+                                        fillOpacity: 0.2,
                                     }}
-                                >
-                                    {s.displayFull}
-                                </li>
-                            ))}
-                        </ul>
+                                    onEachFeature={(feature, layer) => {
+                                        const district: number =
+                                            feature.properties?.DIST;
+
+                                        if (district) {
+                                            layer.bindTooltip(`${district}`, {
+                                                permanent: true, // always visible
+                                                direction: "center",
+                                            });
+                                        }
+                                    }}
+                                />
+                                <FitBounds geojson={houseDistrictPolygon} />
+                            </>
+                        )}
+                        {senateDistrictPolygon && (
+                            <>
+                                <GeoJSON
+                                    key={JSON.stringify(senateDistrictPolygon)}
+                                    data={senateDistrictPolygon}
+                                    style={{
+                                        color: "red",
+                                        weight: 2,
+                                        fillOpacity: 0.2,
+                                    }}
+                                    onEachFeature={(feature, layer) => {
+                                        const district: number =
+                                            feature.properties?.DIST;
+
+                                        if (district) {
+                                            layer.bindTooltip(`${district}`, {
+                                                permanent: true, // always visible
+                                                direction: "center",
+                                            });
+                                        }
+                                    }}
+                                />
+                                <FitBounds geojson={senateDistrictPolygon} />
+                            </>
+                        )}
+                    </MapContainer>
+                </div>
+
+                <div className="horizontalRow">
+                    {houseLegislator && (
+                        <PropertyGroup
+                            title={`House District ${houseLegislator?.district}`}
+                            value={
+                                <div className="horizontalRow defaultGap">
+                                    <img
+                                        className="legislatorIcons"
+                                        src={houseLegislator?.image}
+                                        alt={houseLegislator?.fullName}
+                                    />
+                                    <a
+                                        className="link"
+                                        href={`/legislators/${houseLegislator?.id}`}
+                                    >
+                                        {houseLegislator?.formatName}
+                                    </a>
+                                </div>
+                            }
+                        ></PropertyGroup>
+                    )}
+                    {senateLegislator && (
+                        <PropertyGroup
+                            title={`Senate District ${senateLegislator?.district}`}
+                            value={
+                                <div className="horizontalRow defaultGap">
+                                    <img
+                                        className="legislatorIcons"
+                                        src={senateLegislator?.image}
+                                        alt={senateLegislator?.fullName}
+                                    />
+                                    <a
+                                        className="link"
+                                        href={`/legislators/${senateLegislator?.id}`}
+                                    >
+                                        {senateLegislator?.formatName}
+                                    </a>
+                                </div>
+                            }
+                        ></PropertyGroup>
                     )}
                 </div>
-                <label className="bold">Zipcode: </label>
-                <input
-                    value={zipCode}
-                    onChange={(e) => setZipCode(e.target.value)}
-                />
-
-                <button
-                    className="defaultButton"
-                    onClick={() => handleSearch()}
-                    disabled={loading}
-                >
-                    {loading ? "Searching..." : "Find"}
-                </button>
-            </div>
-
-            {error && <p style={{ color: "red" }}>{error}</p>}
-
-            {/* Map */}
-            <div style={{ height: 400, marginTop: 20 }}>
-                <MapContainer
-                    center={coords ?? UTAH_CENTER}
-                    zoom={6}
-                    style={{ height: "100%", width: "100%" }}
-                >
-                    <TileLayer
-                        attribution="&copy; OpenStreetMap"
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-
-                    {coords && <Marker position={coords} />}
-
-                    {houseDistrictPolygon && (
-                        <>
-                            <GeoJSON
-                                key={JSON.stringify(houseDistrictPolygon)}
-                                data={houseDistrictPolygon}
-                                style={{
-                                    color: "blue",
-                                    weight: 2,
-                                    fillOpacity: 0.2,
-                                }}
-                                onEachFeature={(feature, layer) => {
-                                    const district: number =
-                                        feature.properties?.DIST;
-
-                                    if (district) {
-                                        layer.bindTooltip(`${district}`, {
-                                            permanent: true, // always visible
-                                            direction: "center",
-                                        });
-                                    }
-                                }}
-                            />
-                            <FitBounds geojson={houseDistrictPolygon} />
-                        </>
-                    )}
-                    {senateDistrictPolygon && (
-                        <>
-                            <GeoJSON
-                                key={JSON.stringify(senateDistrictPolygon)}
-                                data={senateDistrictPolygon}
-                                style={{
-                                    color: "red",
-                                    weight: 2,
-                                    fillOpacity: 0.2,
-                                }}
-                                onEachFeature={(feature, layer) => {
-                                    const district: number =
-                                        feature.properties?.DIST;
-
-                                    if (district) {
-                                        layer.bindTooltip(`${district}`, {
-                                            permanent: true, // always visible
-                                            direction: "center",
-                                        });
-                                    }
-                                }}
-                            />
-                            <FitBounds geojson={senateDistrictPolygon} />
-                        </>
-                    )}
-                </MapContainer>
-            </div>
-
-            <div className="horizontalRow">
-                {houseLegislator && (
-                    <PropertyGroup
-                        title={`House District ${houseLegislator?.district}`}
-                        value={
-                            <div className="horizontalRow defaultGap">
-                                <img
-                                    className="legislatorIcons"
-                                    src={houseLegislator?.image}
-                                    alt={houseLegislator?.fullName}
-                                />
-                                <a
-                                    className="link"
-                                    href={`/legislators/${houseLegislator?.id}`}
-                                >
-                                    {houseLegislator?.formatName}
-                                </a>
-                            </div>
-                        }
-                    ></PropertyGroup>
-                )}
-                {senateLegislator && (
-                    <PropertyGroup
-                        title={`Senate District ${senateLegislator?.district}`}
-                        value={
-                            <div className="horizontalRow defaultGap">
-                                <img
-                                    className="legislatorIcons"
-                                    src={senateLegislator?.image}
-                                    alt={senateLegislator?.fullName}
-                                />
-                                <a
-                                    className="link"
-                                    href={`/legislators/${senateLegislator?.id}`}
-                                >
-                                    {senateLegislator?.formatName}
-                                </a>
-                            </div>
-                        }
-                    ></PropertyGroup>
-                )}
             </div>
         </div>
     );

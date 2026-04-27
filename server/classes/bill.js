@@ -5,6 +5,8 @@ class Bill {
         this.shortTitle = billObject.shortTitle;
         this.generalProvisions = billObject.generalProvisions;
         this.highlightedProvisions = billObject.highlightedProvisions;
+        this.moneyAppropriated = billObject.moneyAppropriated;
+        this.fullText = billObject.fullText;
         this.year = billObject.year;
         this.sessionId = billObject.sessionID;
         this.passed = billObject.passed;
@@ -36,7 +38,7 @@ class Bill {
         else this.senateVoteUrl = "";
 
         //these properties are dependent on other properties above
-        this.link = `https://le.utah.gov/session/${this.sessionId}/bills/static/${this.id}.html`;
+        this.link = `https://le.utah.gov/~${this.year}/bills/static/${this.id}.html`;
     }
 
     getSubjects(billVersionList) {

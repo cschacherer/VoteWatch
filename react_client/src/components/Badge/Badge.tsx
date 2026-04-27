@@ -1,5 +1,6 @@
 import RepIcon from "../../assets/icons-republican.svg?react";
 import DemIcon from "../../assets/icons-democrat.svg?react";
+import { normalizeSessionId } from "../../models/Bill";
 
 import style from "./Badge.module.css";
 
@@ -9,7 +10,7 @@ export const BadgeType = {
     Subjects: "subjects",
     Passed: "passed",
     BillId: "billId",
-    Year: "year",
+    SessionId: "sessionId",
 } as const;
 
 export type BadgeType = (typeof BadgeType)[keyof typeof BadgeType];
@@ -20,7 +21,15 @@ type BadgeProps = {
     onClick?: (value: any) => void;
 };
 const Badge = ({ type, value, onClick }: BadgeProps) => {
-    if (!value) return null;
+    if (value == null || value == undefined) return null;
+
+    if (value == false) {
+        const y = 0;
+    }
+
+    if (type == BadgeType.Passed) {
+        const x = 0;
+    }
 
     const v = String(value).toLowerCase();
 
@@ -48,10 +57,15 @@ const Badge = ({ type, value, onClick }: BadgeProps) => {
         if (v == "true") {
             valueStyle = style.badge__yes;
             value = "PASSED";
-        } else if (v == "failed") {
+        } else if (v == "false") {
             valueStyle = style.badge__no;
             value = "FAILED";
+        } else {
+            let x = 0;
         }
+    } else if (type == BadgeType.SessionId) {
+        value = normalizeSessionId(v);
+        valueStyle = style.badge__basic;
     } else {
         valueStyle = style.badge__basic;
     }

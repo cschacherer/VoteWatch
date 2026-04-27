@@ -5,6 +5,7 @@ import { getAllBillsBySession, getBill, getPassedBills } from "./getBills.js";
 import { getAllLegislators } from "./getLegislators.js";
 import { scrapeBillVote } from "./getVotes.js";
 import { SESSION_LIST } from "./constants.js";
+import { scrapeBillText } from "./webScraping.js";
 
 //let databaseName = './server/database/voteWatch.db';
 let db;
@@ -28,7 +29,57 @@ const currentFillBillsTable = async () => {
         try {
             console.log("starting session id: " + session);
             const sessionBillObjects = await getBillData(session);
+
+            for (const sessionBillObject of sessionBillObjects) {
+                const result = await scrapeBillText(
+                    sessionBillObject.year,
+                    sessionBillObject.id,
+                    sessionBillObject.link,
+                );
+                //sessionBillObject.moneyAppropriated = result.money_appropriated;
+                sessionBillObject.fullText = result.full_text;
+            }
             await writeBillsToDb(sessionBillObjects);
+            console.log("finished session id: " + session);
+        } catch (e) {
+            console.log("error - ", e.message);
+        }
+    }
+};
+
+const FillBillsTableByYear = async () => {
+    db = new Database();
+
+    await db.openDatabase();
+
+    const sessions = ["2026GS"];
+
+    for (const session of sessions) {
+        try {
+            console.log("starting session id: " + session);
+            const sessionBillObjects = await getBillData(session);
+
+            await writeBillsToDb(sessionBillObjects);
+            console.log("finished session id: " + session);
+        } catch (e) {
+            console.log("error - ", e.message);
+        }
+    }
+};
+
+const FillBillsTableByYearWebScrapiing = async () => {
+    db = new Database();
+
+    await db.openDatabase();
+
+    const sessions = ["2026"];
+
+    for (const session of sessions) {
+        try {
+            console.log("starting session id: " + session);
+            const sessionBillObjects = await getBillData(session);
+
+            await writeBillFullTextToDb(sessionBillObjects);
             console.log("finished session id: " + session);
         } catch (e) {
             console.log("error - ", e.message);
@@ -86,6 +137,7 @@ const getBillsFromDatabase = async (sessionId) => {
 const getBillData = async (sessionId) => {
     //only works for 2025 right now
     const allBills = await getAllBillsBySession(sessionId);
+    //allBills.sort((a, b) => a.number.localeCompare(b.number));
 
     const passedBills = await getPassedBills(sessionId);
     // const passedBillIds = passedBills.map((bill) => bill.number);
@@ -100,8 +152,8 @@ const getBillData = async (sessionId) => {
                 const billInfo = await getBill(sessionId, billId);
                 const billToAdd = new Bill(billInfo);
 
-                let passedBillData = passedBills?.find(
-                    (bill) => String(bill.number) == String(billId),
+                let passedBillData = passedBills?.find((bill) =>
+                    String(bill.number).includes(billId),
                 );
                 if (passedBillData) {
                     billToAdd.setPassed(passedBillData);
@@ -118,11 +170,37 @@ const getBillData = async (sessionId) => {
 
 const writeBillsToDb = async (allBills) => {
     try {
-        const addingBillsToDatabase = Array.from(allBills).map((bill) =>
-            db.addToBills(bill),
-        );
+        // const addingBillsToDatabase = Array.from(allBills).map((bill) =>
+        //     db.addToBills(bill),
+        // );
 
-        await Promise.all(addingBillsToDatabase);
+        // await Promise.all(addingBillsToDatabase);
+
+        for (const bill of allBills) {
+            await db.addToBills(bill);
+        }
+
+        return true;
+    } catch (err) {
+        console.log(`Error filling bills table. ${err.stack}`);
+        return false;
+    }
+};
+
+const writeBillFullTextToDb = async (allBills) => {
+    try {
+        // const addingBillsToDatabase = Array.from(allBills).map((bill) =>
+        //     db.addToBills(bill),
+        // );
+
+        // await Promise.all(addingBillsToDatabase);
+
+        for (const bill of allBills) {
+            const result = await scrapeBillText(bill.year, bill.id, bill.link);
+            bill.fullText = result.full_text;
+            bill.moneyAppropriated = result.money_appropriated;
+            await db.addToBills(bill);
+        }
 
         return true;
     } catch (err) {
@@ -174,5 +252,12 @@ const writeVotesToDb = async (allBills) => {
 
 //await createNewEmptyDatabase();
 //await currentFillLegislatorsTable();
-//await currentFillBillsTable();
-await currentFillVotesTable();
+await currentFillBillsTable();
+//await currentFillVotesTable();
+
+//await FillBillsTableByYearWebScrapiing();
+// const result = await scrapeBillText(
+//     "2026",
+//     "HB0001",
+//     "https://le.utah.gov/~2026/bills/static/HB0001.html",
+// );

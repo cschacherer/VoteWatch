@@ -57,12 +57,14 @@ class Database {
     async addToBills(bill) {
         try {
             const sqlCommand = `INSERT OR IGNORE INTO bills (
+                session_id, 
                 id, 
                 short_title, 
                 general_provisions,
                 highlighted_provisions,
+                money_appropriated,
+                full_text,
                 year, 
-                session_id, 
                 passed, 
                 date_passed, 
                 effective_date,
@@ -75,15 +77,17 @@ class Database {
                 house_vote_url, 
                 senate_vote_url,
                 link
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
             const values = [
+                bill.sessionId,
                 bill.id,
                 bill.shortTitle,
                 bill.generalProvisions,
                 bill.highlightedProvisions,
+                bill.moneyAppropriated,
+                bill.fullText,
                 bill.year,
-                bill.sessionId,
                 bill.passed,
                 bill.datePassed,
                 bill.effectiveDate,
@@ -320,12 +324,14 @@ class Database {
 
             const createBillsTable = await this
                 ._execute(`CREATE TABLE IF NOT EXISTS bills (
+                                        session_id TEXT,
                                         id TEXT, 
                                         short_title TEXT, 
                                         general_provisions TEXT, 
                                         highlighted_provisions TEXT, 
+                                        money_appropriated TEXT,
+                                        full_text TEXT,
                                         year TEXT, 
-                                        session_id TEXT, 
                                         passed BOOLEAN,
                                         date_passed DATE,
                                         effective_date DATE,
@@ -338,7 +344,7 @@ class Database {
                                         house_vote_url TEXT, 
                                         senate_vote_url TEXT,  
                                         link TEXT,
-                                        PRIMARY KEY(id, session_id))`);
+                                        PRIMARY KEY(session_id, id))`);
 
             const createVotesTable = await this
                 ._execute(`CREATE TABLE IF NOT EXISTS votes (

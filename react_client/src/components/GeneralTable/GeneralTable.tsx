@@ -12,12 +12,14 @@ type GeneralTableProps<T> = {
         filterBadgeClick: (key: string, value: string) => void;
     }) => any[];
     defaultSortId: string;
+    defaultSortAscending: boolean;
 };
 
 export default function GeneralTable<T>({
     data,
     columns,
     defaultSortId,
+    defaultSortAscending,
 }: GeneralTableProps<T>) {
     const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
     const [filterText, setFilterText] = useState("");
@@ -179,7 +181,7 @@ export default function GeneralTable<T>({
                     columns={builtColumns}
                     data={filteredData}
                     defaultSortFieldId={defaultSortId}
-                    defaultSortAsc={true}
+                    defaultSortAsc={defaultSortAscending}
                     customStyles={customStyles}
                     responsive
                     highlightOnHover

@@ -30,7 +30,7 @@ function createLegislatorDetailsColumns({
             width: "120px",
             cell: (row: LegislatorVote) => (
                 <a
-                    href={`/bills/${row.bill.id}`}
+                    href={`/bills/${row.bill.sessionId}/${row.bill.id}`}
                     style={{ color: "#2563eb", textDecoration: "none" }}
                 >
                     <Badge type="billId" value={row.bill.id}></Badge>
@@ -309,6 +309,7 @@ const LegislatorDetailsPage = () => {
                         }
                         data={legislatorVotes}
                         defaultSortId="id"
+                        defaultSortAscending={true}
                     ></GeneralTable>
                 </div>
             </div>

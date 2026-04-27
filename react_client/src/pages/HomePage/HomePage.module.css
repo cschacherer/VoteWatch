@@ -9,6 +9,10 @@
 }
 
 .homePage__body {
-    display: flex; 
     align-items: flex-start; 
+}
+
+.homePage__center {
+    width: 80%; 
+    margin: 0 auto; 
 }

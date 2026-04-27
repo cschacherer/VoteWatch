@@ -3,6 +3,8 @@ export type Bill = {
     shortTitle: string;
     generalProvisions: string;
     highlightedProvisions: string;
+    moneyAppropriations: string;
+    fullText: string;
     lastAction: string;
     lastActionDate: string;
     year: number;
@@ -40,6 +42,8 @@ export const createBill = (raw: any): Bill => {
 
         generalProvisions: String(raw.general_provisions ?? ""),
         highlightedProvisions: normalizeBillText(raw.highlighted_provisions),
+        moneyAppropriations: String(raw.money_appropriations ?? ""),
+        fullText: String(raw.full_text ?? ""),
 
         year: Number(raw.year ?? 0),
         sessionId: String(raw.session_id ?? ""),
@@ -75,6 +79,8 @@ export const createBillFromVote = (raw: any): Bill => {
 
         generalProvisions: String(raw.general_provisions ?? ""),
         highlightedProvisions: normalizeBillText(raw.highlighted_provisions),
+        moneyAppropriations: String(raw.money_appropriations ?? ""),
+        fullText: String(raw.full_text ?? ""),
 
         year: Number(raw.year ?? 0),
         sessionId: String(raw.session_id ?? ""),
@@ -97,4 +103,20 @@ export const createBillFromVote = (raw: any): Bill => {
 
         link: String(raw.link ?? ""),
     };
+};
+
+export const normalizeSessionId = (sessionId: string): String => {
+    sessionId = sessionId.toUpperCase();
+    if (sessionId.includes("GS")) {
+        return sessionId.replace("GS", " General Session");
+    } else if (sessionId.includes("S1")) {
+        return sessionId.replace("S1", " Special Session 1");
+    } else if (sessionId.includes("S2")) {
+        return sessionId.replace("S2", " Special Session 2");
+    } else if (sessionId.includes("S3")) {
+        return sessionId.replace("S3", " Special Session 3");
+    } else if (sessionId.includes("S4")) {
+        return sessionId.replace("S4", " Special Session 4");
+    }
+    return sessionId;
 };
