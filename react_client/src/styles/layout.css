@@ -27,4 +27,10 @@
     position: relative; 
 }
 
+.justifySpaceBetween {
+    display: flex;
+    justify-content: space-between; 
+    width: 100%;
+}
+
 

@@ -10,4 +10,6 @@ export const endpointsAPI = {
         `legislators/${legislatorId}/votes`,
     legislatorDistricts: (chamber: string, district: string) =>
         `legislators/${chamber}/${district}`,
+    legislatorSponsoredBills: (legislatorId: string) =>
+        `legislators/${legislatorId}/sponsored`,
 };

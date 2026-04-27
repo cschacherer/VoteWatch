@@ -11,6 +11,7 @@ export const BadgeType = {
     Passed: "passed",
     BillId: "billId",
     SessionId: "sessionId",
+    Sponsor: "sponsor",
 } as const;
 
 export type BadgeType = (typeof BadgeType)[keyof typeof BadgeType];
@@ -22,14 +23,6 @@ type BadgeProps = {
 };
 const Badge = ({ type, value, onClick }: BadgeProps) => {
     if (value == null || value == undefined) return null;
-
-    if (value == false) {
-        const y = 0;
-    }
-
-    if (type == BadgeType.Passed) {
-        const x = 0;
-    }
 
     const v = String(value).toLowerCase();
 
@@ -60,12 +53,12 @@ const Badge = ({ type, value, onClick }: BadgeProps) => {
         } else if (v == "false") {
             valueStyle = style.badge__no;
             value = "FAILED";
-        } else {
-            let x = 0;
         }
     } else if (type == BadgeType.SessionId) {
         value = normalizeSessionId(v);
         valueStyle = style.badge__basic;
+    } else if (type == BadgeType.Subjects) {
+        valueStyle = `${style.badge__basic} ${style.badge__subject}`;
     } else {
         valueStyle = style.badge__basic;
     }

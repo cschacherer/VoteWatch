@@ -4,6 +4,7 @@ import { endpointsAPI } from "./endpointsAPI";
 import { createLegislator } from "../models/Legislator";
 import { createVote } from "../models/Vote";
 import { createLegislatorVote } from "../models/LegislatorVote";
+import { createBill } from "../models/Bill";
 
 export const getAllLegislators = async () => {
     try {
@@ -53,6 +54,20 @@ export const getLegislatorByDistrict = async (
         );
         const legislator = createLegislator(response.data);
         return legislator;
+    } catch (error) {
+        let msg = getErrorMessage(error);
+        console.log(msg);
+        throw new Error(msg);
+    }
+};
+
+export const getLegislatorSponsoredBills = async (id: string) => {
+    try {
+        const response = await apiClient.get(
+            endpointsAPI.legislatorSponsoredBills(id),
+        );
+        const votesArray = response.data.map(createBill);
+        return votesArray;
     } catch (error) {
         let msg = getErrorMessage(error);
         console.log(msg);

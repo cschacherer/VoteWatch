@@ -47,6 +47,21 @@ legislatorRouter.get("/:id/votes", async (req, res) => {
     }
 });
 
+legislatorRouter.get("/:legislatorId/sponsored", async (req, res) => {
+    //send back the legislator id information
+    try {
+        console.log("get legislator sponsored bills");
+
+        const legislatorId = req.params.legislatorId;
+        const legislatorData =
+            await _db.getLegislatorSponsoredBills(legislatorId);
+        res.json(legislatorData);
+    } catch (err) {
+        console.error("Error fetching legislator details:", err);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
 legislatorRouter.get("/:chamber/:district", async (req, res) => {
     //send back the legislator id information
     try {

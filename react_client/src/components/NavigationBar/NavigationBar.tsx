@@ -16,11 +16,8 @@ const NavigationBar = () => {
                     Utah Vote Watch
                 </Navbar.Brand>
                 <div className={style.navigationBar__linkContainer}>
-                    <Nav.Link
-                        className={style.navigationBar__link}
-                        href="/about"
-                    >
-                        About
+                    <Nav.Link className={style.navigationBar__link} href="/">
+                        Home
                     </Nav.Link>
 
                     <Nav.Link
@@ -39,9 +36,9 @@ const NavigationBar = () => {
 
                     <Nav.Link
                         className={style.navigationBar__link}
-                        href="/legislators"
+                        href="/maps"
                     >
-                        Fun With Maps
+                        Maps
                     </Nav.Link>
                 </div>
             </Navbar.Collapse>

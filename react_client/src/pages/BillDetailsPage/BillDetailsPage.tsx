@@ -12,8 +12,10 @@ import { useParams } from "react-router-dom";
 import PropertyGroup from "../../components/PropertyGroup/PropertyGroup";
 import Badge from "../../components/Badge/Badge";
 import { BadgeType } from "../../components/Badge/Badge";
+import { formatDate } from "../../models/DataTableUtils";
 
 import style from "./BillDetailsPage.module.css";
+import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 
 const BillDetailsPage = () => {
     const [billDetails, setBillDetails] = useState<Bill>();
@@ -174,21 +176,15 @@ const BillDetailsPage = () => {
                             <Col>
                                 <PropertyGroup
                                     title="Date Passed"
-                                    value={
-                                        billDetails?.datePassed == ""
-                                            ? "N/A"
-                                            : billDetails?.datePassed
-                                    }
+                                    value={formatDate(billDetails?.datePassed)}
                                 ></PropertyGroup>
                             </Col>
                             <Col>
                                 <PropertyGroup
                                     title="Date Effective"
-                                    value={
-                                        billDetails?.effectiveDate == ""
-                                            ? "N/A"
-                                            : billDetails?.effectiveDate
-                                    }
+                                    value={formatDate(
+                                        billDetails?.effectiveDate,
+                                    )}
                                 ></PropertyGroup>
                             </Col>
                         </Row>
@@ -226,7 +222,22 @@ const BillDetailsPage = () => {
                                         </div>
                                     }
                                 ></PropertyGroup>
-
+                                <PropertyGroup
+                                    title="Money Approriated"
+                                    value={
+                                        <div className="preWrap">
+                                            {billDetails?.moneyAppropriations}
+                                        </div>
+                                    }
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="Full Text"
+                                    value={
+                                        <CollapsibleCell
+                                            text={billDetails?.fullText}
+                                        />
+                                    }
+                                ></PropertyGroup>
                                 <PropertyGroup
                                     title="House Vote"
                                     value={

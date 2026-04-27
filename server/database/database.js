@@ -195,6 +195,12 @@ class Database {
         return await this._getFirstRow(sqlCommand, values);
     }
 
+    async getLegislatorSponsoredBills(legislatorId) {
+        const sqlCommand = `SELECT * FROM bills WHERE bill_sponsor = ? OR floor_sponsor = ?`;
+        const values = [legislatorId, legislatorId];
+        return await this._getAllRows(sqlCommand, values);
+    }
+
     async getAllVotesOnBill(billId, sessionId) {
         const sqlCommand = `SELECT session_id, bill_id, legislator_id, full_name, vote, house FROM votes JOIN legislators ON votes.legislator_id = legislators.id AND votes.bill_id = ? AND votes.session_id = ?`;
         const values = [billId, sessionId];

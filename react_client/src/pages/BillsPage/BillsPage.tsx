@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { getAllBills } from "../../services/billService";
-import type { Bill } from "../../models/Bill";
+import { type Bill, normalizeSessionId } from "../../models/Bill";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import Badge from "../../components/Badge/Badge";
@@ -18,8 +18,7 @@ function createBillColumns({
         createDataTableColumn<Bill>({
             id: "sessionId",
             name: "Session Id",
-            selector: (row) => row.sessionId,
-            sortable: true,
+            selector: (row: Bill) => normalizeSessionId(row.sessionId),
             width: "150px",
             cell: (row) => (
                 <Badge
@@ -33,7 +32,7 @@ function createBillColumns({
             },
         }),
         createDataTableColumn<Bill>({
-            id: "id",
+            id: "billId",
             name: "Bill Id",
             selector: (row) => row.id,
             width: "120px",
@@ -88,21 +87,19 @@ function createBillColumns({
         createDataTableColumn<Bill>({
             id: "passed",
             name: "Passed",
-            selector: (row) => row.passed,
+            selector: (row) => (row.passed ? "passed" : "failed"),
             sortable: true,
             width: "135px",
             cell: (row) => (
                 <Badge
                     type={BadgeType.Passed}
                     value={row.passed}
-                    onClick={(value) =>
-                        filterBadgeClick("passed", value.toLowerCase())
-                    }
+                    onClick={(value) => filterBadgeClick("passed", value)}
                 />
             ),
             filterConfig: {
                 type: FilterType.Select,
-                options: ["Passed", "Failed"],
+                options: ["PASSED", "FAILED"],
             },
         }),
         //need this column for filtering, but it is redundant with the session id

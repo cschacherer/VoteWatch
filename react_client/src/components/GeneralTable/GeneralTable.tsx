@@ -32,15 +32,13 @@ export default function GeneralTable<T>({
         filterBadgeClick,
     });
 
-    const filters = builtColumns
-        .filter((col) => col.filterConfig)
-        .map((col) => ({
-            key: col.id + col.sessionId,
-            label: col.name,
-            type: col.filterConfig!.type,
-            options: col.filterConfig!.options!,
-            onApplyFilters: setActiveFilters,
-        }));
+    const filters = builtColumns.map((col) => ({
+        key: col.id,
+        label: col.name,
+        type: col.filterConfig!.type,
+        options: col.filterConfig!.options!,
+        onApplyFilters: setActiveFilters,
+    }));
 
     function matchesSearch(obj: any, search: string): boolean {
         if (!obj) return false;
@@ -74,6 +72,9 @@ export default function GeneralTable<T>({
 
                 const column = builtColumns.find((c) => c.id === filter.key);
                 if (!column) return true;
+
+                //set label
+                filter.label = column.name;
 
                 const value = column.selector(row);
 
@@ -131,14 +132,14 @@ export default function GeneralTable<T>({
         },
     };
 
-    function formatLabel(key: string) {
-        return key.charAt(0).toUpperCase() + key.slice(1);
-    }
+    const clearFilters = () => {
+        setActiveFilters([]);
+    };
 
     return (
         <div className={style.generalTable__container}>
             <div className={style.generalTable__subHeader}>
-                <div className="horizontalRowGap">
+                <div className="horizontalRow defaultGap">
                     <input
                         type="text"
                         placeholder="Search..."
@@ -146,10 +147,10 @@ export default function GeneralTable<T>({
                         onChange={(e) => setFilterText(e.target.value)}
                         style={{ flex: 1 }}
                     />
-                    <button>Clear</button>
+                    <button onClick={() => setFilterText("")}>Clear</button>
                 </div>
 
-                <div className="horizontalRowGap">
+                <div className="horizontalRow defaultGap">
                     <FilterPanel
                         filters={filters}
                         activeFilters={activeFilters}
@@ -157,20 +158,29 @@ export default function GeneralTable<T>({
                     />
                     {activeFilters.length > 0 && (
                         <div
-                            className={`horizontalRowGap ${style.generalTable__activeFilterText}`}
+                            className={`horizontalRow defaultGap width100 ${style.generalTable__activeFilterText}`}
                         >
-                            <span className="bold">Active Filters:</span>{" "}
-                            <div className="horizontalRowGap">
-                                {activeFilters.map((f) => (
-                                    <div>
-                                        <span
-                                            key={f.key}
-                                            className={style.filterChip}
-                                        >
-                                            {formatLabel(f.key)}: {f.value}
-                                        </span>
-                                    </div>
-                                ))}
+                            <div className="justifySpaceBetween">
+                                <div className="horizontalRow defaultGap">
+                                    <span className="bold">
+                                        Active Filters:
+                                    </span>{" "}
+                                    {activeFilters.map((f) => (
+                                        <div>
+                                            <div>
+                                                <span key={f.key}>
+                                                    {`${f.label}: ${f.value}`}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={clearFilters}
+                                    className="defaultButton"
+                                >
+                                    Clear Filters
+                                </button>
                             </div>
                         </div>
                     )}

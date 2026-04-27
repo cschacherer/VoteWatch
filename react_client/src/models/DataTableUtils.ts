@@ -22,7 +22,8 @@ export type FilterableBadge = {
 export type ActiveFilter = {
     key: string;
     value: string;
-    operator?: "contains" | "=" | ">" | "<" | ">=" | "<=";
+    label?: string;
+    operator?: "contains" | "equals" | "=" | ">" | "<" | ">=" | "<=";
 };
 
 export type DataTableColumn<T> = {
@@ -71,4 +72,18 @@ export function createDataTableColumn<T>(
 export function sendBadgeFilter(key: string, value: string) {
     const newFilters = [{ key, value }];
     return newFilters;
+}
+
+export function formatDate(dateString?: string | null) {
+    if (!dateString) return "N/A";
+
+    const normalizedDateString = dateString.replace("T0:", "T00:");
+
+    const date = new Date(normalizedDateString);
+
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(date.getUTCDate()).padStart(2, "0");
+    const year = date.getUTCFullYear();
+
+    return `${month}/${day}/${year}`;
 }
