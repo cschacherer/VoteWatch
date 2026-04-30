@@ -38,8 +38,8 @@ function createBillColumns({
             width: "120px",
             cell: (row) => (
                 <a
+                    className="noTextDecoration"
                     href={`/bills/${row.sessionId}/${row.id}`}
-                    style={{ color: "#2563eb", textDecoration: "none" }}
                 >
                     <Badge type="billId" value={row.id}></Badge>
                 </a>
@@ -102,7 +102,8 @@ function createBillColumns({
                 options: ["PASSED", "FAILED"],
             },
         }),
-        //need this column for filtering, but it is redundant with the session id
+        //need this column for filtering, but it is redundant with the session id so we hide it by setting
+        //width to zero
         createDataTableColumn<Bill>({
             id: "year",
             name: "Year",
@@ -125,7 +126,7 @@ function createBillColumns({
                 <CollapsibleCell
                     items={row.subjects}
                     onBadgeClick={(value) =>
-                        filterBadgeClick("subjects", value.toLowerCase())
+                        filterBadgeClick("subjects", value)
                     }
                 />
             ),

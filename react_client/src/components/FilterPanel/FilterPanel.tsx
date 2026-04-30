@@ -53,7 +53,7 @@ export default function FilterPanel({
     return (
         <div>
             <button
-                className={style.filterPanel__showFiltersButton}
+                className={`defaultButton ${style.filterPanel__showFiltersButton}`}
                 onClick={() => setOpen(true)}
             >
                 Filters ({activeFilters.length})
@@ -88,9 +88,7 @@ export default function FilterPanel({
                                         >
                                             {/* Column selector */}
                                             <select
-                                                className={
-                                                    style.filterPanel__columnSelector
-                                                }
+                                                className={`defaultDropdown ${style.filterPanel__columnSelector}`}
                                                 value={filter.key}
                                                 onChange={(e) =>
                                                     updateFilter(
@@ -116,9 +114,7 @@ export default function FilterPanel({
                                             {/* Dropdown Value */}
                                             {config?.type === "select" ? (
                                                 <select
-                                                    className={
-                                                        style.filterPanel__valueDropdown
-                                                    }
+                                                    className={`defaultDropdown ${style.filterPanel__valueDropdown}`}
                                                     value={filter.value}
                                                     onChange={(e) =>
                                                         updateFilter(
@@ -213,9 +209,7 @@ export default function FilterPanel({
                                             ) : (
                                                 //String value textbox
                                                 <input
-                                                    className={
-                                                        style.filterPanel__valueTextbox
-                                                    }
+                                                    className={`defaultTextInput ${style.filterPanel__valueTextbox}`}
                                                     value={filter.value}
                                                     onChange={(e) =>
                                                         updateFilter(
@@ -228,9 +222,7 @@ export default function FilterPanel({
                                                 />
                                             )}
                                             <button
-                                                className={
-                                                    style.filterPanel__deleteFilterButton
-                                                }
+                                                className={`defaultButton ${style.filterPanel__deleteFilterButton}`}
                                                 onClick={() => removeFilter(i)}
                                             >
                                                 ✕
@@ -242,7 +234,7 @@ export default function FilterPanel({
 
                             {/* Add Filter button */}
                             <button
-                                className={style.filterPanel__addFilterButton}
+                                className={`defaultButton ${style.filterPanel__addFilterButton}`}
                                 onClick={addFilter}
                             >
                                 + Add Filter
@@ -251,18 +243,14 @@ export default function FilterPanel({
                             <div className={style.filterPanel__bottomButtons}>
                                 {/* Filter All button */}
                                 <button
-                                    className={
-                                        style.filterPanel__bottomFilterButton
-                                    }
+                                    className={`defaultButton ${style.filterPanel__bottomFilterButton}`}
                                     onClick={applyFilters}
                                 >
                                     Apply Filters
                                 </button>
                                 {/* Clear Filters button */}
                                 <button
-                                    className={
-                                        style.filterPanel__bottomFilterButton
-                                    }
+                                    className={`defaultButton ${style.filterPanel__bottomFilterButton}`}
                                     onClick={clearFilters}
                                 >
                                     Clear Filters

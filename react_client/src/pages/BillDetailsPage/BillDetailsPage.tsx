@@ -13,9 +13,9 @@ import PropertyGroup from "../../components/PropertyGroup/PropertyGroup";
 import Badge from "../../components/Badge/Badge";
 import { BadgeType } from "../../components/Badge/Badge";
 import { formatDate } from "../../models/DataTableUtils";
+import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 
 import style from "./BillDetailsPage.module.css";
-import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 
 const BillDetailsPage = () => {
     const [billDetails, setBillDetails] = useState<Bill>();
@@ -192,7 +192,6 @@ const BillDetailsPage = () => {
                             <Col>
                                 <PropertyGroup
                                     title="Subjects"
-                                    // value={billDetails?.subjects}
                                     value={
                                         <div className="verticalStack defaultGap">
                                             <div className="subjectBadgeList">
@@ -222,7 +221,7 @@ const BillDetailsPage = () => {
                                         </div>
                                     }
                                 ></PropertyGroup>
-                                <PropertyGroup
+                                {/* <PropertyGroup
                                     title="Money Approriated"
                                     value={
                                         <div className="preWrap">
@@ -237,7 +236,7 @@ const BillDetailsPage = () => {
                                             text={billDetails?.fullText}
                                         />
                                     }
-                                ></PropertyGroup>
+                                ></PropertyGroup> */}
                                 <PropertyGroup
                                     title="House Vote"
                                     value={

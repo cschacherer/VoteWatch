@@ -13,7 +13,10 @@ import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
 import Badge from "../../components/Badge/Badge";
 import PropertyGroup from "../../components/PropertyGroup/PropertyGroup";
-import { type Bill } from "../../models/Bill";
+import { type Bill, normalizeSessionId } from "../../models/Bill";
+
+import downIcon from "../../assets/icon_expand_down.svg";
+import rightIcon from "../../assets/icon_expand_right.svg";
 
 import style from "./LegislatorDetailsPage.module.css";
 
@@ -27,8 +30,16 @@ function createLegislatorDetailsColumns({
         createDataTableColumn<LegislatorVote>({
             id: "sessionId",
             name: "Session Id",
-            selector: (row: LegislatorVote) => row.bill.sessionId,
-            width: "130px",
+            selector: (row: LegislatorVote) =>
+                normalizeSessionId(row.bill.sessionId),
+            width: "150px",
+            cell: (row) => (
+                <Badge
+                    type="sessionId"
+                    value={row.bill.sessionId}
+                    onClick={(value) => filterBadgeClick("sessionId", value)}
+                ></Badge>
+            ),
             filterConfig: {
                 type: FilterType.Text,
             },
@@ -40,8 +51,8 @@ function createLegislatorDetailsColumns({
             width: "120px",
             cell: (row: LegislatorVote) => (
                 <a
+                    className="noTextDecoration"
                     href={`/bills/${row.bill.sessionId}/${row.bill.id}`}
-                    style={{ color: "#2563eb", textDecoration: "none" }}
                 >
                     <Badge type="billId" value={row.bill.id}></Badge>
                 </a>
@@ -54,7 +65,7 @@ function createLegislatorDetailsColumns({
             id: "shortTitle",
             name: "Title",
             selector: (row: LegislatorVote) => row.bill.shortTitle,
-            minWidth: "170px",
+            width: "170px",
             filterConfig: {
                 type: FilterType.Text,
             },
@@ -81,8 +92,9 @@ function createLegislatorDetailsColumns({
         createDataTableColumn<LegislatorVote>({
             id: "passed",
             name: "Passed",
-            selector: (row: LegislatorVote) => row.bill.passed,
-            width: "150px",
+            selector: (row: LegislatorVote) =>
+                row.bill.passed ? "passed" : "false",
+            width: "120px",
             cell: (row: LegislatorVote) => (
                 <Badge
                     type="passed"
@@ -101,7 +113,7 @@ function createLegislatorDetailsColumns({
             id: "generalProvisions",
             name: "General Provisions",
             selector: (row: LegislatorVote) => row.bill.generalProvisions,
-            grow: 2,
+            grow: 1,
             minWidth: "250px",
             filterConfig: {
                 type: FilterType.Text,
@@ -120,27 +132,12 @@ function createLegislatorDetailsColumns({
                 type: FilterType.Text,
             },
         }),
-        createDataTableColumn<LegislatorVote>({
-            id: "lastAction",
-            name: "Last Action",
-            selector: (row: LegislatorVote) =>
-                `${row.bill.lastAction} ${row.bill.lastActionDate}`,
-            width: "150px",
-            cell: (row: LegislatorVote) => (
-                <div className={style.bills__lastActionCell}>
-                    <div>{row.bill.lastAction}</div>
-                    <div>{row.bill.lastActionDate}</div>
-                </div>
-            ),
-            filterConfig: {
-                type: FilterType.Text,
-            },
-        }),
+
         createDataTableColumn<LegislatorVote>({
             id: "year",
             name: "Year",
             selector: (row: LegislatorVote) => row.bill.year,
-            width: "100px",
+            width: "0px",
             filterConfig: {
                 type: FilterType.Number,
             },
@@ -151,11 +148,12 @@ function createLegislatorDetailsColumns({
             name: "Subjects",
             selector: (row: LegislatorVote) => row.bill.subjects,
             minWidth: "250px",
+            grow: 1,
             cell: (row: LegislatorVote) => (
                 <CollapsibleCell
                     items={row.bill.subjects}
                     onBadgeClick={(value) =>
-                        filterBadgeClick("subjects", value.toLowerCase())
+                        filterBadgeClick("subjects", value)
                     }
                 />
             ),
@@ -170,9 +168,11 @@ function createLegislatorDetailsColumns({
 
 const LegislatorDetailsPage = () => {
     const [legislatorDetails, setLegislatorDetails] = useState<Legislator>();
+    const [showLegislatorVotes, setShowLegislatorVotes] = useState<Boolean>();
     const [legislatorVotes, setLegislatorVotes] = useState<LegislatorVote[]>(
         [],
     );
+    const [showSponsoredBills, setShowSponsoredBills] = useState<Boolean>();
     const [sponsoredBills, setSponsoredBills] = useState<Bill[]>([]);
 
     let { legislatorId } = useParams<string>();
@@ -190,7 +190,7 @@ const LegislatorDetailsPage = () => {
             createDataTableColumn<Bill>({
                 id: "sessionId",
                 name: "Session Id",
-                selector: (row: Bill) => row.sessionId,
+                selector: (row: Bill) => normalizeSessionId(row.sessionId),
                 width: "150px",
                 cell: (row) => (
                     <Badge
@@ -227,8 +227,8 @@ const LegislatorDetailsPage = () => {
                 width: "120px",
                 cell: (row: Bill) => (
                     <a
+                        className="noTextDecoration"
                         href={`/bills/${row.sessionId}/${row.id}`}
-                        style={{ color: "#2563eb", textDecoration: "none" }}
                     >
                         <Badge type="billId" value={row.id}></Badge>
                     </a>
@@ -307,7 +307,7 @@ const LegislatorDetailsPage = () => {
                     <CollapsibleCell
                         items={row.subjects}
                         onBadgeClick={(value) =>
-                            filterBadgeClick("subjects", value.toLowerCase())
+                            filterBadgeClick("subjects", value)
                         }
                     />
                 ),
@@ -323,17 +323,10 @@ const LegislatorDetailsPage = () => {
             try {
                 const detailsResponse =
                     await getLegislatorDetails(legislatorId);
-                console.log(detailsResponse);
                 setLegislatorDetails(detailsResponse);
 
-                const votesResponse = await getLegislatorVotes(legislatorId);
-                console.log(votesResponse);
-                setLegislatorVotes(votesResponse);
-
-                const sponsoredResponse =
-                    await getLegislatorSponsoredBills(legislatorId);
-                console.log(sponsoredResponse);
-                setSponsoredBills(sponsoredResponse);
+                setShowLegislatorVotes(false);
+                setShowSponsoredBills(false);
             } catch (error) {
                 console.log(error);
             }
@@ -342,121 +335,191 @@ const LegislatorDetailsPage = () => {
         fetchLegislatorDetails();
     }, []);
 
+    useEffect(() => {
+        const fetchLegislatorVotes = async () => {
+            try {
+                const votesResponse = await getLegislatorVotes(legislatorId);
+                setLegislatorVotes(votesResponse);
+
+                const sponsoredResponse =
+                    await getLegislatorSponsoredBills(legislatorId);
+                setSponsoredBills(sponsoredResponse);
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
+        fetchLegislatorVotes();
+    }, [showLegislatorVotes]);
+
+    useEffect(() => {
+        const fetchSponsoredBills = async () => {
+            try {
+                const sponsoredResponse =
+                    await getLegislatorSponsoredBills(legislatorId);
+                setSponsoredBills(sponsoredResponse);
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
+        fetchSponsoredBills();
+    }, [showSponsoredBills]);
+
     return (
         <>
             <div className="page pageScroll">
-                <div className="pageTitle">Legislator Details</div>
-
                 {/* Legislator Details Container*/}
-                <div className="section outline">
-                    <div className="filledHeader">
-                        {legislatorDetails?.formatName}
+                <div className="verticalStack largeGap defaultPadding">
+                    <div className="section outline">
+                        <div className="filledHeader">
+                            {legislatorDetails?.formatName}
+                        </div>
+                        <Container fluid>
+                            <Row
+                                className={`${style.legislatorDetails__rowPadding}`}
+                            >
+                                {/* Profile Pic */}
+                                <Col
+                                    className={
+                                        style.legislatorDetails__centerImage
+                                    }
+                                >
+                                    <img
+                                        className={
+                                            style.legislativeDetails__profileImg
+                                        }
+                                        src={legislatorDetails?.image}
+                                        alt={legislatorDetails?.fullName}
+                                    />
+                                </Col>
+                                {/* House and Party */}
+                                <Col>
+                                    <PropertyGroup
+                                        title="Chamber"
+                                        value={legislatorDetails?.house}
+                                    ></PropertyGroup>
+                                    <PropertyGroup
+                                        title="Party"
+                                        value={
+                                            <Badge
+                                                type="party"
+                                                value={legislatorDetails?.party}
+                                            ></Badge>
+                                        }
+                                    ></PropertyGroup>
+                                </Col>
+                                {/* Counties */}
+                                <Col>
+                                    <PropertyGroup
+                                        title="District"
+                                        value={legislatorDetails?.district}
+                                    ></PropertyGroup>
+                                    <PropertyGroup
+                                        title="Counties"
+                                        value={legislatorDetails?.counties}
+                                    ></PropertyGroup>
+                                </Col>
+                                <Col>
+                                    <PropertyGroup
+                                        title="Email"
+                                        value={legislatorDetails?.email}
+                                    ></PropertyGroup>
+                                    <PropertyGroup
+                                        title="Phone"
+                                        value={legislatorDetails?.phone}
+                                    ></PropertyGroup>
+                                </Col>
+                                <Col>
+                                    <PropertyGroup
+                                        title="Service Start"
+                                        value={legislatorDetails?.serviceStart}
+                                    ></PropertyGroup>
+                                    <PropertyGroup
+                                        title="Official Link"
+                                        value={
+                                            <a
+                                                className="link"
+                                                href={legislatorDetails?.link}
+                                            >
+                                                Government Bio
+                                            </a>
+                                        }
+                                    ></PropertyGroup>
+                                </Col>
+                            </Row>
+                        </Container>
                     </div>
-                    <Container fluid>
-                        <Row
-                            className={`${style.legislatorDetails__rowPadding}`}
-                        >
-                            {/* Profile Pic */}
-                            <Col
-                                className={style.legislatorDetails__centerImage}
+
+                    <div className="section outline ">
+                        {/* Legislator Voting History Table */}
+                        <div className="filledHeader horizontalRow defaultGap">
+                            <button
+                                type="button"
+                                className="expandButton defaultPadding"
+                                onClick={() =>
+                                    setShowLegislatorVotes((prev) => !prev)
+                                }
                             >
                                 <img
-                                    className={
-                                        style.legislativeDetails__profileImg
+                                    className="expandIcon"
+                                    src={
+                                        showLegislatorVotes
+                                            ? downIcon
+                                            : rightIcon
                                     }
-                                    src={legislatorDetails?.image}
-                                    alt={legislatorDetails?.fullName}
                                 />
-                            </Col>
-                            {/* House and Party */}
-                            <Col>
-                                <PropertyGroup
-                                    title="Chamber"
-                                    value={legislatorDetails?.house}
-                                ></PropertyGroup>
-                                <PropertyGroup
-                                    title="Party"
-                                    value={
-                                        <Badge
-                                            type="party"
-                                            value={legislatorDetails?.party}
-                                        ></Badge>
-                                    }
-                                ></PropertyGroup>
-                            </Col>
-                            {/* Counties */}
-                            <Col>
-                                <PropertyGroup
-                                    title="District"
-                                    value={legislatorDetails?.district}
-                                ></PropertyGroup>
-                                <PropertyGroup
-                                    title="Counties"
-                                    value={legislatorDetails?.counties}
-                                ></PropertyGroup>
-                            </Col>
-                            <Col>
-                                <PropertyGroup
-                                    title="Email"
-                                    value={legislatorDetails?.email}
-                                ></PropertyGroup>
-                                <PropertyGroup
-                                    title="Phone"
-                                    value={legislatorDetails?.phone}
-                                ></PropertyGroup>
-                            </Col>
-                            <Col>
-                                <PropertyGroup
-                                    title="Service Start"
-                                    value={legislatorDetails?.serviceStart}
-                                ></PropertyGroup>
-                                <PropertyGroup
-                                    title="Official Link"
-                                    value={
-                                        <a
-                                            href={legislatorDetails?.link}
-                                            style={{
-                                                color: "#2563eb",
-                                                textDecoration: "underline",
-                                            }}
-                                        >
-                                            Government Bio
-                                        </a>
-                                    }
-                                ></PropertyGroup>
-                            </Col>
-                        </Row>
-                    </Container>
-                </div>
+                            </button>
+                            <span>Voting History</span>
+                        </div>
 
-                <div className="section outline">
-                    {/* Legislator Voting History Table */}
-                    <div className="filledHeader">Voting History</div>
-
-                    <div className="defaultPadding">
-                        <GeneralTable
-                            columns={(helpers) =>
-                                createLegislatorDetailsColumns(helpers)
-                            }
-                            data={legislatorVotes}
-                            defaultSortId="id"
-                            defaultSortAscending={true}
-                        ></GeneralTable>
+                        {showLegislatorVotes && (
+                            <div className="defaultPadding height800">
+                                <GeneralTable
+                                    columns={(helpers) =>
+                                        createLegislatorDetailsColumns(helpers)
+                                    }
+                                    data={legislatorVotes}
+                                    defaultSortId="id"
+                                    defaultSortAscending={true}
+                                />
+                            </div>
+                        )}
                     </div>
-                </div>
 
-                <div className="section outline">
-                    {/* Legislator Voting History Table */}
-                    <div className="filledHeader">Sponsored Bills</div>
-                    <div className="defaultPadding">
-                        <GeneralTable
-                            columns={(helpers) =>
-                                createSponsoredBillsColumns(helpers)
-                            }
-                            data={sponsoredBills}
-                            defaultSortId="id"
-                            defaultSortAscending={true}
-                        ></GeneralTable>
+                    <div className="section outline">
+                        {/* Legislator Sponsored Bills Table */}
+                        <div className="filledHeader horizontalRow defaultGap">
+                            <button
+                                type="button"
+                                className="expandButton defaultPadding"
+                                onClick={() =>
+                                    setShowSponsoredBills((prev) => !prev)
+                                }
+                            >
+                                <img
+                                    className="expandIcon"
+                                    src={
+                                        showSponsoredBills
+                                            ? downIcon
+                                            : rightIcon
+                                    }
+                                />
+                            </button>
+                            <span>Sponsored Bills</span>
+                        </div>
+                        {showSponsoredBills && (
+                            <div className="defaultPadding height800">
+                                <GeneralTable
+                                    columns={(helpers) =>
+                                        createSponsoredBillsColumns(helpers)
+                                    }
+                                    data={sponsoredBills}
+                                    defaultSortId="id"
+                                    defaultSortAscending={true}
+                                ></GeneralTable>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

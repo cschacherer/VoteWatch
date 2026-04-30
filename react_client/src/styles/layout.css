@@ -33,4 +33,18 @@
     width: 100%;
 }
 
+.centerVertically {
+    align-items: center;
+}
 
+.centerHorizontally {
+    justify-content: center;
+}
+
+.verticalStack.centerVertically {
+    justify-content: center;
+}
+
+.verticalStack.centerHorizontally {
+    align-items: center;
+}

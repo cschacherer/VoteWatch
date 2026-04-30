@@ -63,7 +63,8 @@
     padding: var(--space-2);
     margin: var(--space-2);
     box-sizing: border-box;
-    width: 100%
+    width: 100%;
+    border-radius: 5px;
 }
 
 .filterPanel__deleteFilterButton {
@@ -82,7 +83,6 @@
 }
 
 .filterPanel__bottomFilterButton {
-    padding: var(--space-2);
     margin: var(--space-4) 0px;
     box-sizing: border-box;
     width: 200px;

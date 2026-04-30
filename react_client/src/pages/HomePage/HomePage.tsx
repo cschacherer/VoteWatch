@@ -1,18 +1,13 @@
-import { useState, useEffect } from "react";
-
-import style from "./HomePage.module.css";
 import DistrictFinder from "../../components/DistrictFinder/DistrictFinder";
+import style from "./HomePage.module.css";
 
 const HomePage = () => {
-    const [question, setQuestion] = useState("");
-    const [answer, setAnswer] = useState("");
-
     return (
         <div className={`page pageScroll`}>
-            <div
-                className={`verticalStack defaultGap ${style.homePage__center}`}
-            >
-                <div className="pageTitle">Home Page</div>
+            <div className={`verticalStack largeGap ${style.homePage__center}`}>
+                <div className="pageTitle">
+                    Hold Your Legislators Accountable
+                </div>
                 <div className="section outline defaultPadding">
                     <div>
                         {`It shouldn't be so hard to figure out what your elected
@@ -35,7 +30,7 @@ const HomePage = () => {
                     </div>
                 </div>
 
-                <div className={style.homePage__districtFinder}>
+                <div>
                     <DistrictFinder></DistrictFinder>
                 </div>
             </div>

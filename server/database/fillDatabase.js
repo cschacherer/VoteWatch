@@ -30,15 +30,15 @@ const currentFillBillsTable = async () => {
             console.log("starting session id: " + session);
             const sessionBillObjects = await getBillData(session);
 
-            for (const sessionBillObject of sessionBillObjects) {
-                const result = await scrapeBillText(
-                    sessionBillObject.year,
-                    sessionBillObject.id,
-                    sessionBillObject.link,
-                );
-                //sessionBillObject.moneyAppropriated = result.money_appropriated;
-                sessionBillObject.fullText = result.full_text;
-            }
+            // for (const sessionBillObject of sessionBillObjects) {
+            //     const result = await scrapeBillText(
+            //         sessionBillObject.year,
+            //         sessionBillObject.id,
+            //         sessionBillObject.link,
+            //     );
+            //     //sessionBillObject.moneyAppropriated = result.money_appropriated;
+            //     sessionBillObject.fullText = result.full_text;
+            // }
             await writeBillsToDb(sessionBillObjects);
             console.log("finished session id: " + session);
         } catch (e) {
@@ -95,7 +95,8 @@ const currentFillVotesTable = async () => {
         try {
             console.log("starting session id: " + session);
 
-            const sessionBillObjects = await db.getAllBillsForSession(session);
+            const sessionBillObjects = await getBillData(session);
+
             await writeVotesToDb(sessionBillObjects);
             console.log("finished session id: " + session);
         } catch (e) {
@@ -252,8 +253,8 @@ const writeVotesToDb = async (allBills) => {
 
 //await createNewEmptyDatabase();
 //await currentFillLegislatorsTable();
-await currentFillBillsTable();
-//await currentFillVotesTable();
+//await currentFillBillsTable();
+await currentFillVotesTable();
 
 //await FillBillsTableByYearWebScrapiing();
 // const result = await scrapeBillText(

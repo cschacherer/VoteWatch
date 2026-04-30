@@ -1,28 +1,62 @@
 import { getErrorMessage } from "./errorHandling";
 import { type Address, createAddress } from "../models/MapUtils";
 
-const UGRC_APIKEY = "UGRC-DF17C55D207308";
+const UGRC_API_KEY = import.meta.env.VITE_UGRC_APIKEY;
+const GEOAPIFY_API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY;
 
 export const searchAddresses = async (streetName: string, zipCode: string) => {
     if (!streetName || streetName.length < 3) return [];
 
-    //nominatim - don't need an api key
-    //address details - return address as seperate components
-    //viewbox - represents the state of utah to find the addresses in
-    //bounded - 1 means that the address has to be in the viewbox
+    // Utah bounding box:
+    // Geoapify rect format is: lon1,lat1,lon2,lat2
+    const utahRect = "-114.1,36.9,-109.0,42.1";
+
+    const text = zipCode
+        ? `${streetName}, ${zipCode}, Utah, USA`
+        : `${streetName}, Utah, USA`;
+
+    const params = new URLSearchParams({
+        text,
+        format: "json",
+        limit: "5",
+        filter: `rect:${utahRect}|countrycode:us`,
+        apiKey: GEOAPIFY_API_KEY ?? "",
+    });
+
     const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?street=${encodeURIComponent(streetName)}&format=json&addressdetails=1&limit=5&viewbox=-114.1,42.1,-109.0,36.9&bounded=1&countrycodes=us`,
+        `https://api.geoapify.com/v1/geocode/autocomplete?${params.toString()}`,
     );
 
-    // const res = await fetch(
-    //     `https://nominatim.openstreetmap.org/search?street=${encodeURIComponent(streetName)}&postalCode=${zipCode}&format=json&addressdetails=1&limit=5&viewbox=-114.1,42.1,-109.0,36.9&bounded=1&countrycodes=us`,
-    // );
+    if (!res.ok) {
+        console.error("Geoapify address search failed", await res.text());
+        return [];
+    }
 
     const data = await res.json();
-
-    const addressArray = data.map((x: any) => createAddress(x.address));
-
+    const addressArray = data.results.map((x: any) => createAddress(x));
     return addressArray;
+
+    // //nominatim - don't need an api key
+    // //address details - return address as seperate components
+    // //viewbox - represents the state of utah to find the addresses in
+    // //bounded - 1 means that the address has to be in the viewbox
+    // const res = await fetch(
+    //     `https://nominatim.openstreetmap.org/search?street=${encodeURIComponent(streetName)}&format=json&addressdetails=1&limit=5&viewbox=-114.1,42.1,-109.0,36.9&bounded=1&countrycodes=us`,
+    // );
+
+    // // const res = await fetch(
+    // //     `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&countrycodes=us&q=${encodeURIComponent(streetName)}, Utah, USA"`,
+    // // );
+
+    // // const res = await fetch(
+    // //     `https://nominatim.openstreetmap.org/search?street=${encodeURIComponent(streetName)}&postalCode=${zipCode}&format=json&addressdetails=1&limit=5&viewbox=-114.1,42.1,-109.0,36.9&bounded=1&countrycodes=us`,
+    // // );
+
+    // const data = await res.json();
+
+    // const addressArray = data.map((x: any) => createAddress(x.address));
+
+    // return addressArray;
 };
 
 //get latitude/longitude coordinates from street address
@@ -40,7 +74,7 @@ export const getCoordinatesFromAddress = async (
         // );
 
         const response = await fetch(
-            `${url}?apikey=${UGRC_APIKEY}&spatialReference=4326`, //spatial reference changes the type of lat/lng you get back
+            `${url}?apikey=${UGRC_API_KEY}&spatialReference=4326`, //spatial reference changes the type of lat/lng you get back
         );
 
         const json = await response.json();

@@ -21,18 +21,16 @@ function createLegislatorColumns({
             selector: (row) => row.fullName,
             minWidth: "250px",
             cell: (row: Legislator) => (
-                <a
-                    href={`legislators/${row.id}`}
-                    className={style.legislators__nameCell}
-                >
-                    <img
-                        src={row.image}
-                        alt={row.fullName}
-                        className={style.legislators__image}
-                    />
-
-                    <div className={style.legislators__name}>
-                        {row.fullName}
+                <a href={`legislators/${row.id}`}>
+                    <div className="horizontalRow defaultGap">
+                        <img
+                            className="legislatorIcons"
+                            src={row.image}
+                            alt={row.fullName}
+                        />
+                        <a className="link" href={`/legislators/${row.id}`}>
+                            {row?.formatName}
+                        </a>
                     </div>
                 </a>
             ),
@@ -59,9 +57,7 @@ function createLegislatorColumns({
                 <Badge
                     type="party"
                     value={row.party}
-                    onClick={(value) =>
-                        filterBadgeClick("party", value.toLowerCase())
-                    }
+                    onClick={(value) => filterBadgeClick("party", value)}
                 />
             ),
             filterConfig: {
@@ -148,7 +144,7 @@ const LegislatorsPage = () => {
 
     return (
         <div className="page">
-            <div className="pageTitle">Current Legislators</div>
+            <div className="pageTitle">Current Utah Legislators</div>
             <GeneralTable
                 columns={(helpers) => createLegislatorColumns(helpers)}
                 data={legislators}

@@ -147,7 +147,12 @@ export default function GeneralTable<T>({
                         onChange={(e) => setFilterText(e.target.value)}
                         style={{ flex: 1 }}
                     />
-                    <button onClick={() => setFilterText("")}>Clear</button>
+                    <button
+                        className="defaultButton"
+                        onClick={() => setFilterText("")}
+                    >
+                        Clear
+                    </button>
                 </div>
 
                 <div className="horizontalRow defaultGap">
