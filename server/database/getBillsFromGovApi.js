@@ -4,10 +4,9 @@ import { DEV_TOKEN, BASE_URL } from "./constants.js";
 const test =
     "https://glen.le.utah.gov/bills/2026GS/billlist/83C4D87BC38A20EE125713B39B56AA5B";
 
-export const getAllBillsBySession = async (sessionId) => {
+export const getAllBillsBySessionFromGovApi = async (sessionId) => {
     const billsUrl = `/bills/${sessionId}/billlist/${DEV_TOKEN}`;
     const finalUrl = BASE_URL + billsUrl;
-
     try {
         const response = await fetch(finalUrl, { method: "GET" });
         if (response.ok) {
@@ -19,7 +18,7 @@ export const getAllBillsBySession = async (sessionId) => {
     }
 };
 
-export const getBill = async (sessionId, billId) => {
+export const getBillFromGovApi = async (sessionId, billId) => {
     const billsUrl = `/bills/${sessionId}/${billId}/${DEV_TOKEN}`;
     const finalUrl = BASE_URL + billsUrl;
 
@@ -34,7 +33,7 @@ export const getBill = async (sessionId, billId) => {
     }
 };
 
-export const getPassedBills = async (sessionId) => {
+export const getPassedBillsFromGovApi = async (sessionId) => {
     const billsUrl = `/bills/${sessionId}/passedlist/${DEV_TOKEN}`;
     const finalUrl = BASE_URL + billsUrl;
 

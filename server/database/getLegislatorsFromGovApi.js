@@ -2,8 +2,7 @@
 import { DEV_TOKEN, BASE_URL } from "./constants.js";
 
 //this calls the utah government legislator API and returns JSON responses
-
-export const getAllLegislators = async () => {
+export const getAllLegislatorsFromGovApi = async () => {
     const legislatorsUrl = `/legislators/${DEV_TOKEN}`;
     const finalUrl = BASE_URL + legislatorsUrl;
 
@@ -18,7 +17,7 @@ export const getAllLegislators = async () => {
     }
 };
 
-export const getLegislator = async (legislatorId) => {
+export const getLegislatorFromGovApi = async (legislatorId) => {
     const legislatorsUrl = `/legislator/${legislatorId}/${DEV_TOKEN}`;
     const finalUrl = BASE_URL + legislatorsUrl;
 
@@ -33,7 +32,10 @@ export const getLegislator = async (legislatorId) => {
     }
 };
 
-export const getLegislatorByDistrict = async (chamber, districtNumber) => {
+export const getLegislatorByDistrictFromGovApi = async (
+    chamber,
+    districtNumber,
+) => {
     const legislatorsUrl = `/legislator/${chamber}/${districtNumber}/${DEV_TOKEN}`;
     const finalUrl = BASE_URL + legislatorsUrl;
 

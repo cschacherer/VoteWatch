@@ -1,15 +1,32 @@
 class Bill {
+    //have to handle 2026, 2025, and 2024 json differences from api
     constructor(billObject) {
         if (!billObject) return;
-        this.id = billObject.billNumber;
-        this.shortTitle = billObject.shortTitle;
-        this.generalProvisions = billObject.generalProvisions;
-        this.highlightedProvisions = billObject.highlightedProvisions;
-        this.moneyAppropriated = billObject.moneyAppropriated;
+        if (billObject.billNumber) {
+            this.id = billObject.billNumber;
+        } else if (billObject.bill) {
+            this.id = billObject.billNumber;
+        }
+        if (billObject.shortTitle) {
+            this.shortTitle = billObject.shortTitle;
+        } else if (billObject.shorttitle) {
+            this.shortTitle = billObject.shorttitle;
+        }
+        if (billObject.generalProvisions) {
+            this.generalProvisions = billObject.generalProvisions;
+        } else if (billObject.generalprovisions) {
+            this.generalProvisions = billObject.generalProvisions;
+        }
+        if (billObject.highlightedProvisions) {
+            this.highlightedProvisions = billObject.highlightedProvisions;
+        } else if (billObject.hilightedProvisions) {
+            this.highlightedProvisions = billObject.hilightedprovisions;
+        }
+        this.moneyAppropriated = billObject.moniesAppropriated;
         this.fullText = billObject.fullText;
         this.year = billObject.year;
         this.sessionId = billObject.sessionID;
-        this.passed = billObject.passed;
+        this.passed = billObject.passed ?? false;
         this.datePassed = billObject.datePassed;
         this.effectiveDate = billObject.effectiveDate;
         this.lastAction = billObject.lastAction;
@@ -165,12 +182,6 @@ class Bill {
         }
         //sometimes a bill will not make it to the 3rd reading to be passed, so it should be null
         return "";
-    }
-
-    setPassed(passedBillData) {
-        this.passed = true;
-        this.datePassed = passedBillData.datepassed;
-        this.effectiveDate = passedBillData.effectivedate;
     }
 }
 

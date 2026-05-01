@@ -1,121 +1,55 @@
 import Database from "./database.js";
 import Bill from "../classes/bill.js";
 import Legislator from "../classes/legislator.js";
-import { getAllBillsBySession, getBill, getPassedBills } from "./getBills.js";
-import { getAllLegislators } from "./getLegislators.js";
-import { scrapeBillVote } from "./getVotes.js";
+import {
+    getAllBillsBySessionFromGovApi,
+    getBillFromGovApi,
+    getPassedBillsFromGovApi,
+} from "./getBillsFromGovApi.js";
+import { getAllLegislatorsFromGovApi } from "./getLegislatorsFromGovApi.js";
+import { scrapeBillVote } from "./getVotesFromWebScraping.js";
 import { SESSION_LIST } from "./constants.js";
-import { scrapeBillText } from "./webScraping.js";
+import { getUtahBillText } from "./getBillTextFromWebScraping.js";
 
 //let databaseName = './server/database/voteWatch.db';
-let db;
+const db = new Database();
+
+// #region CREATE/DELETE ENTIRE DATABASE
 
 const createNewEmptyDatabase = async () => {
-    db = new Database();
     await db.createNewDatabase();
 };
 
-const currentFillLegislatorsTable = async () => {
-    db = new Database();
+// #endregion
+
+// #region LEGISLATURES TABLE
+
+//this function will get the current legislatures from the utah gov api and then write it to the database.
+const fillLegislatorsTable = async () => {
     await db.openDatabase();
-    await writeLegislatorsToDb();
+    const currentLegislators = await getLegislatorsDataFromApi();
+    const result = await writeLegislatorsToDatabase(currentLegislators);
 };
 
-const currentFillBillsTable = async () => {
-    db = new Database();
-
-    await db.openDatabase();
-    for (const session of SESSION_LIST) {
-        try {
-            console.log("starting session id: " + session);
-            const sessionBillObjects = await getBillData(session);
-
-            // for (const sessionBillObject of sessionBillObjects) {
-            //     const result = await scrapeBillText(
-            //         sessionBillObject.year,
-            //         sessionBillObject.id,
-            //         sessionBillObject.link,
-            //     );
-            //     //sessionBillObject.moneyAppropriated = result.money_appropriated;
-            //     sessionBillObject.fullText = result.full_text;
-            // }
-            await writeBillsToDb(sessionBillObjects);
-            console.log("finished session id: " + session);
-        } catch (e) {
-            console.log("error - ", e.message);
-        }
-    }
-};
-
-const FillBillsTableByYear = async () => {
-    db = new Database();
-
-    await db.openDatabase();
-
-    const sessions = ["2026GS"];
-
-    for (const session of sessions) {
-        try {
-            console.log("starting session id: " + session);
-            const sessionBillObjects = await getBillData(session);
-
-            await writeBillsToDb(sessionBillObjects);
-            console.log("finished session id: " + session);
-        } catch (e) {
-            console.log("error - ", e.message);
-        }
-    }
-};
-
-const FillBillsTableByYearWebScrapiing = async () => {
-    db = new Database();
-
-    await db.openDatabase();
-
-    const sessions = ["2026"];
-
-    for (const session of sessions) {
-        try {
-            console.log("starting session id: " + session);
-            const sessionBillObjects = await getBillData(session);
-
-            await writeBillFullTextToDb(sessionBillObjects);
-            console.log("finished session id: " + session);
-        } catch (e) {
-            console.log("error - ", e.message);
-        }
-    }
-};
-
-const currentFillVotesTable = async () => {
-    db = new Database();
-
-    await db.openDatabase();
-    for (const session of SESSION_LIST) {
-        try {
-            console.log("starting session id: " + session);
-
-            const sessionBillObjects = await getBillData(session);
-
-            await writeVotesToDb(sessionBillObjects);
-            console.log("finished session id: " + session);
-        } catch (e) {
-            console.log("error - ", e.message);
-        }
-    }
-};
-
-//gets the current roster of legislators from the gov api and writes it to the database
-const writeLegislatorsToDb = async () => {
+const getLegislatorsDataFromApi = async () => {
     try {
-        const allLegislators = await getAllLegislators();
+        const allLegislatorsJson = await getAllLegislatorsFromGovApi();
 
-        const allLegislatorsClass = allLegislators?.map(
+        const allLegislators = allLegislatorsJson?.map(
             (leg) => new Legislator(leg),
         );
 
+        return allLegislators;
+    } catch (err) {
+        console.log(`Error getting legislator data from api. ${err.stack}`);
+        return false;
+    }
+};
+
+const writeLegislatorsToDatabase = async (allLegislators) => {
+    try {
         await Promise.all(
-            allLegislatorsClass.map(async (legislator) => {
+            allLegislators.map(async (legislator) => {
                 await db.addToLegislators(legislator);
             }),
         );
@@ -127,20 +61,175 @@ const writeLegislatorsToDb = async () => {
     }
 };
 
-//takes the data from the gov api and creates the Bill object to be written to the database
-const getBillsFromDatabase = async (sessionId) => {
-    //only works for 2025 right now
-    const allBills = await db.getAllBillsBySession(sessionId);
+// #end region
+
+// #region BILLS TABLE
+
+const fillBillsTableAllSessions_generalData = async () => {
+    await db.openDatabase();
+    for (const session of SESSION_LIST) {
+        try {
+            console.log("starting session id: " + session);
+            const sessionBills = await getAllBillsBySessionFromApi(session);
+            await writeBillsToDatabase(sessionBills);
+            console.log("finished session id: " + session);
+        } catch (e) {
+            console.log("error - ", e.message);
+        }
+    }
+};
+
+const fillBillsTableAllSessions_passedData = async () => {
+    await db.openDatabase();
+    for (const session of SESSION_LIST) {
+        try {
+            console.log("starting session id: " + session);
+            await getAndWritePassedBillsToDatabase(session);
+            console.log("finished session id: " + session);
+        } catch (e) {
+            console.log("error - ", e.message);
+        }
+    }
+};
+
+const fillBillsTableAllSessions_textData = async () => {
+    await db.openDatabase();
+    for (const session of SESSION_LIST) {
+        try {
+            console.log("starting session id: " + session);
+            await getAndWriteFullBillTextToDatabase(session);
+            console.log("finished session id: " + session);
+        } catch (e) {
+            console.log("error - ", e.message);
+        }
+    }
+};
+
+const getAllBillsBySessionFromApi = async (sessionId) => {
+    //this gives a list of the bill titles in the session
+    const allBillsJson = await getAllBillsBySessionFromGovApi(sessionId);
+
+    //for each of the bills, get more details about the bill and create a Bill Object
+    const promiseResult = await Promise.all(
+        Array.from(allBillsJson).map(async (bill) => {
+            try {
+                if (!bill.number) {
+                    return;
+                }
+                const billId = bill.number;
+                const billInfo = await getBillFromGovApi(sessionId, billId);
+                const billToAdd = new Bill(billInfo);
+                return billToAdd;
+            } catch (e) {}
+        }),
+    );
+
+    return promiseResult;
+};
+
+const writeBillsToDatabase = async (bills) => {
+    try {
+        for (const bill of bills) {
+            await db.addToBills(bill);
+        }
+
+        return true;
+    } catch (err) {
+        console.log(`Error writing bills to database table. ${err.stack}`);
+        return false;
+    }
+};
+
+const getBillsBySessionFromDatabase = async (sessionId) => {
+    const allBills = await db.getAllBillsForSession(sessionId);
     return allBills;
+};
+
+const getBaseBillNumber = (billNumber) => {
+    return String(billNumber).toUpperCase().trim().replace(/S\d+$/, "");
+};
+
+const getAndWritePassedBillsToDatabase = async (sessionId) => {
+    const allBills = await getBillsBySessionFromDatabase(sessionId);
+
+    const passedBillsJson = await getPassedBillsFromGovApi(sessionId);
+
+    for (const passedBill of passedBillsJson) {
+        try {
+            //in passedBills, it will return the version of the bill passed for the number
+            //so we need to get rid of any trailing S01 version numbers - HB0005S01 to HB0005
+            let baseBillNumber = getBaseBillNumber(passedBill.number);
+
+            const matchingBill = allBills.find((bill) => {
+                return bill.id === baseBillNumber;
+            });
+
+            if (!matchingBill) {
+                console.log(
+                    `No matching bill found for passed bill ${passedBill.number}`,
+                );
+                continue;
+            }
+
+            const billId = matchingBill.id;
+            const datePassed = passedBill.datepassed;
+            const effectiveDate = passedBill.effectivedate;
+
+            //write whether the bill was passed or not to the database
+            const result = await db.addPassedDataToBill(
+                sessionId,
+                billId,
+                datePassed,
+                effectiveDate,
+            );
+        } catch (e) {
+            console.log(
+                `Error adding passed bill information for ${passedBill.number}} - ${e.message}`,
+            );
+        }
+    }
+};
+
+const getAndWriteFullBillTextToDatabase = async (sessionId) => {
+    const allBills = await getBillsBySessionFromDatabase(sessionId);
+
+    for (const bill of allBills) {
+        try {
+            const year = bill.year;
+            const billId = bill.id;
+
+            //write whether the bill was passed or not to the database
+            const result = await getUtahBillText(year, billId);
+
+            if (!result) {
+                console.log(`No result returned for ${billId}`);
+                continue;
+            }
+
+            const pdfUrl = result.pdfUrl;
+            const fullText = result.fullText;
+
+            const dbResult = await db.addFullTextToBill(
+                sessionId,
+                billId,
+                fullText,
+                pdfUrl,
+            );
+        } catch (e) {
+            console.log(
+                `Error adding pdf and text information for ${bill.id} - ${e.message}`,
+            );
+        }
+    }
 };
 
 //takes the data from the gov api and creates the Bill object to be written to the database
 const getBillData = async (sessionId) => {
     //only works for 2025 right now
-    const allBills = await getAllBillsBySession(sessionId);
+    const allBills = await getAllBillsBySessionFromGovApi(sessionId);
     //allBills.sort((a, b) => a.number.localeCompare(b.number));
 
-    const passedBills = await getPassedBills(sessionId);
+    const passedBills = await getPassedBillsFromGovApi(sessionId);
     // const passedBillIds = passedBills.map((bill) => bill.number);
 
     const promiseResult = await Promise.all(
@@ -150,7 +239,7 @@ const getBillData = async (sessionId) => {
                     return;
                 }
                 const billId = bill.number;
-                const billInfo = await getBill(sessionId, billId);
+                const billInfo = await getBillFromGovApi(sessionId, billId);
                 const billToAdd = new Bill(billInfo);
 
                 let passedBillData = passedBills?.find((bill) =>
@@ -169,44 +258,44 @@ const getBillData = async (sessionId) => {
     return promiseResult;
 };
 
-const writeBillsToDb = async (allBills) => {
-    try {
-        // const addingBillsToDatabase = Array.from(allBills).map((bill) =>
-        //     db.addToBills(bill),
-        // );
+// const FillBillsTableByYearWebScrapiing = async () => {
+//     db = new Database();
 
-        // await Promise.all(addingBillsToDatabase);
+//     await db.openDatabase();
 
-        for (const bill of allBills) {
-            await db.addToBills(bill);
+//     const sessions = ["2026"];
+
+//     for (const session of sessions) {
+//         try {
+//             console.log("starting session id: " + session);
+//             const sessionBillObjects = await getBillData(session);
+
+//             await writeBillFullTextToDb(sessionBillObjects);
+//             console.log("finished session id: " + session);
+//         } catch (e) {
+//             console.log("error - ", e.message);
+//         }
+//     }
+// };
+
+// #endregion
+
+// #region VOTES TABLE
+const currentFillVotesTable = async () => {
+    db = new Database();
+
+    await db.openDatabase();
+    for (const session of SESSION_LIST) {
+        try {
+            console.log("starting session id: " + session);
+
+            const sessionBillObjects = await getBillData(session);
+
+            await writeVotesToDb(sessionBillObjects);
+            console.log("finished session id: " + session);
+        } catch (e) {
+            console.log("error - ", e.message);
         }
-
-        return true;
-    } catch (err) {
-        console.log(`Error filling bills table. ${err.stack}`);
-        return false;
-    }
-};
-
-const writeBillFullTextToDb = async (allBills) => {
-    try {
-        // const addingBillsToDatabase = Array.from(allBills).map((bill) =>
-        //     db.addToBills(bill),
-        // );
-
-        // await Promise.all(addingBillsToDatabase);
-
-        for (const bill of allBills) {
-            const result = await scrapeBillText(bill.year, bill.id, bill.link);
-            bill.fullText = result.full_text;
-            bill.moneyAppropriated = result.money_appropriated;
-            await db.addToBills(bill);
-        }
-
-        return true;
-    } catch (err) {
-        console.log(`Error filling bills table. ${err.stack}`);
-        return false;
     }
 };
 
@@ -251,11 +340,37 @@ const writeVotesToDb = async (allBills) => {
     }
 };
 
-//await createNewEmptyDatabase();
-//await currentFillLegislatorsTable();
-//await currentFillBillsTable();
-await currentFillVotesTable();
+// #endregion
 
+const writeBillFullTextToDb = async (allBills) => {
+    try {
+        // const addingBillsToDatabase = Array.from(allBills).map((bill) =>
+        //     db.addToBills(bill),
+        // );
+
+        // await Promise.all(addingBillsToDatabase);
+
+        for (const bill of allBills) {
+            const result = await scrapeBillText(bill.year, bill.id, bill.link);
+            bill.fullText = result.full_text;
+            bill.moneyAppropriated = result.money_appropriated;
+            await db.addToBills(bill);
+        }
+
+        return true;
+    } catch (err) {
+        console.log(`Error filling bills table. ${err.stack}`);
+        return false;
+    }
+};
+
+//await createNewEmptyDatabase();
+//await fillLegislatorsTable();
+await fillBillsTableAllSessions_generalData();
+await fillBillsTableAllSessions_passedData();
+//await fillBillsTableAllSessions_textData();
+
+//await currentFillVotesTable();
 //await FillBillsTableByYearWebScrapiing();
 // const result = await scrapeBillText(
 //     "2026",
