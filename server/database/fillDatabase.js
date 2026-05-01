@@ -118,7 +118,7 @@ const getAllBillsBySessionFromApi = async (sessionId) => {
                 }
                 const billId = bill.number;
                 const billInfo = await getBillFromGovApi(sessionId, billId);
-                const billToAdd = new Bill(billInfo);
+                const billToAdd = new Bill(billInfo, sessionId);
                 return billToAdd;
             } catch (e) {}
         }),
@@ -190,6 +190,30 @@ const getAndWritePassedBillsToDatabase = async (sessionId) => {
     }
 };
 
+//check to see if the bill is a special session - then bill id will have S1/S2/etc at the end of it
+function parseBillId(billId) {
+    const value = String(billId || "")
+        .toUpperCase()
+        .trim();
+    const match = value.match(/^(.*?)(S0?(\d+))$/);
+
+    if (!match) {
+        return {
+            original: value,
+            isSpecialSession: false,
+            sessionSuffix: null,
+            baseBillId: value,
+        };
+    }
+
+    return {
+        original: value,
+        isSpecialSession: true,
+        sessionSuffix: match[2],
+        baseBillId: match[1],
+    };
+}
+
 const getAndWriteFullBillTextToDatabase = async (sessionId) => {
     const allBills = await getBillsBySessionFromDatabase(sessionId);
 
@@ -198,8 +222,16 @@ const getAndWriteFullBillTextToDatabase = async (sessionId) => {
             const year = bill.year;
             const billId = bill.id;
 
+            const specialSession = parseBillId(bill.session_id);
+
+            let result;
+            if (specialSession.isSpecialSession) {
+                result = await getUtahBillText(bill.session_id, billId);
+            } else {
+                result = await getUtahBillText(year, billId);
+            }
+
             //write whether the bill was passed or not to the database
-            const result = await getUtahBillText(year, billId);
 
             if (!result) {
                 console.log(`No result returned for ${billId}`);
@@ -258,38 +290,17 @@ const getBillData = async (sessionId) => {
     return promiseResult;
 };
 
-// const FillBillsTableByYearWebScrapiing = async () => {
-//     db = new Database();
-
-//     await db.openDatabase();
-
-//     const sessions = ["2026"];
-
-//     for (const session of sessions) {
-//         try {
-//             console.log("starting session id: " + session);
-//             const sessionBillObjects = await getBillData(session);
-
-//             await writeBillFullTextToDb(sessionBillObjects);
-//             console.log("finished session id: " + session);
-//         } catch (e) {
-//             console.log("error - ", e.message);
-//         }
-//     }
-// };
-
 // #endregion
 
 // #region VOTES TABLE
 const currentFillVotesTable = async () => {
-    db = new Database();
-
     await db.openDatabase();
     for (const session of SESSION_LIST) {
         try {
             console.log("starting session id: " + session);
 
-            const sessionBillObjects = await getBillData(session);
+            const sessionBillObjects =
+                await getBillsBySessionFromDatabase(session);
 
             await writeVotesToDb(sessionBillObjects);
             console.log("finished session id: " + session);
@@ -304,22 +315,22 @@ const writeVotesToDb = async (allBills) => {
         for (let i = 0; i < allBills.length; i++) {
             const currentBill = allBills[i];
             try {
-                if (currentBill.houseVoteUrl) {
+                if (currentBill.house_vote_url) {
                     const allHouseVotes = await scrapeBillVote(
-                        currentBill.sessionId,
+                        currentBill.session_id,
                         currentBill.id,
-                        currentBill.houseVoteUrl,
+                        currentBill.house_vote_url,
                         db,
                     );
                     const addHouseVotesToDb = await Promise.all(
                         allHouseVotes?.map((x) => db.addToVotes(x)),
                     );
                 }
-                if (currentBill.senateVoteUrl) {
+                if (currentBill.senate_vote_url) {
                     const allSenateVotes = await scrapeBillVote(
-                        currentBill.sessionId,
+                        currentBill.session_id,
                         currentBill.id,
-                        currentBill.senateVoteUrl,
+                        currentBill.senate_vote_url,
                         db,
                     );
                     const addSenateVotesToDb = await Promise.all(
@@ -366,9 +377,10 @@ const writeBillFullTextToDb = async (allBills) => {
 
 //await createNewEmptyDatabase();
 //await fillLegislatorsTable();
-await fillBillsTableAllSessions_generalData();
-await fillBillsTableAllSessions_passedData();
+//await fillBillsTableAllSessions_generalData();
+//await fillBillsTableAllSessions_passedData();
 //await fillBillsTableAllSessions_textData();
+//await currentFillVotesTable();
 
 //await currentFillVotesTable();
 //await FillBillsTableByYearWebScrapiing();

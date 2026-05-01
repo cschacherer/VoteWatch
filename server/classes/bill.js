@@ -1,61 +1,52 @@
+function lowerCaseKeys(obj) {
+    return Object.fromEntries(
+        Object.entries(obj || {}).map(([key, value]) => [
+            key.toLowerCase(),
+            value,
+        ]),
+    );
+}
+
 class Bill {
     //have to handle 2026, 2025, and 2024 json differences from api
-    constructor(billObject) {
+    constructor(billObject, sessionId = "") {
         if (!billObject) return;
-        if (billObject.billNumber) {
-            this.id = billObject.billNumber;
-        } else if (billObject.bill) {
-            this.id = billObject.billNumber;
-        }
-        if (billObject.shortTitle) {
-            this.shortTitle = billObject.shortTitle;
-        } else if (billObject.shorttitle) {
-            this.shortTitle = billObject.shorttitle;
-        }
-        if (billObject.generalProvisions) {
-            this.generalProvisions = billObject.generalProvisions;
-        } else if (billObject.generalprovisions) {
-            this.generalProvisions = billObject.generalProvisions;
-        }
-        if (billObject.highlightedProvisions) {
-            this.highlightedProvisions = billObject.highlightedProvisions;
-        } else if (billObject.hilightedProvisions) {
-            this.highlightedProvisions = billObject.hilightedprovisions;
-        }
-        this.moneyAppropriated = billObject.moniesAppropriated;
-        this.fullText = billObject.fullText;
-        this.year = billObject.year;
-        this.sessionId = billObject.sessionID;
-        this.passed = billObject.passed ?? false;
-        this.datePassed = billObject.datePassed;
-        this.effectiveDate = billObject.effectiveDate;
-        this.lastAction = billObject.lastAction;
-        this.lastActionDate = billObject.lastActionDate;
-        this.billSponsor = billObject.primeSponsor;
-        this.floorSponsor = billObject.floorSponsor;
-        this.trackingId = billObject.trackingID;
 
-        this.subjects = this.getSubjects(billObject.billVersionList);
-        if (billObject.actionHistoryList)
-            this.houseVoteUrl = this.getHouseVoteUrl(
-                billObject.actionHistoryList,
-            );
-        else if (billObject.actionhistory)
-            this.houseVoteUrl = this.getHouseVoteUrl(billObject.actionhistory);
-        else this.houseVoteUrl = "";
+        //this will normalize key spelling differences between the returned json objects
+        const bill = lowerCaseKeys(billObject);
 
-        if (billObject.actionHistoryList)
-            this.senateVoteUrl = this.getSenateVoteUrl(
-                billObject.actionHistoryList,
-            );
-        else if (billObject.actionhistory)
-            this.senateVoteUrl = this.getSenateVoteUrl(
-                billObject.actionhistory,
-            );
-        else this.senateVoteUrl = "";
+        this.id = bill.billnumber || bill.bill || null;
+        this.shortTitle = bill.shorttitle || null;
+        this.generalProvisions = bill.generalprovisions || null;
+        this.highlightedProvisions =
+            bill.highlightedprovisions || bill.hilightedprovisions || null;
+
+        this.moneyAppropriated = bill.moniesappropriated || bill.monies || "";
+        this.fullText = bill.fulltext || null;
+        this.year = bill.year || null;
+        this.sessionId = bill.sessionid || sessionId || null; //for 2024, session id was not part of the billObject
+        this.passed = bill.passed ?? false;
+        this.datePassed = bill.datepassed || null;
+        this.effectiveDate = bill.effectivedate || null;
+        this.lastAction = bill.lastaction || "";
+        this.lastActionDate = bill.lastactiondate || "";
+        this.billSponsor = bill.primesponsor || bill.sponsor || null;
+        this.floorSponsor = bill.floorsponsor || "";
+        this.trackingId = bill.trackingid || "";
+
+        this.subjects =
+            bill.subjects || this.getSubjects(bill.billversionlist) || "";
+        const actionHistory =
+            bill.actionhistorylist || bill.actionhistory || [];
+
+        this.houseVoteUrl = this.getHouseVoteUrl(actionHistory) || "";
+        this.senateVoteUrl = this.getSenateVoteUrl(actionHistory) || "";
 
         //these properties are dependent on other properties above
-        this.link = `https://le.utah.gov/~${this.year}/bills/static/${this.id}.html`;
+        this.link =
+            this.year && this.id
+                ? `https://le.utah.gov/~${this.year}/bills/static/${this.id}.html`
+                : "";
     }
 
     getSubjects(billVersionList) {

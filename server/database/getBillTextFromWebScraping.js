@@ -2,7 +2,7 @@ import * as cheerio from "cheerio";
 
 const BASE_URL = "https://le.utah.gov";
 
-export const getUtahBillText = async (year, billId) => {
+export const getUtahBillText = async (year, billId, sessionSuffix = null) => {
     try {
         //get printer friendly pdf url
         const pdfUrl = await createPdfLink(year, billId);
