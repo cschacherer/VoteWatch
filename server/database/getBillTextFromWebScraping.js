@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 
-const BASE_URL = "https://le.utah.gov";
+import { DEV_TOKEN, WEB_BASE_URL } from "./constants.js";
 
 export const getUtahBillText = async (year, billId, sessionSuffix = null) => {
     try {
@@ -28,13 +28,13 @@ async function urlExists(url) {
 }
 
 async function createPdfLink(year, billId) {
-    const enrolledUrl = `${BASE_URL}/Session/${year}/bills/enrolled/${billId}.pdf`;
+    const enrolledUrl = `${WEB_BASE_URL}/Session/${year}/bills/enrolled/${billId}.pdf`;
     let exists = await urlExists(enrolledUrl);
     if (exists) {
         return enrolledUrl;
     }
 
-    const introducedUrl = `${BASE_URL}/Session/${year}/bills/introduced/${billId}.pdf`;
+    const introducedUrl = `${WEB_BASE_URL}/Session/${year}/bills/introduced/${billId}.pdf`;
     return introducedUrl;
 }
 
@@ -77,7 +77,7 @@ async function fetchWithRetry(url, tries = 3) {
 }
 
 async function getXmlText(year, billId, version) {
-    const xmlUrl = `${BASE_URL}/Session/${year}/bills/${version}/${billId}.xml`;
+    const xmlUrl = `${WEB_BASE_URL}/Session/${year}/bills/${version}/${billId}.xml`;
 
     const response = await fetchWithRetry(xmlUrl, 4);
 

@@ -137,27 +137,27 @@ class Database {
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
             const values = [
-                bill.sessionId,
+                bill.session_id,
                 bill.id,
-                bill.shortTitle,
-                bill.generalProvisions,
-                bill.highlightedProvisions,
-                bill.moneyAppropriated,
-                bill.fullText,
-                bill.pdfLink,
-                bill.summaryText,
+                bill.short_title,
+                bill.general_provisions,
+                bill.highlighted_provisions,
+                bill.money_appropriated,
+                bill.full_text,
+                bill.pdf_link,
+                bill.summary_text,
                 bill.year,
                 bill.passed,
-                bill.datePassed,
-                bill.effectiveDate,
-                bill.lastAction,
-                bill.lastActionDate,
+                bill.date_passed,
+                bill.effective_date,
+                bill.last_action,
+                bill.last_action_date,
                 bill.subjects,
-                bill.billSponsor,
-                bill.floorSponsor,
-                bill.trackingId,
-                bill.houseVoteUrl,
-                bill.senateVoteUrl,
+                bill.bill_sponsor,
+                bill.floor_sponsor,
+                bill.tracking_id,
+                bill.house_vote_url,
+                bill.senate_vote_url,
                 bill.link,
             ];
 
@@ -169,27 +169,32 @@ class Database {
         }
     }
 
-    async addPassedDataToBill(sessionId, billId, datePassed, effectiveDate) {
+    async addPassedDataToBill(
+        session_id,
+        bill_id,
+        date_passed,
+        effective_date,
+    ) {
         const sqlCommand = `UPDATE bills SET passed = 'true', date_passed = ?, effective_date = ? WHERE session_id = ? AND id = ?`;
-        const values = [datePassed, effectiveDate, sessionId, billId];
+        const values = [date_passed, effective_date, session_id, bill_id];
         return await this._getAllRows(sqlCommand, values);
     }
 
-    async addFullTextToBill(sessionId, billId, fullText, pdfLink) {
+    async addFullTextToBill(session_id, bill_id, full_text, pdf_link) {
         const sqlCommand = `UPDATE bills SET full_text = ?, pdf_link = ? WHERE session_id = ? AND id = ?`;
-        const values = [fullText, pdfLink, sessionId, billId];
+        const values = [full_text, pdf_link, session_id, bill_id];
         return await this._getAllRows(sqlCommand, values);
     }
 
-    async addTextSummaryToBill(sessionId, billId, summaryText) {
+    async addTextSummaryToBill(session_id, bill_id, summary_text) {
         const sqlCommand = `UPDATE bills SET summary_text = ? WHERE session_id = ? AND bill_id = ?`;
-        const values = [fullText, sessionId, billId];
+        const values = [fullText, session_id, bill_id];
         return await this._getAllRows(sqlCommand, values);
     }
 
-    async getBill(id, sessionId) {
+    async getBill(id, session_id) {
         const sqlCommand = `SELECT * FROM bills WHERE (id = ? AND session_id = ?)`;
-        const values = [id, sessionId];
+        const values = [id, session_id];
         return await this._getFirstRow(sqlCommand, values);
     }
 
@@ -198,9 +203,9 @@ class Database {
         return await this._getAllRows(sqlCommand);
     }
 
-    async getAllBillsForSession(sessionId) {
+    async getAllBillsForSession(session_id) {
         const sqlCommand = `SELECT * FROM bills WHERE session_id = ?`;
-        const values = [sessionId];
+        const values = [session_id];
         return await this._getAllRows(sqlCommand, values);
     }
 
@@ -217,8 +222,8 @@ class Database {
 
             const values = [
                 legislator.id,
-                legislator.fullName,
-                legislator.formatName,
+                legislator.full_name,
+                legislator.format_name,
                 legislator.image,
                 legislator.house,
                 legislator.party,
@@ -226,7 +231,7 @@ class Database {
                 legislator.counties,
                 legislator.email,
                 legislator.cell,
-                legislator.serviceStart,
+                legislator.service_start,
                 legislator.link,
             ];
 
@@ -255,9 +260,9 @@ class Database {
         return await this._getFirstRow(sqlCommand, values);
     }
 
-    async getLegislatorSponsoredBills(legislatorId) {
+    async getLegislatorSponsoredBills(legislator_id) {
         const sqlCommand = `SELECT * FROM bills WHERE bill_sponsor = ? OR floor_sponsor = ?`;
-        const values = [legislatorId, legislatorId];
+        const values = [legislator_id, legislator_id];
         return await this._getAllRows(sqlCommand, values);
     }
 
@@ -299,9 +304,9 @@ class Database {
                 session_id, bill_id, legislator_id, vote
               )  VALUES (?, ?, ?, ?)`;
             const values = [
-                vote.sessionId,
-                vote.billId,
-                vote.legislatorId,
+                vote.session_id,
+                vote.bill_id,
+                vote.legislator_id,
                 vote.vote,
             ];
 
@@ -313,18 +318,18 @@ class Database {
         }
     }
 
-    async getAllVotesOnBill(billId, sessionId) {
+    async getAllVotesOnBill(bill_id, session_id) {
         const sqlCommand = `SELECT session_id, bill_id, legislator_id, full_name, vote, house FROM votes JOIN legislators ON votes.legislator_id = legislators.id AND votes.bill_id = ? AND votes.session_id = ?`;
-        const values = [billId, sessionId];
+        const values = [bill_id, session_id];
         return await this._getAllRows(sqlCommand, values);
     }
 
-    async getVotesForAllBills(sessionId) {
+    async getVotesForAllBills(session_id) {
         const allBillsForSessionId =
-            await this.getAllBillsForSession(sessionId);
+            await this.getAllBillsForSession(session_id);
 
         const joinCommand = `SELECT * FROM bills JOIN votes ON bills.id = votes.bill_id AND bills.session_id = votes.session_id AND (bills.session_id = ?)`;
-        const values = [sessionId];
+        const values = [session_id];
 
         return await this._getAllRows(joinCommand, values);
     }

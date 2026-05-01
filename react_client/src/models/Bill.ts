@@ -3,7 +3,7 @@ export type Bill = {
     shortTitle: string;
     generalProvisions: string;
     highlightedProvisions: string;
-    moneyAppropriations: string;
+    moneyAppropriated: string;
     fullText: string;
     lastAction: string;
     lastActionDate: string;
@@ -42,7 +42,7 @@ export const createBill = (raw: any): Bill => {
 
         generalProvisions: String(raw.general_provisions ?? ""),
         highlightedProvisions: normalizeBillText(raw.highlighted_provisions),
-        moneyAppropriations: String(raw.money_appropriations ?? ""),
+        moneyAppropriated: String(raw.money_appropriated ?? ""),
         fullText: String(raw.full_text ?? ""),
 
         year: Number(raw.year ?? 0),
@@ -53,7 +53,7 @@ export const createBill = (raw: any): Bill => {
         effectiveDate: String(raw.effective_date ?? ""),
 
         lastAction: String(raw.last_action ?? ""),
-        lastActionDate: String(raw.lastActionDate ?? ""),
+        lastActionDate: String(raw.last_action_date ?? ""),
 
         subjects: raw.subjects?.split(",").map((s: string) => s.trim()),
 
@@ -79,7 +79,7 @@ export const createBillFromVote = (raw: any): Bill => {
 
         generalProvisions: String(raw.general_provisions ?? ""),
         highlightedProvisions: normalizeBillText(raw.highlighted_provisions),
-        moneyAppropriations: String(raw.money_appropriations ?? ""),
+        moneyAppropriated: String(raw.money_appropriations ?? ""),
         fullText: String(raw.full_text ?? ""),
 
         year: Number(raw.year ?? 0),
@@ -90,7 +90,7 @@ export const createBillFromVote = (raw: any): Bill => {
         effectiveDate: String(raw.effective_date ?? ""),
 
         lastAction: String(raw.last_action ?? ""),
-        lastActionDate: String(raw.lastActionDate ?? ""),
+        lastActionDate: String(raw.last_action_date ?? ""),
 
         subjects: raw.subjects?.split(",").map((s: string) => s.trim()),
 

@@ -1,46 +1,52 @@
-function lowerCaseKeys(obj) {
-    return Object.fromEntries(
-        Object.entries(obj || {}).map(([key, value]) => [
-            key.toLowerCase(),
-            value,
-        ]),
-    );
-}
+import lowerCaseKeys from "../helper.js";
 
 class Bill {
     //have to handle 2026, 2025, and 2024 json differences from api
-    constructor(billObject, sessionId = "") {
-        if (!billObject) return;
+    constructor(bill_object, session_id = "") {
+        if (!bill_object) return;
 
         //this will normalize key spelling differences between the returned json objects
-        const bill = lowerCaseKeys(billObject);
+        const bill = lowerCaseKeys(bill_object);
 
-        this.id = bill.billnumber || bill.bill || null;
-        this.shortTitle = bill.shorttitle || null;
-        this.generalProvisions = bill.generalprovisions || null;
-        this.highlightedProvisions =
-            bill.highlightedprovisions || bill.hilightedprovisions || null;
+        this.id = bill.id || bill.billnumber || bill.bill || null;
+        this.short_title = bill.short_title || bill.shorttitle || null;
+        this.general_provisions =
+            bill.general_provisions || bill.generalprovisions || null;
+        this.highlighted_provisions =
+            bill.highlighted_provisions ||
+            bill.highlightedprovisions ||
+            bill.hilightedprovisions ||
+            null;
 
-        this.moneyAppropriated = bill.moniesappropriated || bill.monies || "";
-        this.fullText = bill.fulltext || null;
+        this.money_appropriated =
+            bill.money_appropriated ||
+            bill.moniesappropriated ||
+            bill.monies ||
+            "";
+        this.full_text = bill.full_text || bill.fulltext || null;
         this.year = bill.year || null;
-        this.sessionId = bill.sessionid || sessionId || null; //for 2024, session id was not part of the billObject
+        this.session_id =
+            bill.session_id || bill.sessionid || session_id || null; //for 2024, session id was not part of the billObject
         this.passed = bill.passed ?? false;
-        this.datePassed = bill.datepassed || null;
-        this.effectiveDate = bill.effectivedate || null;
-        this.lastAction = bill.lastaction || "";
-        this.lastActionDate = bill.lastactiondate || "";
-        this.billSponsor = bill.primesponsor || bill.sponsor || null;
-        this.floorSponsor = bill.floorsponsor || "";
-        this.trackingId = bill.trackingid || "";
+        this.date_passed = bill.date_passed || bill.datepassed || null;
+        this.effective_date = bill.effective_date || bill.effectivedate || null;
+        this.last_action = bill.last_action || bill.lastaction || "";
+        this.last_action_date =
+            bill.last_action_date || bill.lastactiondate || "";
+        this.bill_sponsor =
+            bill.bill_sponsor || bill.primesponsor || bill.sponsor || null;
+        this.floor_sponsor = bill.floor_sponsor || bill.floorsponsor || "";
+        this.tracking_id = bill.tracking_id || bill.trackingid || "";
 
         this.subjects =
             bill.subjects || this.getSubjects(bill.billversionlist) || "";
         const actionHistory =
             bill.actionhistorylist || bill.actionhistory || [];
 
-        this.houseVoteUrl = this.getHouseVoteUrl(actionHistory) || "";
-        this.senateVoteUrl = this.getSenateVoteUrl(actionHistory) || "";
+        this.house_vote_url =
+            bill.house_vote_url || this.getHouseVoteUrl(actionHistory) || "";
+        this.senate_vote_url =
+            bill.senate_vote_url || this.getSenateVoteUrl(actionHistory) || "";
 
         //these properties are dependent on other properties above
         this.link =
@@ -111,7 +117,7 @@ class Bill {
             }
             const voteId = actionItem?.voteID;
             if (voteId) {
-                const voteUrl = `https://le.utah.gov/DynaBill/svotes.jsp?sessionid=${this.sessionId}&voteid=${voteId}&house=H`;
+                const voteUrl = `https://le.utah.gov/DynaBill/svotes.jsp?sessionid=${this.session_id}&voteid=${voteId}&house=H`;
                 return voteUrl;
             }
         } catch (err) {
@@ -163,7 +169,7 @@ class Bill {
             }
             const voteId = actionItem?.voteID;
             if (voteId) {
-                const voteUrl = `https://le.utah.gov/DynaBill/svotes.jsp?sessionid=${this.sessionId}&voteid=${voteId}&house=S`;
+                const voteUrl = `https://le.utah.gov/DynaBill/svotes.jsp?sessionid=${this.session_id}&voteid=${voteId}&house=S`;
                 return voteUrl;
             }
         } catch (err) {

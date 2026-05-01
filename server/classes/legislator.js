@@ -1,18 +1,29 @@
+import lowerCaseKeys from "../helper.js";
+
 class Legislator {
     constructor(legislatorObject) {
-        this.id = legislatorObject.id;
-        this.fullName = legislatorObject.fullName;
-        this.formatName = legislatorObject.formatName;
-        this.image = legislatorObject.image;
-        this.house = legislatorObject.house;
-        this.party = legislatorObject.party;
-        this.district = legislatorObject.district;
-        this.counties = legislatorObject.counties;
-        this.email = legislatorObject.email;
-        this.cell = legislatorObject.cell;
-        this.serviceStart = legislatorObject.serviceStart;
-        this.link = this.house === 'H' ? `https://house.utleg.gov/rep/${this.id}` : `https://senate.utah.gov/sen/${this.id}`;
+        if (!legislatorObject) return;
+
+        const legislator = lowerCaseKeys(legislatorObject);
+
+        this.id = legislator.id || null;
+        this.full_name = legislator.full_name || legislator.fullname || null;
+        this.format_name =
+            legislator.format_name || legislator.formatname || "";
+        this.image = legislator.image || "";
+        this.house = legislator.house || "";
+        this.party = legislator.party || "";
+        this.district = legislator.district || "";
+        this.counties = legislator.counties || "";
+        this.email = legislator.email || "";
+        this.cell = legislator.cell || "";
+        this.service_start =
+            legislator.service_start || legislator.servicestart || "";
+        this.link =
+            this.house === "H"
+                ? `https://house.utleg.gov/rep/${this.id}`
+                : `https://senate.utah.gov/sen/${this.id}`;
     }
 }
 
-export default Legislator; 
+export default Legislator;

@@ -1,10 +1,10 @@
 //GET ALL LEGISLATORS FROM THE GOVERNMENT WEBSITE AND API
-import { DEV_TOKEN, BASE_URL } from "./constants.js";
+import { DEV_TOKEN, API_BASE_URL } from "./constants.js";
 
 //this calls the utah government legislator API and returns JSON responses
 export const getAllLegislatorsFromGovApi = async () => {
     const legislatorsUrl = `/legislators/${DEV_TOKEN}`;
-    const finalUrl = BASE_URL + legislatorsUrl;
+    const finalUrl = API_BASE_URL + legislatorsUrl;
 
     try {
         const response = await fetch(finalUrl, { method: "GET" });
@@ -17,9 +17,9 @@ export const getAllLegislatorsFromGovApi = async () => {
     }
 };
 
-export const getLegislatorFromGovApi = async (legislatorId) => {
-    const legislatorsUrl = `/legislator/${legislatorId}/${DEV_TOKEN}`;
-    const finalUrl = BASE_URL + legislatorsUrl;
+export const getLegislatorFromGovApi = async (legislator_id) => {
+    const legislatorsUrl = `/legislator/${legislator_id}/${DEV_TOKEN}`;
+    const finalUrl = API_BASE_URL + legislatorsUrl;
 
     try {
         const response = await fetch(finalUrl, { method: "GET" });
@@ -34,10 +34,10 @@ export const getLegislatorFromGovApi = async (legislatorId) => {
 
 export const getLegislatorByDistrictFromGovApi = async (
     chamber,
-    districtNumber,
+    district_number,
 ) => {
-    const legislatorsUrl = `/legislator/${chamber}/${districtNumber}/${DEV_TOKEN}`;
-    const finalUrl = BASE_URL + legislatorsUrl;
+    const legislatorsUrl = `/legislator/${chamber}/${district_number}/${DEV_TOKEN}`;
+    const finalUrl = API_BASE_URL + legislatorsUrl;
 
     try {
         const response = await fetch(finalUrl, { method: "GET" });

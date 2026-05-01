@@ -141,8 +141,9 @@ const writeBillsToDatabase = async (bills) => {
 };
 
 const getBillsBySessionFromDatabase = async (sessionId) => {
-    const allBills = await db.getAllBillsForSession(sessionId);
-    return allBills;
+    const bills = await db.getAllBillsForSession(sessionId);
+    const billObjects = bills?.map((bill) => new Bill(bill));
+    return billObjects;
 };
 
 const getBaseBillNumber = (billNumber) => {
@@ -255,41 +256,6 @@ const getAndWriteFullBillTextToDatabase = async (sessionId) => {
     }
 };
 
-//takes the data from the gov api and creates the Bill object to be written to the database
-const getBillData = async (sessionId) => {
-    //only works for 2025 right now
-    const allBills = await getAllBillsBySessionFromGovApi(sessionId);
-    //allBills.sort((a, b) => a.number.localeCompare(b.number));
-
-    const passedBills = await getPassedBillsFromGovApi(sessionId);
-    // const passedBillIds = passedBills.map((bill) => bill.number);
-
-    const promiseResult = await Promise.all(
-        Array.from(allBills).map(async (bill) => {
-            try {
-                if (!bill.number) {
-                    return;
-                }
-                const billId = bill.number;
-                const billInfo = await getBillFromGovApi(sessionId, billId);
-                const billToAdd = new Bill(billInfo);
-
-                let passedBillData = passedBills?.find((bill) =>
-                    String(bill.number).includes(billId),
-                );
-                if (passedBillData) {
-                    billToAdd.setPassed(passedBillData);
-                } else {
-                    billToAdd.passed = false;
-                }
-                return billToAdd;
-            } catch (e) {}
-        }),
-    );
-
-    return promiseResult;
-};
-
 // #endregion
 
 // #region VOTES TABLE
@@ -353,34 +319,12 @@ const writeVotesToDb = async (allBills) => {
 
 // #endregion
 
-const writeBillFullTextToDb = async (allBills) => {
-    try {
-        // const addingBillsToDatabase = Array.from(allBills).map((bill) =>
-        //     db.addToBills(bill),
-        // );
-
-        // await Promise.all(addingBillsToDatabase);
-
-        for (const bill of allBills) {
-            const result = await scrapeBillText(bill.year, bill.id, bill.link);
-            bill.fullText = result.full_text;
-            bill.moneyAppropriated = result.money_appropriated;
-            await db.addToBills(bill);
-        }
-
-        return true;
-    } catch (err) {
-        console.log(`Error filling bills table. ${err.stack}`);
-        return false;
-    }
-};
-
 //await createNewEmptyDatabase();
 //await fillLegislatorsTable();
 //await fillBillsTableAllSessions_generalData();
 //await fillBillsTableAllSessions_passedData();
 //await fillBillsTableAllSessions_textData();
-//await currentFillVotesTable();
+await currentFillVotesTable();
 
 //await currentFillVotesTable();
 //await FillBillsTableByYearWebScrapiing();

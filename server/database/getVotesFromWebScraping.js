@@ -121,9 +121,9 @@ const createVoteDatabaseObjects = (
         for (let i = 0; i < legislatorVoteArray.length; i++) {
             if (idArray[i] != "") {
                 voteArray.push({
-                    sessionId: sessionId,
-                    billId: billId,
-                    legislatorId: idArray[i],
+                    session_id: sessionId,
+                    bill_id: billId,
+                    legislator_id: idArray[i],
                     vote: vote,
                 });
             }

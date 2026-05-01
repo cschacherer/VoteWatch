@@ -1,12 +1,12 @@
 //GET ALL BILLS FROM THE GOVERNMENT WEBSITE AND API
-import { DEV_TOKEN, BASE_URL } from "./constants.js";
+import { DEV_TOKEN, API_BASE_URL } from "./constants.js";
 
 const test =
     "https://glen.le.utah.gov/bills/2026GS/billlist/83C4D87BC38A20EE125713B39B56AA5B";
 
-export const getAllBillsBySessionFromGovApi = async (sessionId) => {
-    const billsUrl = `/bills/${sessionId}/billlist/${DEV_TOKEN}`;
-    const finalUrl = BASE_URL + billsUrl;
+export const getAllBillsBySessionFromGovApi = async (session_id) => {
+    const billsUrl = `/bills/${session_id}/billlist/${DEV_TOKEN}`;
+    const finalUrl = API_BASE_URL + billsUrl;
     try {
         const response = await fetch(finalUrl, { method: "GET" });
         if (response.ok) {
@@ -18,9 +18,9 @@ export const getAllBillsBySessionFromGovApi = async (sessionId) => {
     }
 };
 
-export const getBillFromGovApi = async (sessionId, billId) => {
-    const billsUrl = `/bills/${sessionId}/${billId}/${DEV_TOKEN}`;
-    const finalUrl = BASE_URL + billsUrl;
+export const getBillFromGovApi = async (session_id, bill_id) => {
+    const billsUrl = `/bills/${session_id}/${bill_id}/${DEV_TOKEN}`;
+    const finalUrl = API_BASE_URL + billsUrl;
 
     try {
         const response = await fetch(finalUrl, { method: "GET" });
@@ -33,9 +33,9 @@ export const getBillFromGovApi = async (sessionId, billId) => {
     }
 };
 
-export const getPassedBillsFromGovApi = async (sessionId) => {
-    const billsUrl = `/bills/${sessionId}/passedlist/${DEV_TOKEN}`;
-    const finalUrl = BASE_URL + billsUrl;
+export const getPassedBillsFromGovApi = async (session_id) => {
+    const billsUrl = `/bills/${session_id}/passedlist/${DEV_TOKEN}`;
+    const finalUrl = API_BASE_URL + billsUrl;
 
     try {
         const response = await fetch(finalUrl, { method: "GET" });
