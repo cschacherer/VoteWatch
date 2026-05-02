@@ -10,6 +10,7 @@ import { getAllLegislatorsFromGovApi } from "./getLegislatorsFromGovApi.js";
 import { scrapeBillVote } from "./getVotesFromWebScraping.js";
 import { SESSION_LIST } from "./constants.js";
 import { getUtahBillText } from "./getBillTextFromWebScraping.js";
+import { getBillSummary } from "./getSummariesFromAI.js";
 
 //let databaseName = './server/database/voteWatch.db';
 const db = new Database();
@@ -98,6 +99,19 @@ const fillBillsTableAllSessions_textData = async () => {
         try {
             console.log("starting session id: " + session);
             await getAndWriteFullBillTextToDatabase(session);
+            console.log("finished session id: " + session);
+        } catch (e) {
+            console.log("error - ", e.message);
+        }
+    }
+};
+
+const fillBillsTableAllSessions_summaryData = async () => {
+    await db.openDatabase();
+    for (const session of SESSION_LIST) {
+        try {
+            console.log("starting session id: " + session);
+            await getAndWriteBillSummaryToDatabase(session);
             console.log("finished session id: " + session);
         } catch (e) {
             console.log("error - ", e.message);
@@ -256,6 +270,40 @@ const getAndWriteFullBillTextToDatabase = async (sessionId) => {
     }
 };
 
+const getAndWriteBillSummaryToDatabase = async (sessionId) => {
+    const allBills = await getBillsBySessionFromDatabase(sessionId);
+
+    for (const bill of allBills) {
+        try {
+            const existingText = await db.getTextSummaryFromBill(
+                sessionId,
+                bill.id,
+            );
+
+            if (existingText) {
+                continue;
+            }
+
+            const summary = await getBillSummary(bill);
+
+            const result = await db.addTextSummaryToBill(
+                bill.session_id,
+                bill.id,
+                summary,
+            );
+
+            if (!result) {
+                console.log(`No result returned for ${bill.id}`);
+                continue;
+            }
+        } catch (e) {
+            console.log(
+                `Error adding pdf and text information for ${bill.id} - ${e.message}`,
+            );
+        }
+    }
+};
+
 // #endregion
 
 // #region VOTES TABLE
@@ -324,7 +372,8 @@ const writeVotesToDb = async (allBills) => {
 //await fillBillsTableAllSessions_generalData();
 //await fillBillsTableAllSessions_passedData();
 //await fillBillsTableAllSessions_textData();
-await currentFillVotesTable();
+//await currentFillVotesTable();
+await fillBillsTableAllSessions_summaryData();
 
 //await currentFillVotesTable();
 //await FillBillsTableByYearWebScrapiing();

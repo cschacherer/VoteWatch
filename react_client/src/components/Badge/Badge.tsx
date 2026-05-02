@@ -12,6 +12,7 @@ export const BadgeType = {
     BillId: "billId",
     SessionId: "sessionId",
     Sponsor: "sponsor",
+    Basic: "basic",
 } as const;
 
 export type BadgeType = (typeof BadgeType)[keyof typeof BadgeType];

@@ -19,7 +19,7 @@ function createBillColumns({
             id: "sessionId",
             name: "Session Id",
             selector: (row: Bill) => normalizeSessionId(row.sessionId),
-            width: "150px",
+            width: "170px",
             cell: (row) => (
                 <Badge
                     type="sessionId"
@@ -53,37 +53,49 @@ function createBillColumns({
             name: "Title",
             selector: (row) => row.shortTitle,
             sortable: true,
-            width: "150px",
+            width: "250px",
             wrap: true,
             filterConfig: {
                 type: FilterType.Text,
             },
         }),
+        // createDataTableColumn<Bill>({
+        //     id: "generalProvisions",
+        //     name: "General Provisions",
+        //     selector: (row) => row.generalProvisions,
+        //     sortable: true,
+        //     grow: 1,
+        //     minWidth: "300px",
+        //     wrap: true,
+        //     filterConfig: {
+        //         type: FilterType.Text,
+        //     },
+        // }),
         createDataTableColumn<Bill>({
-            id: "generalProvisions",
-            name: "General Provisions",
-            selector: (row) => row.generalProvisions,
+            id: "summary",
+            name: "Summary",
+            selector: (row) => row.summary.oneSentence,
             sortable: true,
-            grow: 1,
+            grow: 2,
             minWidth: "300px",
             wrap: true,
             filterConfig: {
                 type: FilterType.Text,
             },
         }),
-        createDataTableColumn<Bill>({
-            id: "highlightedProvisions",
-            name: "Highlighted Provisions",
-            selector: (row) => row.highlightedProvisions,
-            sortable: true,
-            grow: 1.5,
-            minWidth: "350px",
-            wrap: true,
-            cell: (row) => <CollapsibleCell text={row.highlightedProvisions} />,
-            filterConfig: {
-                type: FilterType.Text,
-            },
-        }),
+        // createDataTableColumn<Bill>({
+        //     id: "highlightedProvisions",
+        //     name: "Highlighted Provisions",
+        //     selector: (row) => row.highlightedProvisions,
+        //     sortable: true,
+        //     grow: 1.5,
+        //     minWidth: "350px",
+        //     wrap: true,
+        //     cell: (row) => <CollapsibleCell text={row.highlightedProvisions} />,
+        //     filterConfig: {
+        //         type: FilterType.Text,
+        //     },
+        // }),
         createDataTableColumn<Bill>({
             id: "passed",
             name: "Passed",

@@ -16,6 +16,7 @@ import { formatDate } from "../../models/DataTableUtils";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 
 import style from "./BillDetailsPage.module.css";
+import ExpandableSection from "../../components/ExpandableSection/ExpandableSection";
 
 const BillDetailsPage = () => {
     const [billDetails, setBillDetails] = useState<Bill>();
@@ -72,11 +73,19 @@ const BillDetailsPage = () => {
                         {billDetails?.id} - {billDetails?.shortTitle}
                     </div>
                     {/* Bill Details */}
-                    <Container fluid>
+                    <Container className="defaultPadding" fluid>
+                        {/* <Row>
+                            <Col>
+                                <PropertyGroup
+                                    title="Overview"
+                                    value={billDetails?.summary?.oneSentence}
+                                ></PropertyGroup>
+                            </Col>
+                        </Row> */}
                         <Row>
                             <Col>
                                 <PropertyGroup
-                                    title="Session Id"
+                                    title="Session"
                                     value={
                                         <Badge
                                             type="sessionId"
@@ -125,6 +134,7 @@ const BillDetailsPage = () => {
                                     }
                                 ></PropertyGroup>
                             </Col>
+
                             <Col>
                                 <PropertyGroup
                                     title="Offical Links"
@@ -155,6 +165,7 @@ const BillDetailsPage = () => {
                                 ></PropertyGroup>
                             </Col>
                         </Row>
+
                         <Row>
                             <Col>
                                 <PropertyGroup
@@ -170,7 +181,7 @@ const BillDetailsPage = () => {
                             <Col>
                                 <PropertyGroup
                                     title="Last Action"
-                                    value={`${billDetails?.lastAction} ${billDetails?.lastActionDate}`}
+                                    value={`${billDetails?.lastAction} - ${billDetails?.lastActionDate}`}
                                 ></PropertyGroup>
                             </Col>
                             <Col>
@@ -179,125 +190,214 @@ const BillDetailsPage = () => {
                                     value={formatDate(billDetails?.datePassed)}
                                 ></PropertyGroup>
                             </Col>
-                            <Col>
-                                <PropertyGroup
-                                    title="Date Effective"
-                                    value={formatDate(
-                                        billDetails?.effectiveDate,
-                                    )}
-                                ></PropertyGroup>
-                            </Col>
+                            <Col></Col>
                         </Row>
-                        <Row>
+                        {/* <Row>
                             <Col>
-                                <PropertyGroup
-                                    title="Subjects"
-                                    value={
-                                        <div className="verticalStack defaultGap">
-                                            <div className="subjectBadgeList">
-                                                {billDetails?.subjects.map(
-                                                    (item) => (
-                                                        <Badge
-                                                            type={
-                                                                BadgeType.Subjects
-                                                            }
-                                                            value={item}
-                                                        />
-                                                    ),
-                                                )}
-                                            </div>
-                                        </div>
-                                    }
-                                ></PropertyGroup>
-                                <PropertyGroup
-                                    title="General Provisions"
-                                    value={billDetails?.generalProvisions}
-                                ></PropertyGroup>
-                                <PropertyGroup
-                                    title="Highlighted Provisions"
-                                    value={
-                                        <div className="preWrap">
-                                            {billDetails?.highlightedProvisions}
-                                        </div>
-                                    }
-                                ></PropertyGroup>
-                                {/* <PropertyGroup
-                                    title="Money Approriated"
-                                    value={
-                                        <div className="preWrap">
-                                            {billDetails?.moneyAppropriations}
-                                        </div>
-                                    }
-                                ></PropertyGroup>
-                                <PropertyGroup
-                                    title="Full Text"
-                                    value={
-                                        <CollapsibleCell
-                                            text={billDetails?.fullText}
-                                        />
-                                    }
-                                ></PropertyGroup> */}
-                                <PropertyGroup
-                                    title="House Vote"
-                                    value={
-                                        <div className="verticalStack">
-                                            {/* YEAS */}
-                                            <BillVoteTable
-                                                voteList={billVotes}
-                                                house="H"
-                                                voteValue={VoteValue.Yes}
-                                                title="Yeas"
-                                            ></BillVoteTable>
-                                            {/* NAYS */}
-                                            <BillVoteTable
-                                                voteList={billVotes}
-                                                house="H"
-                                                voteValue={VoteValue.No}
-                                                title="Nays"
-                                            ></BillVoteTable>
-                                            {/* ABSENT */}
-                                            <BillVoteTable
-                                                voteList={billVotes}
-                                                house="H"
-                                                voteValue={VoteValue.Absent}
-                                                title="Absent / Abstained"
-                                            ></BillVoteTable>
-                                        </div>
-                                    }
-                                ></PropertyGroup>
-                                <PropertyGroup
-                                    title="Senate Vote"
-                                    value={
-                                        <div className="verticalStack">
-                                            {" "}
-                                            {/* YEAS */}
-                                            <BillVoteTable
-                                                voteList={billVotes}
-                                                house="S"
-                                                voteValue={VoteValue.Yes}
-                                                title="Yeas"
-                                            ></BillVoteTable>
-                                            {/* NAYS */}
-                                            <BillVoteTable
-                                                voteList={billVotes}
-                                                house="S"
-                                                voteValue={VoteValue.No}
-                                                title="Nays"
-                                            ></BillVoteTable>
-                                            {/* ABSENT */}
-                                            <BillVoteTable
-                                                voteList={billVotes}
-                                                house="S"
-                                                voteValue={VoteValue.Absent}
-                                                title="Absent / Abstained"
-                                            ></BillVoteTable>
-                                        </div>
-                                    }
-                                ></PropertyGroup>
+                                <div className="defaultPadding">
+                                    <div className="pageTitle">Summary</div>
+                                    <div className="verticalStack defaultGap section outlineThin defaultPadding">
+                                        <PropertyGroup
+                                            title="Overview"
+                                            value={
+                                                billDetails?.summary
+                                                    ?.oneSentence
+                                            }
+                                        ></PropertyGroup>
+                                        <PropertyGroup
+                                            title="Summary"
+                                            value={
+                                                billDetails?.summary?.overview
+                                            }
+                                        ></PropertyGroup>
+                                        <PropertyGroup
+                                            title="Key Changes"
+                                            value={
+                                                <ul className="customList">
+                                                    {billDetails?.summary?.keyChanges.map(
+                                                        (item) => (
+                                                            <li>{item}</li>
+                                                        ),
+                                                    )}
+                                                </ul>
+                                            }
+                                        ></PropertyGroup>
+                                        <PropertyGroup
+                                            title="Groups Affected"
+                                            value={
+                                                <ul className="customList">
+                                                    {billDetails?.summary?.groupsAffected.map(
+                                                        (item) => (
+                                                            <li>{item}</li>
+                                                        ),
+                                                    )}
+                                                </ul>
+                                            }
+                                        ></PropertyGroup>
+                                        <PropertyGroup
+                                            title="Money or Funding Impact"
+                                            value={billDetails?.summary?.money}
+                                        ></PropertyGroup>
+                                    </div>
+                                </div>
                             </Col>
-                        </Row>
+                        </Row> */}
                     </Container>
                 </div>
+                <ExpandableSection
+                    header="Summary (AI Generated)"
+                    children={
+                        <div className="verticalStack defaultGap defaultPadding">
+                            <PropertyGroup
+                                title="Overview"
+                                value={billDetails?.summary?.oneSentence}
+                            ></PropertyGroup>
+                            <PropertyGroup
+                                title="Summary"
+                                value={billDetails?.summary?.overview}
+                            ></PropertyGroup>
+                            <PropertyGroup
+                                title="Key Changes"
+                                value={
+                                    <ul className="customList">
+                                        {billDetails?.summary?.keyChanges.map(
+                                            (item) => (
+                                                <li>{item}</li>
+                                            ),
+                                        )}
+                                    </ul>
+                                }
+                            ></PropertyGroup>
+                            <PropertyGroup
+                                title="Groups Affected"
+                                value={
+                                    <ul className="customList">
+                                        {billDetails?.summary?.groupsAffected.map(
+                                            (item) => (
+                                                <li>{item}</li>
+                                            ),
+                                        )}
+                                    </ul>
+                                }
+                            ></PropertyGroup>
+                            <PropertyGroup
+                                title="Money or Funding Impact"
+                                value={billDetails?.summary?.money}
+                            ></PropertyGroup>
+                        </div>
+                    }
+                ></ExpandableSection>
+                <ExpandableSection
+                    header="Official Documentation"
+                    children={
+                        <div className="verticalStack defaultGap defaultPadding">
+                            <PropertyGroup
+                                title="Official Text"
+                                value={
+                                    <a
+                                        className="link"
+                                        href={billDetails?.pdfLink}
+                                    >
+                                        {`${billDetails?.id} (PDF)`}
+                                    </a>
+                                }
+                            ></PropertyGroup>
+                            <PropertyGroup
+                                title="General Provisions"
+                                value={billDetails?.generalProvisions}
+                            ></PropertyGroup>
+                            <PropertyGroup
+                                title="Highlighted Provisions"
+                                value={
+                                    <div className="preWrap">
+                                        {billDetails?.highlightedProvisions}
+                                    </div>
+                                }
+                            ></PropertyGroup>
+                            <PropertyGroup
+                                title="Subjects"
+                                value={
+                                    <div className="verticalStack defaultGap">
+                                        <div className="subjectBadgeList">
+                                            {billDetails?.subjects.map(
+                                                (item) => (
+                                                    <Badge
+                                                        type={BadgeType.Basic}
+                                                        value={item}
+                                                    />
+                                                ),
+                                            )}
+                                        </div>
+                                    </div>
+                                }
+                            ></PropertyGroup>
+                        </div>
+                    }
+                ></ExpandableSection>
+                <ExpandableSection
+                    header="Votes"
+                    children={
+                        <div className="verticalStack defaultGap defaultPadding">
+                            <PropertyGroup
+                                title="House Vote"
+                                value={
+                                    <div className="section verticalStack">
+                                        {/* YEAS */}
+                                        <BillVoteTable
+                                            voteList={billVotes}
+                                            house="H"
+                                            voteValue={VoteValue.Yes}
+                                            title="Yeas"
+                                        ></BillVoteTable>
+                                        {/* NAYS */}
+                                        <BillVoteTable
+                                            voteList={billVotes}
+                                            house="H"
+                                            voteValue={VoteValue.No}
+                                            title="Nays"
+                                        ></BillVoteTable>
+                                        {/* ABSENT */}
+                                        <BillVoteTable
+                                            voteList={billVotes}
+                                            house="H"
+                                            voteValue={VoteValue.Absent}
+                                            title="Absent / Abstained"
+                                        ></BillVoteTable>
+                                    </div>
+                                }
+                            ></PropertyGroup>
+                            <PropertyGroup
+                                title="Senate Vote"
+                                value={
+                                    <div className="section verticalStack">
+                                        {" "}
+                                        {/* YEAS */}
+                                        <BillVoteTable
+                                            voteList={billVotes}
+                                            house="S"
+                                            voteValue={VoteValue.Yes}
+                                            title="Yeas"
+                                        ></BillVoteTable>
+                                        {/* NAYS */}
+                                        <BillVoteTable
+                                            voteList={billVotes}
+                                            house="S"
+                                            voteValue={VoteValue.No}
+                                            title="Nays"
+                                        ></BillVoteTable>
+                                        {/* ABSENT */}
+                                        <BillVoteTable
+                                            voteList={billVotes}
+                                            house="S"
+                                            voteValue={VoteValue.Absent}
+                                            title="Absent / Abstained"
+                                        ></BillVoteTable>
+                                    </div>
+                                }
+                            ></PropertyGroup>
+                        </div>
+                    }
+                ></ExpandableSection>
             </div>
         </>
     );

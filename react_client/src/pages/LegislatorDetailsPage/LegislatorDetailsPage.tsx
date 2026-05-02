@@ -14,6 +14,7 @@ import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
 import Badge from "../../components/Badge/Badge";
 import PropertyGroup from "../../components/PropertyGroup/PropertyGroup";
 import { type Bill, normalizeSessionId } from "../../models/Bill";
+import ExpandableSection from "../../components/ExpandableSection/ExpandableSection";
 
 import downIcon from "../../assets/icon_expand_down.svg";
 import rightIcon from "../../assets/icon_expand_right.svg";
@@ -109,30 +110,52 @@ function createLegislatorDetailsColumns({
                 options: ["PASSED", "FAILED"],
             },
         }),
+        // createDataTableColumn<LegislatorVote>({
+        //     id: "summary",
+        //     name: "Summary",
+        //     selector: (row: LegislatorVote) => row.bill.summary.oneSentence,
+        //     sortable: true,
+        //     grow: 2,
+        //     minWidth: "300px",
+        //     wrap: true,
+        //     filterConfig: {
+        //         type: FilterType.Text,
+        //     },
+        // }),
         createDataTableColumn<LegislatorVote>({
-            id: "generalProvisions",
-            name: "General Provisions",
-            selector: (row: LegislatorVote) => row.bill.generalProvisions,
-            grow: 1,
+            id: "summary",
+            name: "Summary",
+            selector: (row: LegislatorVote) =>
+                row.bill?.summary?.oneSentence ?? "",
+            grow: 2,
             minWidth: "250px",
             filterConfig: {
                 type: FilterType.Text,
             },
         }),
-        createDataTableColumn<LegislatorVote>({
-            id: "highlightedProvisions",
-            name: "Highlighted Provisions",
-            selector: (row: LegislatorVote) => row.bill.highlightedProvisions,
-            grow: 2,
-            minWidth: "350px",
-            cell: (row: LegislatorVote) => (
-                <CollapsibleCell text={row.bill.highlightedProvisions} />
-            ),
-            filterConfig: {
-                type: FilterType.Text,
-            },
-        }),
-
+        // createDataTableColumn<LegislatorVote>({
+        //     id: "generalProvisions",
+        //     name: "General Provisions",
+        //     selector: (row: LegislatorVote) => row.bill.generalProvisions,
+        //     grow: 1,
+        //     minWidth: "250px",
+        //     filterConfig: {
+        //         type: FilterType.Text,
+        //     },
+        // }),
+        // createDataTableColumn<LegislatorVote>({
+        //     id: "highlightedProvisions",
+        //     name: "Highlighted Provisions",
+        //     selector: (row: LegislatorVote) => row.bill.highlightedProvisions,
+        //     grow: 2,
+        //     minWidth: "350px",
+        //     cell: (row: LegislatorVote) => (
+        //         <CollapsibleCell text={row.bill.highlightedProvisions} />
+        //     ),
+        //     filterConfig: {
+        //         type: FilterType.Text,
+        //     },
+        // }),
         createDataTableColumn<LegislatorVote>({
             id: "year",
             name: "Year",
@@ -168,17 +191,45 @@ function createLegislatorDetailsColumns({
 
 const LegislatorDetailsPage = () => {
     const [legislatorDetails, setLegislatorDetails] = useState<Legislator>();
-    const [showLegislatorVotes, setShowLegislatorVotes] = useState<Boolean>();
     const [legislatorVotes, setLegislatorVotes] = useState<LegislatorVote[]>(
         [],
     );
-    const [showSponsoredBills, setShowSponsoredBills] = useState<Boolean>();
     const [sponsoredBills, setSponsoredBills] = useState<Bill[]>([]);
+
+    const [legislatorVotesLoaded, setLegislatorVotesLoaded] = useState(false);
+    const [sponsoredBillsLoaded, setSponsoredBillsLoaded] = useState(false);
 
     let { legislatorId } = useParams<string>();
     if (!legislatorId) {
         legislatorId = "";
     }
+
+    const loadLegislatorVotes = async () => {
+        if (legislatorVotesLoaded) return;
+
+        try {
+            const votesResponse = await getLegislatorVotes(legislatorId);
+            setLegislatorVotes(votesResponse);
+
+            setLegislatorVotesLoaded(true);
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const loadSponsoredBills = async () => {
+        if (sponsoredBillsLoaded) return;
+
+        try {
+            const sponsoredResponse =
+                await getLegislatorSponsoredBills(legislatorId);
+
+            setSponsoredBills(sponsoredResponse);
+            setSponsoredBillsLoaded(true);
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
     //this needs to be in here because we have to access the legislator id
     function createSponsoredBillsColumns({
@@ -265,29 +316,40 @@ const LegislatorDetailsPage = () => {
                 },
             }),
             createDataTableColumn<Bill>({
-                id: "generalProvisions",
-                name: "General Provisions",
-                selector: (row: Bill) => row.generalProvisions,
+                id: "summary",
+                name: "Summary",
+                selector: (row: Bill) => row.summary.oneSentence,
+                sortable: true,
                 grow: 2,
-                minWidth: "250px",
+                minWidth: "300px",
+                wrap: true,
                 filterConfig: {
                     type: FilterType.Text,
                 },
             }),
-            createDataTableColumn<Bill>({
-                id: "highlightedProvisions",
-                name: "Highlighted Provisions",
-                selector: (row: Bill) => row.highlightedProvisions,
-                grow: 2,
-                minWidth: "350px",
-                cell: (row: Bill) => (
-                    <CollapsibleCell text={row.highlightedProvisions} />
-                ),
-                filterConfig: {
-                    type: FilterType.Text,
-                },
-            }),
-
+            // createDataTableColumn<Bill>({
+            //     id: "generalProvisions",
+            //     name: "General Provisions",
+            //     selector: (row: Bill) => row.generalProvisions,
+            //     grow: 2,
+            //     minWidth: "250px",
+            //     filterConfig: {
+            //         type: FilterType.Text,
+            //     },
+            // }),
+            // createDataTableColumn<Bill>({
+            //     id: "highlightedProvisions",
+            //     name: "Highlighted Provisions",
+            //     selector: (row: Bill) => row.highlightedProvisions,
+            //     grow: 2,
+            //     minWidth: "350px",
+            //     cell: (row: Bill) => (
+            //         <CollapsibleCell text={row.highlightedProvisions} />
+            //     ),
+            //     filterConfig: {
+            //         type: FilterType.Text,
+            //     },
+            // }),
             createDataTableColumn<Bill>({
                 id: "year",
                 name: "Year",
@@ -324,9 +386,6 @@ const LegislatorDetailsPage = () => {
                 const detailsResponse =
                     await getLegislatorDetails(legislatorId);
                 setLegislatorDetails(detailsResponse);
-
-                setShowLegislatorVotes(false);
-                setShowSponsoredBills(false);
             } catch (error) {
                 console.log(error);
             }
@@ -334,37 +393,6 @@ const LegislatorDetailsPage = () => {
 
         fetchLegislatorDetails();
     }, []);
-
-    useEffect(() => {
-        const fetchLegislatorVotes = async () => {
-            try {
-                const votesResponse = await getLegislatorVotes(legislatorId);
-                setLegislatorVotes(votesResponse);
-
-                const sponsoredResponse =
-                    await getLegislatorSponsoredBills(legislatorId);
-                setSponsoredBills(sponsoredResponse);
-            } catch (error) {
-                console.log(error);
-            }
-        };
-
-        fetchLegislatorVotes();
-    }, [showLegislatorVotes]);
-
-    useEffect(() => {
-        const fetchSponsoredBills = async () => {
-            try {
-                const sponsoredResponse =
-                    await getLegislatorSponsoredBills(legislatorId);
-                setSponsoredBills(sponsoredResponse);
-            } catch (error) {
-                console.log(error);
-            }
-        };
-
-        fetchSponsoredBills();
-    }, [showSponsoredBills]);
 
     return (
         <>
@@ -451,76 +479,39 @@ const LegislatorDetailsPage = () => {
                         </Container>
                     </div>
 
-                    <div className="section outline ">
-                        {/* Legislator Voting History Table */}
-                        <div className="filledHeader horizontalRow defaultGap">
-                            <button
-                                type="button"
-                                className="expandButton defaultPadding"
-                                onClick={() =>
-                                    setShowLegislatorVotes((prev) => !prev)
-                                }
-                            >
-                                <img
-                                    className="expandIcon"
-                                    src={
-                                        showLegislatorVotes
-                                            ? downIcon
-                                            : rightIcon
-                                    }
-                                />
-                            </button>
-                            <span>Voting History</span>
-                        </div>
-
-                        {showLegislatorVotes && (
-                            <div className="defaultPadding height800">
+                    <ExpandableSection
+                        header="Voting History"
+                        onExpand={loadLegislatorVotes}
+                    >
+                        <div className="defaultPadding height800">
+                            {
                                 <GeneralTable
                                     columns={(helpers) =>
                                         createLegislatorDetailsColumns(helpers)
                                     }
                                     data={legislatorVotes}
-                                    defaultSortId="id"
-                                    defaultSortAscending={true}
+                                    defaultSortId="sessionId"
+                                    defaultSortAscending={false}
                                 />
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="section outline">
-                        {/* Legislator Sponsored Bills Table */}
-                        <div className="filledHeader horizontalRow defaultGap">
-                            <button
-                                type="button"
-                                className="expandButton defaultPadding"
-                                onClick={() =>
-                                    setShowSponsoredBills((prev) => !prev)
-                                }
-                            >
-                                <img
-                                    className="expandIcon"
-                                    src={
-                                        showSponsoredBills
-                                            ? downIcon
-                                            : rightIcon
-                                    }
-                                />
-                            </button>
-                            <span>Sponsored Bills</span>
+                            }
                         </div>
-                        {showSponsoredBills && (
-                            <div className="defaultPadding height800">
-                                <GeneralTable
-                                    columns={(helpers) =>
-                                        createSponsoredBillsColumns(helpers)
-                                    }
-                                    data={sponsoredBills}
-                                    defaultSortId="id"
-                                    defaultSortAscending={true}
-                                ></GeneralTable>
-                            </div>
-                        )}
-                    </div>
+                    </ExpandableSection>
+
+                    <ExpandableSection
+                        header="Sponsored Bills"
+                        onExpand={loadSponsoredBills}
+                    >
+                        <div className="defaultPadding height800">
+                            <GeneralTable
+                                columns={(helpers) =>
+                                    createSponsoredBillsColumns(helpers)
+                                }
+                                data={sponsoredBills}
+                                defaultSortId="sessionId"
+                                defaultSortAscending={false}
+                            />
+                        </div>
+                    </ExpandableSection>
                 </div>
             </div>
         </>

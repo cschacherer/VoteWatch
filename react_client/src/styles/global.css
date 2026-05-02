@@ -283,3 +283,12 @@
     width: 30px; 
     height: 30px; 
 }
+
+.customList {
+    list-style-type: disc;
+}
+
+.customList li {
+    margin: 10px 0px;
+    padding-left: 15px;
+}

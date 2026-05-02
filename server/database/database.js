@@ -187,8 +187,14 @@ class Database {
     }
 
     async addTextSummaryToBill(session_id, bill_id, summary_text) {
-        const sqlCommand = `UPDATE bills SET summary_text = ? WHERE session_id = ? AND bill_id = ?`;
-        const values = [fullText, session_id, bill_id];
+        const sqlCommand = `UPDATE bills SET summary_text = ? WHERE session_id = ? AND id = ?`;
+        const values = [summary_text, session_id, bill_id];
+        return await this._getAllRows(sqlCommand, values);
+    }
+
+    async getTextSummaryFromBill(session_id, bill_id) {
+        const sqlCommand = `SELECT summary_text FROM bills WHERE session_id = ? AND id = ?`;
+        const values = [session_id, bill_id];
         return await this._getAllRows(sqlCommand, values);
     }
 
@@ -273,6 +279,7 @@ class Database {
                                 votes.session_id,
                                 votes.vote, 
                                 bills.short_title,
+                                bills.summary_text,
                                 bills.general_provisions, 
                                 bills.highlighted_provisions, 
                                 bills.year,

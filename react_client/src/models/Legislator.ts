@@ -48,5 +48,6 @@ const normalizeParty = (text?: string): string => {
         return "Republican";
     } else if (text.toUpperCase() == "D") return "Democrat";
     else if (text.toUpperCase() == "I") return "Independent";
-    else return "";
+    else if (text.toUpperCase() == "F") return "Foward Party";
+    else return text;
 };
