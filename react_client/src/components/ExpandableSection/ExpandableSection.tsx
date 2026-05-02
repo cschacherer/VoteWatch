@@ -23,15 +23,6 @@ const ExpandableSection = ({
             onExpand();
         }
         setExpanded(newExpanded);
-        // setExpanded((prev) => {
-        //     const next = !prev;
-
-        //     if (next && onExpand) {
-        //         onExpand();
-        //     }
-
-        //     return next;
-        // });
     };
 
     return (

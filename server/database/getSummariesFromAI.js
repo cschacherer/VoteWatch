@@ -24,10 +24,14 @@ Rules:
 - Be neutral and factual.
 - Use simple language.
 - Base your summary only on the bill text provided.
-- Do not speculate about political motives or effects not stated in the bill.
+- Do not speculate about motives, likely political effects, or consequences not stated in the text.
 - If something is unclear, say so instead of guessing.
+- Focus specifically on what the bill changes compared to existing law, not just what it says.
 - Focus on what the bill changes, who it affects, and any money or date information.
-                        `.trim(),
+- If the bill mostly makes technical, conforming, or renumbering changes, say that clearly.
+- Do not include anything that is not supported by the bill text.
+- If large portions of the text are unchanged existing law, summarize only the changes.
+    `.trim(),
                     },
                     {
                         role: "user",
@@ -45,15 +49,23 @@ Return a valid JSON object with exactly these properties:
   "unclear_items": string
 }
 
-Guidance:
-- "one_sentence_summary": one short sentence explaining the bill
-- "plain_english_overview": a paragraph or two in plain English
-- "key_changes": a list of the main legal or policy changes
-- "who_is_affected": a list of groups, agencies, industries, or people affected
-- "money_or_funding_impact": describe appropriations, fiscal impact, or say "Not clearly stated in the bill text."
-- "effective_date": give the effective date, or say "Not clearly stated in the bill text."
-- "unclear_items": note anything important that is ambiguous or not clearly stated
+Instructions for each field:
+- "one_sentence_summary": one short sentence saying what the bill mainly does
+- "plain_english_overview": 1 to 2 short paragraphs in plain English
+- "key_changes": 2 to 6 short bullet-style strings describing the main changes in the bill text
+- "who_is_affected": list the people, agencies, industries, local governments, schools, courts, or other groups directly affected
+- "money_or_funding_impact": describe any appropriation, tax change, fee change, transfer, fiscal mechanism, or say "Not clearly stated in the bill text."
+- "effective_date": give the effective date exactly if stated, or say "Not clearly stated in the bill text."
+- "unclear_items": briefly note anything important that is ambiguous, cross-referenced without explanation, or not clearly stated; if nothing stands out, say "Nothing significant is unclear from the bill text alone."
 
+Important:
+- Use only the bill text below.
+- Do not use outside knowledge.
+- Do not guess.
+- If the bill amends existing law, describe the change in plain English rather than quoting legal language.
+- If the bill has multiple parts, focus on the main operative changes.
+- If the bill is mostly technical or administrative, say so plainly.
+- If large portions of the text are unchanged existing law, summarize only the changes.
 
 Bill metadata:
 - Bill ID: ${bill.id}
@@ -63,7 +75,7 @@ Bill metadata:
 
 Bill text:
 ${bill.full_text}
-                        `.trim(),
+    `.trim(),
                     },
                 ],
                 response_format: {

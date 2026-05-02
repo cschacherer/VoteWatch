@@ -92,6 +92,7 @@ class Database {
                                         house_vote_url TEXT, 
                                         senate_vote_url TEXT,  
                                         link TEXT,
+                                        policy_topics TEXT,
                                         PRIMARY KEY(session_id, id))`);
 
             const createVotesTable = await this
@@ -133,8 +134,9 @@ class Database {
                 tracking_id,
                 house_vote_url, 
                 senate_vote_url,
-                link
-              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                link,
+                policy_topics
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
             const values = [
                 bill.session_id,
@@ -159,6 +161,7 @@ class Database {
                 bill.house_vote_url,
                 bill.senate_vote_url,
                 bill.link,
+                bill.policy_topics,
             ];
 
             const result = await this._execute(sqlCommand, values);
@@ -192,10 +195,22 @@ class Database {
         return await this._getAllRows(sqlCommand, values);
     }
 
+    async addPolicyTopicsToBill(session_id, bill_id, policy_topics) {
+        const sqlCommand = `UPDATE bills SET policy_topics = ? WHERE session_id = ? AND id = ?`;
+        const values = [policy_topics, session_id, bill_id];
+        return await this._getAllRows(sqlCommand, values);
+    }
+
+    async getPolicyTopicsFromBill(session_id, bill_id) {
+        const sqlCommand = `SELECT policy_topics FROM bills WHERE session_id = ? AND id = ?`;
+        const values = [session_id, bill_id];
+        return await this._getFirstRow(sqlCommand, values);
+    }
+
     async getTextSummaryFromBill(session_id, bill_id) {
         const sqlCommand = `SELECT summary_text FROM bills WHERE session_id = ? AND id = ?`;
         const values = [session_id, bill_id];
-        return await this._getAllRows(sqlCommand, values);
+        return await this._getFirstRow(sqlCommand, values);
     }
 
     async getBill(id, session_id) {

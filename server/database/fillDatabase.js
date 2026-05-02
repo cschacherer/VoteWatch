@@ -11,6 +11,8 @@ import { scrapeBillVote } from "./getVotesFromWebScraping.js";
 import { SESSION_LIST } from "./constants.js";
 import { getUtahBillText } from "./getBillTextFromWebScraping.js";
 import { getBillSummary } from "./getSummariesFromAI.js";
+import { writeFileSync } from "fs";
+import { getPolicyClassificationsForBills } from "./getPoliciesFromAI.js";
 
 //let databaseName = './server/database/voteWatch.db';
 const db = new Database();
@@ -112,6 +114,19 @@ const fillBillsTableAllSessions_summaryData = async () => {
         try {
             console.log("starting session id: " + session);
             await getAndWriteBillSummaryToDatabase(session);
+            console.log("finished session id: " + session);
+        } catch (e) {
+            console.log("error - ", e.message);
+        }
+    }
+};
+
+const fillBillsTableAllSessions_policyData = async () => {
+    await db.openDatabase();
+    for (const session of SESSION_LIST) {
+        try {
+            console.log("starting session id: " + session);
+            await getAndWriteBillPolicyDataToDatabase(session);
             console.log("finished session id: " + session);
         } catch (e) {
             console.log("error - ", e.message);
@@ -280,11 +295,17 @@ const getAndWriteBillSummaryToDatabase = async (sessionId) => {
                 bill.id,
             );
 
-            if (existingText) {
+            const stringText = existingText?.summary_text;
+
+            if (stringText) {
                 continue;
             }
 
             const summary = await getBillSummary(bill);
+            if (summary == "") {
+                console.log("error generating summary for " + bill.id);
+                continue;
+            }
 
             const result = await db.addTextSummaryToBill(
                 bill.session_id,
@@ -294,13 +315,83 @@ const getAndWriteBillSummaryToDatabase = async (sessionId) => {
 
             if (!result) {
                 console.log(`No result returned for ${bill.id}`);
-                continue;
+            } else {
+                console.log(`created summary for ${bill.id}`);
             }
         } catch (e) {
             console.log(
                 `Error adding pdf and text information for ${bill.id} - ${e.message}`,
             );
         }
+    }
+};
+
+const getAndWriteBillPolicyDataToDatabase = async (sessionId) => {
+    const allBills = await getBillsBySessionFromDatabase(sessionId);
+
+    for (const bill of allBills) {
+        try {
+            //don't redo policy topics that aready exist
+            // const existingText = await db.getPolicyTopicsFromBill(
+            //     sessionId,
+            //     bill.id,
+            // );
+            // const stringText = existingText?.policy_topics;
+            // if (stringText) {
+            //     continue;
+            // }
+
+            //generate new policy topics
+            const policyTopics = await getPolicyClassificationsForBills(bill);
+
+            if (!policyTopics) {
+                console.log(
+                    `No policy topic returned for getPolicyClassificationsForBills ${bill.id}`,
+                );
+                continue;
+            }
+
+            const result = await db.addPolicyTopicsToBill(
+                bill.session_id,
+                bill.id,
+                policyTopics,
+            );
+
+            if (!result) {
+                console.log(`No result returned for ${bill.id}`);
+            } else {
+                console.log(`created policy topics  for ${bill.id}`);
+            }
+        } catch (e) {
+            console.log(
+                `Error adding pdf and text information for ${bill.id} - ${e.message}`,
+            );
+        }
+    }
+};
+
+const getAllSubjects = async (sessionId) => {
+    await db.openDatabase();
+    const allBills = await getBillsBySessionFromDatabase(sessionId);
+
+    const subjectSet = new Set();
+
+    try {
+        for (const bill of allBills) {
+            const subjectArray = bill.subjects
+                .split(",")
+                .map((item) => item.trim());
+            subjectArray.forEach((subject) => subjectSet.add(subject));
+        }
+        console.log(subjectSet);
+        writeFileSync(
+            "C:/Users/Conner Schacherer/Desktop/Output1.txt",
+            [...subjectSet].join("; "),
+            "utf8",
+        );
+        return subjectSet;
+    } catch (e) {
+        console.log(e);
     }
 };
 
@@ -374,6 +465,10 @@ const writeVotesToDb = async (allBills) => {
 //await fillBillsTableAllSessions_textData();
 //await currentFillVotesTable();
 await fillBillsTableAllSessions_summaryData();
+
+//await fillBillsTableAllSessions_policyData();
+
+//const set = await getAllSubjects("2026GS");
 
 //await currentFillVotesTable();
 //await FillBillsTableByYearWebScrapiing();
