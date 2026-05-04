@@ -117,7 +117,7 @@ Bill metadata:
 - Subjects: ${JSON.stringify(bill.subjects ?? [], null, 2)}
 
 Summary:
-${JSON.stringify(bill.summary_text, null, 2)}
+${bill.summary_text}
                 `.trim(),
                     },
                 ],
@@ -206,7 +206,8 @@ ${JSON.stringify(bill.summary_text, null, 2)}
         });
         if (response.ok) {
             const data = await response.json();
-            const billPolicies = data.choices[0].message.content;
+            const billPoliciesString = data.choices[0].message.content;
+            const billPolicies = JSON.parse(billPoliciesString);
             return billPolicies;
         } else {
             console.log(response.status + " " + response.statusText);

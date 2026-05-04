@@ -286,21 +286,27 @@ const getAndWriteFullBillTextToDatabase = async (sessionId) => {
 };
 
 const getAndWriteBillSummaryToDatabase = async (sessionId) => {
+    if (sessionId != "2026GS" && sessionId != "2025S2") return;
+
     const allBills = await getBillsBySessionFromDatabase(sessionId);
 
+    let count = 0;
     for (const bill of allBills) {
         try {
-            const existingText = await db.getTextSummaryFromBill(
-                sessionId,
-                bill.id,
-            );
+            // const existingText = await db.getTextSummaryFromBill(
+            //     sessionId,
+            //     bill.id,
+            // );
 
-            const stringText = existingText?.summary_text;
+            // const stringText = existingText?.summary_text;
 
-            if (stringText) {
-                continue;
+            // if (stringText) {
+            //     continue;
+            // }
+            if (count > 300) {
+                console.log("done with 300");
+                return;
             }
-
             const summary = await getBillSummary(bill);
             if (summary == "") {
                 console.log("error generating summary for " + bill.id);
@@ -318,9 +324,10 @@ const getAndWriteBillSummaryToDatabase = async (sessionId) => {
             } else {
                 console.log(`created summary for ${bill.id}`);
             }
+            count = count + 1;
         } catch (e) {
             console.log(
-                `Error adding pdf and text information for ${bill.id} - ${e.message}`,
+                `Error adding ai summary information for ${bill.id} - ${e.message}`,
             );
         }
     }
@@ -342,29 +349,36 @@ const getAndWriteBillPolicyDataToDatabase = async (sessionId) => {
             // }
 
             //generate new policy topics
-            const policyTopics = await getPolicyClassificationsForBills(bill);
+            const billPolicy = await getPolicyClassificationsForBills(bill);
 
-            if (!policyTopics) {
+            if (!billPolicy) {
                 console.log(
                     `No policy topic returned for getPolicyClassificationsForBills ${bill.id}`,
                 );
                 continue;
             }
 
-            const result = await db.addPolicyTopicsToBill(
+            const x = await db.addPolicyPropertiesToBill(
                 bill.session_id,
                 bill.id,
-                policyTopics,
+                billPolicy.measure_type,
+                billPolicy.is_substantive,
+                billPolicy.needs_review,
+                billPolicy.review_reason,
             );
 
-            if (!result) {
-                console.log(`No result returned for ${bill.id}`);
-            } else {
-                console.log(`created policy topics  for ${bill.id}`);
+            if (!x) {
+                console.log(`error writing policy properties to ${bill.id}`);
             }
+
+            for (const topic of billPolicy.topics) {
+                await db.addToPolicy(bill.session_id, bill.id, topic);
+            }
+
+            console.log(`added policy data for ${bill.id}`);
         } catch (e) {
             console.log(
-                `Error adding pdf and text information for ${bill.id} - ${e.message}`,
+                `Error adding policy information for ${bill.id} - ${e.message}`,
             );
         }
     }
@@ -464,9 +478,9 @@ const writeVotesToDb = async (allBills) => {
 //await fillBillsTableAllSessions_passedData();
 //await fillBillsTableAllSessions_textData();
 //await currentFillVotesTable();
-await fillBillsTableAllSessions_summaryData();
+//await fillBillsTableAllSessions_summaryData();
 
-//await fillBillsTableAllSessions_policyData();
+await fillBillsTableAllSessions_policyData();
 
 //const set = await getAllSubjects("2026GS");
 

@@ -21,6 +21,7 @@ export type Bill = {
     floorSponsor: string;
     trackingId: string;
     summary: BillSummary;
+    billPolicies: BillPolicy[];
 };
 
 export type BillSummary = {
@@ -31,6 +32,17 @@ export type BillSummary = {
     money: string;
     effectiveDate: string;
     unclearItems: string;
+};
+
+export type BillPolicy = {
+    sessionId: string;
+    billId: string;
+    policyTopic: string;
+    policyTopicStrength: string;
+    policyDirection: string;
+    impactLevel: string;
+    confidence: number;
+    neutralSummary: string;
 };
 
 export const normalizeBillText = (text?: string): string => {
@@ -80,6 +92,8 @@ export const createBill = (raw: any): Bill => {
         senateVoteUrl: String(raw.senate_vote_url ?? ""),
 
         link: String(raw.link ?? ""),
+
+        billPolicies: raw.bill_policies ? createAllBillPolicies(raw) : [],
     };
 };
 
@@ -119,6 +133,7 @@ export const createBillFromVote = (raw: any): Bill => {
         senateVoteUrl: String(raw.senate_vote_url ?? ""),
 
         link: String(raw.link ?? ""),
+        billPolicies: raw.bill_policies ? createAllBillPolicies(raw) : [],
     };
 };
 
@@ -168,4 +183,35 @@ export const createBillSummary = (raw: any): BillSummary => {
             unclearItems: "",
         };
     }
+};
+
+export const createBillPolicy = (raw: any): BillPolicy => {
+    if (typeof raw !== "object" || raw === null) {
+        throw new Error("Invalid policy topic payload");
+    }
+
+    return {
+        sessionId: raw.session_id,
+        billId: raw.bill_id,
+        policyTopic: raw.policy_topic,
+        policyTopicStrength: String(raw.policy_topic_strength ?? ""),
+        policyDirection: String(raw.policy_direction ?? ""),
+        impactLevel: String(raw.impact_level ?? ""),
+        confidence: Number(raw.confidence ?? null),
+        neutralSummary: String(raw.nuetral_summary ?? ""),
+    };
+};
+
+export const createAllBillPolicies = (raw: any): BillPolicy[] => {
+    if (!Array.isArray(raw.bill_policies) || raw === null) {
+        throw new Error("Invalid policy topic payload");
+    }
+
+    let policyList = [];
+    for (const policy of raw.bill_policies) {
+        const p = createBillPolicy(policy);
+        policyList.push(p);
+    }
+
+    return policyList;
 };

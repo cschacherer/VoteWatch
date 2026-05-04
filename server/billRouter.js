@@ -14,7 +14,7 @@ billRouter.get("/", async (req, res) => {
         const allBills = await _db.getAllBills();
         res.json(allBills);
     } catch (err) {
-        console.error("Error fetching bill details:", error);
+        console.error("Error fetching bill details:", err);
         res.status(500).send("Internal Server Error");
     }
 });
@@ -27,7 +27,7 @@ billRouter.get("/:sessionId", async (req, res) => {
         const allBills = await _db.getAllBillsForSession();
         res.json(allBills);
     } catch (err) {
-        console.error("Error fetching bill details:", error);
+        console.error("Error fetching bill details:", err);
         res.status(500).send("Internal Server Error");
     }
 });
@@ -42,9 +42,11 @@ billRouter.get("/:sessionId/:id", async (req, res) => {
         const id = req.params.id;
         console.log(id);
         const billDetails = await _db.getBill(id, sessionId);
+        const policies = await _db.getBillPolicies(sessionId, id);
+        billDetails["bill_policies"] = policies;
         res.json(billDetails);
     } catch (err) {
-        console.error("Error fetching bill details:", error);
+        console.error("Error fetching bill details:", err);
         res.status(500).send("Internal Server Error");
     }
 });

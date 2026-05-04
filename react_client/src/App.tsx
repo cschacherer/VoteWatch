@@ -7,6 +7,7 @@ import LegislatorsPage from "./pages/LegislatorsPage/LegislatorsPage";
 import BillDetailsPage from "./pages/BillDetailsPage/BillDetailsPage";
 import LegislatorDetailsPage from "./pages/LegislatorDetailsPage/LegislatorDetailsPage";
 import MapsPage from "./pages/MapsPage/MapsPage";
+import AnalysisPage from "./pages/AnalysisPage/AnalysisPage";
 
 import "./App.css";
 
@@ -20,6 +21,7 @@ function App() {
                 <Route path="/bills" element={<BillsPage />} />
                 <Route path="/legislators" element={<LegislatorsPage />} />
                 <Route path="/maps" element={<MapsPage />} />
+                <Route path="/analysis" element={<AnalysisPage />} />
 
                 <Route
                     path="/bills/:sessionId/:billId"

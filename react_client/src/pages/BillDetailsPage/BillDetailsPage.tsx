@@ -288,6 +288,37 @@ const BillDetailsPage = () => {
                     }
                 ></ExpandableSection>
                 <ExpandableSection
+                    header="Bill Policies (AI Generated)"
+                    children={
+                        <div className="verticalStack defaultGap defaultPadding">
+                            {billDetails?.billPolicies?.map((item) => (
+                                <div className="defaultPadding outlineThin">
+                                    <PropertyGroup
+                                        title="Policy Topic"
+                                        value={item.policyTopic}
+                                    ></PropertyGroup>
+                                    <PropertyGroup
+                                        title="Policy Topic Strength"
+                                        value={item.policyTopicStrength}
+                                    ></PropertyGroup>
+                                    <PropertyGroup
+                                        title="Policy Direction"
+                                        value={item.policyDirection}
+                                    ></PropertyGroup>
+                                    <PropertyGroup
+                                        title="Impact Level"
+                                        value={item.impactLevel}
+                                    ></PropertyGroup>
+                                    <PropertyGroup
+                                        title="AI Confidence"
+                                        value={item.confidence}
+                                    ></PropertyGroup>
+                                </div>
+                            ))}
+                        </div>
+                    }
+                ></ExpandableSection>
+                <ExpandableSection
                     header="Official Documentation"
                     children={
                         <div className="verticalStack defaultGap defaultPadding">

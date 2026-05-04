@@ -53,6 +53,13 @@ class Bill {
             this.year && this.id
                 ? `https://le.utah.gov/~${this.year}/bills/static/${this.id}.html`
                 : "";
+
+        this.summary_text = bill.summary_text;
+        this.measure_type = bill.measure_type;
+        this.is_substantive = bill.is_substantive;
+        this.needs_review = bill.needs_review;
+        this.review_reason = bill.review_reason;
+        this.bill_policies = bill.bill_policies;
     }
 
     getSubjects(billVersionList) {

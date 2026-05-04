@@ -36,6 +36,13 @@ const NavigationBar = () => {
 
                     <Nav.Link
                         className={style.navigationBar__link}
+                        href="/analysis"
+                    >
+                        Analysis
+                    </Nav.Link>
+
+                    <Nav.Link
+                        className={style.navigationBar__link}
                         href="/maps"
                     >
                         Maps

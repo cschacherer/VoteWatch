@@ -61,6 +61,17 @@ export function createPolicyTopics() {
             "restrict_voting_access",
         ]),
 
+        new PolicyTopic("redistricting_elections", [
+            "increase_redistricting_independence",
+            "reduce_redistricting_independence",
+            "increase_redistricting_transparency",
+            "reduce_redistricting_transparency",
+            "expand_voter_representation",
+            "restrict_voter_representation",
+            "increase_legislative_control_over_redistricting",
+            "reduce_legislative_control_over_redistricting",
+        ]),
+
         new PolicyTopic("healthcare_public_health", [
             "expand_healthcare_access",
             "restrict_healthcare_access",
