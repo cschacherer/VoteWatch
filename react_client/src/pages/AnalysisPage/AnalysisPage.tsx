@@ -3,6 +3,7 @@ import {
     getLegislatorDetails,
     getLegislatorVotes,
     getLegislatorSponsoredBills,
+    getLegislatorAnalysisByYear,
 } from "../../services/legislatorService";
 import type { Legislator } from "../../models/Legislator";
 import type { LegislatorVote } from "../../models/LegislatorVote";
@@ -19,53 +20,103 @@ import ExpandableSection from "../../components/ExpandableSection/ExpandableSect
 import downIcon from "../../assets/icon_expand_down.svg";
 import rightIcon from "../../assets/icon_expand_right.svg";
 import { type PolicyTopic, createPolicyTopics } from "../../models/PolicyTopic";
+import {
+    type LegislatorPolicyScore,
+    createLegislatorPolicyScore,
+} from "../../models/LegislatorPolicyScore";
 
 //Create all columns for SPONSORED BILLS TABLE
+function createLegislatorPolicyScoreColumns({
+    filterBadgeClick,
+}: {
+    filterBadgeClick: (key: string, value: string) => void;
+}) {
+    return [
+        createDataTableColumn<LegislatorPolicyScore>({
+            id: "policyTopic",
+            name: "Policy Topic",
+            selector: (row: LegislatorPolicyScore) => row.policyTopic,
+            cell: (row) => (
+                <Badge
+                    type="basic"
+                    value={row.policyTopic}
+                    onClick={(value) => filterBadgeClick("policyTopic", value)}
+                ></Badge>
+            ),
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<LegislatorPolicyScore>({
+            id: "policyDirection",
+            name: "Policy Direction",
+            selector: (row: LegislatorPolicyScore) => row.policyDirection,
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<LegislatorPolicyScore>({
+            id: "score",
+            name: "Score",
+            selector: (row: LegislatorPolicyScore) => row.score,
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<LegislatorPolicyScore>({
+            id: "totalVotes",
+            name: "Total Yes Votes",
+            selector: (row: LegislatorPolicyScore) =>
+                `${row.yesVotes} out of ${row.includedVotes}`,
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<LegislatorPolicyScore>({
+            id: "absentPercentage",
+            name: "Absent for Vote",
+            selector: (row: LegislatorPolicyScore) => `${row.absentPercentage}`,
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<LegislatorPolicyScore>({
+            id: "seeBills",
+            name: "See Bills",
+            selector: (row: LegislatorPolicyScore) => `${row.absentPercentage}`,
+            cell: (row) => (
+                <a
+                    className="link"
+                    href={`/analysis/${row.legislatorId}/${row.year}/${row.policyTopic}/${row.policyDirection}`}
+                >
+                    See Bills
+                </a>
+                // <Badge
+                //     type="basic"
+                //     value={row.policyTopic}
+                //     onClick={(value) => filterBadgeClick("policyTopic", value)}
+                // ></Badge>
+            ),
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+    ];
+}
 
 const AnalysisPage = () => {
     const [legislatorDetails, setLegislatorDetails] = useState<Legislator>();
-    const [legislatorVotes, setLegislatorVotes] = useState<LegislatorVote[]>(
-        [],
-    );
-    const [sponsoredBills, setSponsoredBills] = useState<Bill[]>([]);
+    const [legislatorPolicyScores, setlegislatorPolicyScores] = useState<
+        LegislatorPolicyScore[]
+    >([]);
 
     const [policyTopics, setPolicyTopics] = useState<PolicyTopic[]>([]);
-
-    const [legislatorVotesLoaded, setLegislatorVotesLoaded] = useState(false);
-    const [sponsoredBillsLoaded, setSponsoredBillsLoaded] = useState(false);
 
     let legislatorId = "ARTHUJ";
     // let { legislatorId } = useParams<string>();
     // if (!legislatorId) {
     //     legislatorId = "";
     // }
-
-    const loadLegislatorVotes = async () => {
-        if (legislatorVotesLoaded) return;
-
-        try {
-            const votesResponse = await getLegislatorVotes(legislatorId);
-            setLegislatorVotes(votesResponse);
-
-            setLegislatorVotesLoaded(true);
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-    const loadSponsoredBills = async () => {
-        if (sponsoredBillsLoaded) return;
-
-        try {
-            const sponsoredResponse =
-                await getLegislatorSponsoredBills(legislatorId);
-
-            setSponsoredBills(sponsoredResponse);
-            setSponsoredBillsLoaded(true);
-        } catch (error) {
-            console.log(error);
-        }
-    };
 
     useEffect(() => {
         const fetchInformation = async () => {
@@ -81,7 +132,20 @@ const AnalysisPage = () => {
             setPolicyTopics(x);
         };
 
+        const loadLegislatorPolicyAnalysis = async () => {
+            try {
+                const policyScores = await getLegislatorAnalysisByYear(
+                    legislatorId,
+                    "2026",
+                );
+                setlegislatorPolicyScores(policyScores);
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
         fetchInformation();
+        loadLegislatorPolicyAnalysis();
     }, []);
 
     return (
@@ -93,7 +157,14 @@ const AnalysisPage = () => {
                         <div className="filledHeader">Analysis</div>
                         <div className="defaultPadding">
                             <div>{legislatorDetails?.formatName}</div>
-                            {policyTopics.map((item) => (
+                            <div>2026</div>
+                            {/* {legislatorPolicyScores.map((item) => (
+                                <div className="horizontalRow defaultGap">
+                                    <div>{item.policyDirection}</div>
+                                    <div>{item.score}</div>
+                                </div>
+                            ))} */}
+                            {/* {policyTopics.map((item) => (
                                 <>
                                     <div className="bold">{item.topic}</div>
                                     <ul>
@@ -102,7 +173,21 @@ const AnalysisPage = () => {
                                         ))}
                                     </ul>
                                 </>
-                            ))}
+                            ))} */}
+                            <div className="defaultPadding height800">
+                                {
+                                    <GeneralTable
+                                        columns={(helpers) =>
+                                            createLegislatorPolicyScoreColumns(
+                                                helpers,
+                                            )
+                                        }
+                                        data={legislatorPolicyScores}
+                                        defaultSortId="policyTopic"
+                                        defaultSortAscending={false}
+                                    />
+                                }
+                            </div>
                             <PropertyGroup
                                 title="Policy Topic"
                                 value="placeholder"

@@ -28,9 +28,9 @@ class Database {
 
     async openDatabase() {
         try {
-            if (fs.existsSync(this._dbName)) {
-                console.log("db exists");
-            }
+            // if (fs.existsSync(this._dbName)) {
+            //     console.log("db exists");
+            // }
             this._db = new this.sqlite.Database(this._dbName, (err) => {
                 if (err) {
                     console.log(err.message);
@@ -117,6 +117,15 @@ class Database {
                                                     confidence TEXT,
                                                     neutral_summary TEXT, 
                                                     include_in_scorecard TEXT,
+                                                    PRIMARY KEY(session_id, bill_id, policy_topic))`);
+
+            const createPolicyScoreTable = await this
+                ._execute(`CREATE TABLE IF NOT EXISTS policy_score (
+                                                    legislator_id TEXT,
+                                                    year TEXT,
+                                                    policy_topic TEXT, 
+                                                    policy_direction TEXT,
+                                                    score DECIMAL,
                                                     PRIMARY KEY(session_id, bill_id, policy_topic))`);
         } catch (err) {
             console.log(`Error creating tables: ${err.stack}`);
@@ -298,6 +307,72 @@ class Database {
     // #endregion
 
     // #region POLICY FUNCTIONS
+    async createPolicyScoreTable() {
+        try {
+            const createPolicyScoreTable = await this
+                ._execute(`CREATE TABLE policy_score (
+                                                    legislator_id TEXT,
+                                                    year TEXT,
+                                                    policy_topic TEXT,
+                                                    policy_direction TEXT,
+                                                    score DECIMAL,
+                                                    all_votes INT, 
+                                                    included_votes INT,
+                                                    yes_votes INT,
+                                                    PRIMARY KEY(legislator_id, year, policy_direction))`);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async createPolicyTopicTable() {
+        try {
+            const createPolicyScoreTable = await this
+                ._execute(`CREATE TABLE IF NOT EXISTS policy_topics (
+                                                    policy_direction TEXT,
+                                                    policy_topic TEXT,
+                                                    PRIMARY KEY(policy_direction))`);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    async addToPolicyTopic(policy_topic, policy_direction) {
+        try {
+            const sqlCommand = `INSERT OR IGNORE INTO policy (
+                policy_topic, 
+                policy_direction
+              ) VALUES (?, ?)`;
+
+            const values = [policy_topic, policy_direction];
+
+            return await this._execute(sqlCommand, values);
+        } catch (err) {
+            console.log(
+                `Error adding information to policy table: ${err.stack}`,
+            );
+        }
+    }
+
+    async addToPolicyTopic(policy_topic, policy_direction) {
+        try {
+            const sqlCommand = `INSERT INTO policy_topics (
+                policy_direction,
+                policy_topic
+              ) VALUES (?, ?)
+                ON CONFLICT (policy_direction) 
+                DO UPDATE SET policy_direction = EXCLUDED.policy_direction, policy_topic = EXCLUDED.policy_topic`;
+
+            const values = [policy_direction, policy_topic];
+
+            return await this._execute(sqlCommand, values);
+        } catch (err) {
+            console.log(
+                `Error adding information to policy table: ${err.stack}`,
+            );
+        }
+    }
+
     async addToPolicy(session_id, bill_id, policy) {
         try {
             const sqlCommand = `INSERT OR IGNORE INTO policy (
@@ -326,6 +401,47 @@ class Database {
         } catch (err) {
             console.log(
                 `Error adding information to policy table: ${err.stack}`,
+            );
+        }
+    }
+
+    async addToPolicyScore(
+        legislator_id,
+        year,
+        policy_topic,
+        policy_direction,
+        score,
+        all_votes,
+        included_votes,
+        yes_votes,
+    ) {
+        try {
+            const sqlCommand = `INSERT OR IGNORE INTO policy_score (
+                legislator_id, 
+                year, 
+                policy_topic,
+                policy_direction, 
+                score,
+                all_votes,
+                included_votes,
+                yes_votes
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+
+            const values = [
+                legislator_id,
+                year,
+                policy_topic,
+                policy_direction,
+                score,
+                all_votes,
+                included_votes,
+                yes_votes,
+            ];
+
+            return await this._execute(sqlCommand, values);
+        } catch (err) {
+            console.log(
+                `Error adding information to policy score table: ${err.stack}`,
             );
         }
     }
@@ -473,6 +589,7 @@ class Database {
         legislatorId,
         policyTopic,
         policyDirection,
+        sessionId,
     ) {
         const joinCommand = `SELECT 
                                 votes.legislator_id,
@@ -489,10 +606,19 @@ class Database {
                                 ON votes.legislator_id = legislators.id 
                             INNER JOIN policy 
                                 ON (votes.bill_id = policy.bill_id AND votes.session_id = policy.session_id)
-                            WHERE legislators.id = ? AND policy.policy_topic = ? AND policy.policy_direction = ?`;
-        const values = [legislatorId, policyTopic, policyDirection];
+                            WHERE legislators.id = ? AND policy.policy_topic = ? AND policy.policy_direction = ? AND policy.session_id = ?`;
+        const values = [legislatorId, policyTopic, policyDirection, sessionId];
 
         return await this._getAllRows(joinCommand, values);
+    }
+
+    async getPolicyAnalysisForLegislatorByYear(legislatorId, year) {
+        const sqlCommand = `SELECT *
+                            FROM policy_score
+                            WHERE legislator_id = ? AND year = ?`;
+        const values = [legislatorId, year];
+
+        return await this._getAllRows(sqlCommand, values);
     }
 
     // #endregion

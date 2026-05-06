@@ -12,4 +12,6 @@ export const endpointsAPI = {
         `legislators/${chamber}/${district}`,
     legislatorSponsoredBills: (legislatorId: string) =>
         `legislators/${legislatorId}/sponsored`,
+    legislatorAnalysis: (legislatorId: string, year: string) =>
+        `legislators/${legislatorId}/${year}/analysis`,
 };
