@@ -304,6 +304,17 @@ class Database {
         return await this._getAllRows(sqlCommand, values);
     }
 
+    async getAllBillsAndPolicies(session_id) {
+        try {
+            const sqlCommand = `SELECT bills.*, policy.* 
+                            FROM bills JOIN policy ON policy.bill_id = bills.id WHERE bills.session_id = ?`;
+            const values = [session_id];
+            return await this._getAllRows(sqlCommand, values);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
     // #endregion
 
     // #region POLICY FUNCTIONS
@@ -337,22 +348,22 @@ class Database {
         }
     }
 
-    async addToPolicyTopic(policy_topic, policy_direction) {
-        try {
-            const sqlCommand = `INSERT OR IGNORE INTO policy (
-                policy_topic, 
-                policy_direction
-              ) VALUES (?, ?)`;
+    // async addToPolicyTopic(policy_topic, policy_direction) {
+    //     try {
+    //         const sqlCommand = `INSERT OR IGNORE INTO policy (
+    //             policy_topic,
+    //             policy_direction
+    //           ) VALUES (?, ?)`;
 
-            const values = [policy_topic, policy_direction];
+    //         const values = [policy_topic, policy_direction];
 
-            return await this._execute(sqlCommand, values);
-        } catch (err) {
-            console.log(
-                `Error adding information to policy table: ${err.stack}`,
-            );
-        }
-    }
+    //         return await this._execute(sqlCommand, values);
+    //     } catch (err) {
+    //         console.log(
+    //             `Error adding information to policy table: ${err.stack}`,
+    //         );
+    //     }
+    // }
 
     async addToPolicyTopic(policy_topic, policy_direction) {
         try {
@@ -589,27 +600,29 @@ class Database {
         legislatorId,
         policyTopic,
         policyDirection,
-        sessionId,
+        year,
     ) {
-        const joinCommand = `SELECT 
-                                votes.legislator_id,
-                                votes.bill_id, 
-                                votes.session_id,
-                                votes.vote, 
-                                policy.policy_topic,
-                                policy.policy_topic_strength,
-                                policy.policy_direction, 
-                                policy.impact_level,
-                                policy.confidence
-                            FROM legislators 
-                            INNER JOIN votes 
-                                ON votes.legislator_id = legislators.id 
-                            INNER JOIN policy 
-                                ON (votes.bill_id = policy.bill_id AND votes.session_id = policy.session_id)
-                            WHERE legislators.id = ? AND policy.policy_topic = ? AND policy.policy_direction = ? AND policy.session_id = ?`;
-        const values = [legislatorId, policyTopic, policyDirection, sessionId];
+        const sqlCommand = `
+        SELECT 
+            bills.*,
+            votes.vote,
+            votes.legislator_id,
+            policy.policy_topic,
+            policy.policy_direction
+        FROM votes
+        JOIN bills 
+            ON bills.id = votes.bill_id
+        JOIN policy 
+            ON policy.bill_id = bills.id
+        WHERE votes.legislator_id = ?
+          AND policy.policy_topic = ?
+          AND policy.policy_direction = ?
+          AND bills.year = ?
+    `;
 
-        return await this._getAllRows(joinCommand, values);
+        const values = [legislatorId, policyTopic, policyDirection, year];
+
+        return await this._getAllRows(sqlCommand, values);
     }
 
     async getPolicyAnalysisForLegislatorByYear(legislatorId, year) {

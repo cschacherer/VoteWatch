@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { billRouter } from "./billRouter.js";
 import { legislatorRouter } from "./legislatorRouter.js";
+import { analysisRouter } from "./analysisRouter.js";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -27,6 +28,7 @@ app.use(express.static(path.join(__dirname, "../client")));
 
 app.use("/bills", billRouter);
 app.use("/legislators", legislatorRouter);
+app.use("/analysis", analysisRouter);
 
 const PORT = process.env.PORT || "3005";
 app.listen(PORT, () => {

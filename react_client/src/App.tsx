@@ -8,6 +8,7 @@ import BillDetailsPage from "./pages/BillDetailsPage/BillDetailsPage";
 import LegislatorDetailsPage from "./pages/LegislatorDetailsPage/LegislatorDetailsPage";
 import MapsPage from "./pages/MapsPage/MapsPage";
 import AnalysisPage from "./pages/AnalysisPage/AnalysisPage";
+import AnalysisDetailsPage from "./pages/AnalysisDetailsPage/AnalysisDetailsPage";
 
 import "./App.css";
 
@@ -30,6 +31,10 @@ function App() {
                 <Route
                     path="/legislators/:legislatorId"
                     element={<LegislatorDetailsPage />}
+                />
+                <Route
+                    path="/analysis/:legislatorId/:year/:policyTopic/:policyDirection"
+                    element={<AnalysisDetailsPage />}
                 />
             </Route>
         </Routes>

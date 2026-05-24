@@ -98,4 +98,31 @@ legislatorRouter.get("/:legislatorId/:year/analysis", async (req, res) => {
     }
 });
 
+legislatorRouter.get(
+    "analysis/:legislatorId/:year/:policyTopic/:policyDirection",
+    async (req, res) => {
+        //send back the legislator id information
+        try {
+            console.log("get legislator sponsored bills");
+
+            const legislatorId = req.params.legislatorId;
+            const year = req.params.year;
+            const policyTopic = req.params.policyTopic;
+            const policyDirection = req.params.policyDirection;
+
+            const legislatorData =
+                await _db.getAllBillsAndVotesForLegislatorByPolicyDirection(
+                    legislatorId,
+                    policyTopic,
+                    policyDirection,
+                    year,
+                );
+            res.json(legislatorData);
+        } catch (err) {
+            console.error("Error fetching legislator details:", err);
+            res.status(500).send("Internal Server Error");
+        }
+    },
+);
+
 export { legislatorRouter };

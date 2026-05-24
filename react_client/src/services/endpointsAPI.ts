@@ -1,9 +1,11 @@
 export const endpointsAPI = {
+    // BILLS
     bills: "/bills",
     billDetails: (sessionId: string, billId: string) =>
         `bills/${sessionId}/${billId}`,
     billVotes: (sessionId: string, billId: string) =>
         `bills/${sessionId}/${billId}/votes`,
+    // LEGISLATORS
     legislators: "/legislators",
     legislatorDetails: (legislatorId: string) => `legislators/${legislatorId}`,
     legislatorVotes: (legislatorId: string) =>
@@ -12,6 +14,13 @@ export const endpointsAPI = {
         `legislators/${chamber}/${district}`,
     legislatorSponsoredBills: (legislatorId: string) =>
         `legislators/${legislatorId}/sponsored`,
-    legislatorAnalysis: (legislatorId: string, year: string) =>
-        `legislators/${legislatorId}/${year}/analysis`,
+    // ANALYSIS
+    analysisOfLegislator: (legislatorId: string, year: string) =>
+        `analysis/${legislatorId}/${year}/`,
+    analysisOfLegislatorPolicy: (
+        legislatorId: string,
+        year: string,
+        policyTopic: string,
+        policyDirection: string,
+    ) => `analysis/${legislatorId}/${year}/${policyTopic}/${policyDirection}`,
 };
