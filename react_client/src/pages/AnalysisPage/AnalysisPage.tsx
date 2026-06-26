@@ -17,6 +17,8 @@ import {
     createLegislatorPolicyScore,
 } from "../../models/LegislatorPolicyScore";
 import { getLegislatorAnalysisByYear } from "../../services/analysisService";
+import PolicyTopicSection from "../../components/PolicyTopicSection/PolicyTopicSection";
+import { ScoreSlider } from "../../components/ScoreSlider/ScoreSlider";
 
 //Create all columns for SPONSORED BILLS TABLE
 function createLegislatorPolicyScoreColumns({
@@ -261,24 +263,11 @@ const AnalysisPage = () => {
                                     </ul>
                                 </>
                             ))} */}
-                            <div className="defaultPadding height800">
-                                {
-                                    <GeneralTable
-                                        columns={(helpers) =>
-                                            createLegislatorPolicyScoreColumns(
-                                                helpers,
-                                            )
-                                        }
-                                        data={legislatorPolicyScores}
-                                        defaultSortId="policyTopic"
-                                        defaultSortAscending={false}
-                                    />
-                                }
-                            </div>
-                            <PropertyGroup
-                                title="Policy Topic"
-                                value="placeholder"
-                            ></PropertyGroup>
+
+                            <PolicyTopicSection
+                                legislatorPolicyScores={legislatorPolicyScores}
+                            ></PolicyTopicSection>
+                            <ScoreSlider value={50} label="50"></ScoreSlider>
                         </div>
                     </div>
                 </div>

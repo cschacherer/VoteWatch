@@ -146,6 +146,48 @@ function createBillColumns({
                 type: FilterType.Text,
             },
         }),
+        createDataTableColumn<Bill>({
+            id: "policy",
+            name: "Policies",
+            selector: (row: Bill) => row.policies,
+            minWidth: "250px",
+            grow: 1,
+            cell: (row: Bill) => {
+                return (
+                    <div>
+                        {row.policies.map((policy) => {
+                            return (
+                                <div>
+                                    {/* <div>
+                                                <strong>Policy Topic:</strong>{" "}
+                                                {policy.policyTopic}
+                                            </div>
+                                            <div>
+                                                <strong>Policy Direction:</strong>{" "}
+                                                {policy.policyDirection}
+                                            </div> */}
+                                    <div>
+                                        <strong>Policy Topic Strength:</strong>{" "}
+                                        {policy.policyTopicStrength}
+                                    </div>
+                                    <div>
+                                        <strong>Impact Level:</strong>{" "}
+                                        {policy.impactLevel}
+                                    </div>
+                                    <div>
+                                        <strong>AI Confidence:</strong>{" "}
+                                        {policy.confidence}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                );
+            },
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
     ];
 }
 

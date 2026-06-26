@@ -126,6 +126,15 @@
     border-radius: 7px 7px 0px 0px;
 }
 
+.smallFilledHeader {
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-lg);
+    background-color: var(--color-datatable-header-bg);
+    color:var(--color-filled-header-text);
+    padding: var(--space-3);
+    border-radius: 7px 7px 0px 0px;
+}
+
 .link {
     color: var(--color-link);
     text-decoration: underline;
@@ -210,6 +219,11 @@
 .width100 {
     width: 100%; 
 }
+
+.width50 {
+    width: 50%;
+}
+
 .width30 {
     width: 30%;
 }
@@ -291,4 +305,38 @@
 .customList li {
     margin: 10px 0px;
     padding-left: 15px;
+}
+
+
+.ScoreSlider {
+    width: 100%;
+    max-width: 320px;
+    padding: 24px 14px;
+    box-sizing: border-box;
+}
+
+.ScoreSlider__track {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    border-radius: 999px;
+}
+
+.ScoreSlider__thumb {
+    position: absolute;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.ScoreSlider__label {
+    position: absolute;
+    bottom: 18px;
+    transform: translateX(-50%);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
 }

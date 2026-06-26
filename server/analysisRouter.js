@@ -29,14 +29,14 @@ analysisRouter.get(
     async (req, res) => {
         //send back the legislator id information
         try {
-            console.log("get legislator sponsored bills");
+            console.log(
+                "get bills for a certain policy direction and legislator votes",
+            );
 
             const legislatorId = req.params.legislatorId;
             const year = req.params.year;
             const policyTopic = req.params.policyTopic;
             const policyDirection = req.params.policyDirection;
-
-            const results = await _db.getAllBillsAndPolicies("2026GS");
 
             const legislatorData =
                 await _db.getAllBillsAndVotesForLegislatorByPolicyDirection(
@@ -45,6 +45,7 @@ analysisRouter.get(
                     policyDirection,
                     year,
                 );
+
             res.json(legislatorData);
         } catch (err) {
             console.error("Error fetching legislator details:", err);

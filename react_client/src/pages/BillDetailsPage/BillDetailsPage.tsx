@@ -291,7 +291,7 @@ const BillDetailsPage = () => {
                     header="Bill Policies (AI Generated)"
                     children={
                         <div className="verticalStack defaultGap defaultPadding">
-                            {billDetails?.billPolicies?.map((item) => (
+                            {billDetails?.policies?.map((item) => (
                                 <div className="defaultPadding outlineThin">
                                     <PropertyGroup
                                         title="Policy Topic"
@@ -350,7 +350,7 @@ const BillDetailsPage = () => {
                                 value={
                                     <div className="verticalStack defaultGap">
                                         <div className="subjectBadgeList">
-                                            {billDetails?.subjects.map(
+                                            {billDetails?.subjects?.map(
                                                 (item) => (
                                                     <Badge
                                                         type={BadgeType.Basic}

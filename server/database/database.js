@@ -253,37 +253,85 @@ class Database {
         return await this._getFirstRow(sqlCommand, values);
     }
 
+    async getBillsWithPoliciesForYear(year) {
+        const sqlCommand = `
+        SELECT 
+            bills.*,
+            COALESCE(
+                json_group_array(
+                    CASE 
+                        WHEN policy.policy_topic IS NOT NULL THEN
+                            json_object(
+                                'policy_topic', policy.policy_topic,
+                                'policy_topic_strength', policy.policy_topic_strength,
+                                'policy_direction', policy.policy_direction,
+                                'impact_level', policy.impact_level,
+                                'confidence', policy.confidence,
+                                'neutral_summary', policy.neutral_summary,
+                                'include_in_scorecard', policy.include_in_scorecard
+                            )
+                    END
+                ),
+                '[]'
+            ) AS policies
+        FROM bills
+        LEFT JOIN policy
+            ON policy.session_id = bills.session_id
+           AND policy.bill_id = bills.id
+        WHERE bills.year = ?
+        GROUP BY bills.session_id, bills.id
+        ORDER BY bills.id
+    `;
+
+        const rows = await this._getAllRows(sqlCommand, [year]);
+
+        return rows.map((row) => ({
+            ...row,
+            policies: JSON.parse(row.policies || "[]").filter(Boolean),
+        }));
+    }
+
+    async getBillDetailsWithPolicies(sessionId, billId) {
+        const sqlCommand = `
+        SELECT 
+            bills.*,
+            COALESCE(
+                json_group_array(
+                    CASE 
+                        WHEN policy.policy_topic IS NOT NULL THEN
+                            json_object(
+                                'policy_topic', policy.policy_topic,
+                                'policy_topic_strength', policy.policy_topic_strength,
+                                'policy_direction', policy.policy_direction,
+                                'impact_level', policy.impact_level,
+                                'confidence', policy.confidence,
+                                'neutral_summary', policy.neutral_summary,
+                                'include_in_scorecard', policy.include_in_scorecard
+                            )
+                    END
+                ),
+                '[]'
+            ) AS policies
+        FROM bills
+        LEFT JOIN policy
+            ON policy.session_id = bills.session_id
+           AND policy.bill_id = bills.id
+        WHERE bills.session_id = ?
+          AND bills.id = ?
+        GROUP BY bills.session_id, bills.id
+    `;
+
+        const values = [sessionId, billId];
+
+        const row = await this._getFirstRow(sqlCommand, values);
+
+        return row;
+    }
+
     async getTextSummaryFromBill(session_id, bill_id) {
         const sqlCommand = `SELECT summary_text FROM bills WHERE session_id = ? AND id = ?`;
         const values = [session_id, bill_id];
         return await this._getFirstRow(sqlCommand, values);
-    }
-
-    async getBillWithPolicies(id, session_id) {
-        // const sqlCommand = `SELECT * FROM bills JOIN policy ON bills.id = policy.bill_id AND bills.session_id = policy.session_id WHERE bill.session_id = ? AND bill.id = ?`;
-        // const values = [id, session_id];
-        // return await this._getAllRows(sqlCommand, values);
-        //         const sqlCommand = `SELECT
-        //     b.*,
-        //     COALESCE(
-        //         json_agg(
-        //         json_build_object(
-        //             'session_id', bp.session_id,
-        //             'bill_id', bp.bill_id,
-        //             'policy_topic', bp.policy_topic,
-        //             'policy_topic_strength', bp.policy_topic_strength,
-        //             'policy_direction', bp.policy_direction,
-        //             'impact_level', bp.impact_level,
-        //             'confidence', bp.confidence,
-        //             'neutral_summary', bp.neutral_summary
-        //         )
-        //         ) FILTER (WHERE bp.bill_id IS NOT NULL),
-        //         '[]'
-        //     ) AS bill_policies
-        //     FROM bills b
-        //     LEFT JOIN policy bp
-        //     ON bp.bill_id = b.bill_id
-        //     GROUP BY b.bill_id;`;
     }
 
     async getBill(id, session_id) {
@@ -298,21 +346,106 @@ class Database {
         return await this._getAllRows(sqlCommand);
     }
 
+    async getAllBillsWithPolicies() {
+        const sqlCommand = `
+        SELECT 
+            bills.*,
+            COALESCE(
+                json_group_array(
+                    CASE 
+                        WHEN policy.policy_topic IS NOT NULL THEN
+                            json_object(
+                                'policy_topic', policy.policy_topic,
+                                'policy_topic_strength', policy.policy_topic_strength,
+                                'policy_direction', policy.policy_direction,
+                                'impact_level', policy.impact_level,
+                                'confidence', policy.confidence,
+                                'neutral_summary', policy.neutral_summary,
+                                'include_in_scorecard', policy.include_in_scorecard
+                            )
+                    END
+                ),
+                '[]'
+            ) AS policies
+        FROM bills
+        LEFT JOIN policy
+            ON policy.session_id = bills.session_id
+           AND policy.bill_id = bills.id
+        GROUP BY bills.session_id, bills.id
+    `;
+
+        const rows = await this._getAllRows(sqlCommand);
+
+        return rows.map((row) => ({
+            ...row,
+            policies: JSON.parse(row.policies || "[]").filter(Boolean),
+        }));
+    }
+
     async getAllBillsForSession(session_id) {
         const sqlCommand = `SELECT * FROM bills WHERE session_id = ?`;
         const values = [session_id];
         return await this._getAllRows(sqlCommand, values);
     }
 
-    async getAllBillsAndPolicies(session_id) {
-        try {
-            const sqlCommand = `SELECT bills.*, policy.* 
-                            FROM bills JOIN policy ON policy.bill_id = bills.id WHERE bills.session_id = ?`;
-            const values = [session_id];
-            return await this._getAllRows(sqlCommand, values);
-        } catch (e) {
-            console.log(e);
-        }
+    async getAllBillsWithPoliciesForSession(session_id) {
+        const sqlCommand = `
+        SELECT 
+            bills.*,
+            COALESCE(
+                json_group_array(
+                    CASE 
+                        WHEN policy.policy_topic IS NOT NULL THEN
+                            json_object(
+                                'policy_topic', policy.policy_topic,
+                                'policy_topic_strength', policy.policy_topic_strength,
+                                'policy_direction', policy.policy_direction,
+                                'impact_level', policy.impact_level,
+                                'confidence', policy.confidence,
+                                'neutral_summary', policy.neutral_summary,
+                                'include_in_scorecard', policy.include_in_scorecard
+                            )
+                    END
+                ),
+                '[]'
+            ) AS policies
+        FROM bills
+        LEFT JOIN policy
+            ON policy.session_id = bills.session_id
+           AND policy.bill_id = bills.id
+        WHERE bills.session_id = ?
+        GROUP BY bills.session_id, bills.id
+    `;
+
+        const values = [session_id];
+        return await this._getAllRows(sqlCommand, values);
+
+        return rows.map((row) => ({
+            ...row,
+            policies: JSON.parse(row.policies || "[]").filter(Boolean),
+        }));
+    }
+
+    async getAllBillsByPolicyDirectionForYear(
+        policyTopic,
+        policyDirection,
+        year,
+    ) {
+        const sqlCommand = `
+            SELECT 
+                bills.*,
+                policy.policy_topic,
+                policy.policy_direction
+            FROM bills
+            JOIN policy 
+                ON policy.bill_id = bills.id
+                AND policy.session_id = bills.session_id
+            WHERE bills.year = ?
+            AND policy.policy_topic = ?
+            AND policy.policy_direction = ?
+        `;
+        const values = [year, policyTopic, policyDirection];
+        return await this._getAllRows(sqlCommand, values);
     }
 
     // #endregion
@@ -596,7 +729,7 @@ class Database {
         return await this._getAllRows(joinCommand, values);
     }
 
-    async getAllBillsAndVotesForLegislatorByPolicyDirection(
+    async getAllBillsForLegislatorByPolicyDirection(
         legislatorId,
         policyTopic,
         policyDirection,
@@ -612,8 +745,40 @@ class Database {
         FROM votes
         JOIN bills 
             ON bills.id = votes.bill_id
+            AND bills.session_id = votes.session_id
         JOIN policy 
             ON policy.bill_id = bills.id
+            AND policy.bill_id = votes.bill_id
+        WHERE votes.legislator_id = ?
+          AND policy.policy_topic = ?
+          AND policy.policy_direction = ?
+          AND bills.year = ?
+    `;
+
+        const values = [legislatorId, policyTopic, policyDirection, year];
+
+        return await this._getAllRows(sqlCommand, values);
+    }
+
+    async getAllBillsAndVotesForLegislatorByPolicyDirection(
+        legislatorId,
+        policyTopic,
+        policyDirection,
+        year,
+    ) {
+        const sqlCommand = `
+        SELECT 
+            bills.*,
+            votes.vote,
+            votes.legislator_id,
+            policy.*
+        FROM votes
+        JOIN bills 
+            ON bills.id = votes.bill_id
+            AND bills.session_id = votes.session_id
+        JOIN policy 
+            ON policy.bill_id = bills.id
+            AND policy.session_id = bills.session_id
         WHERE votes.legislator_id = ?
           AND policy.policy_topic = ?
           AND policy.policy_direction = ?

@@ -168,7 +168,48 @@ function createAnalysisDetailsColumns({
                 type: FilterType.Number,
             },
         }),
-
+        createDataTableColumn<LegislatorVote>({
+            id: "policy",
+            name: "Policies",
+            selector: (row: LegislatorVote) => row.bill.policies,
+            minWidth: "250px",
+            grow: 1,
+            cell: (row: LegislatorVote) => {
+                return (
+                    <div>
+                        {row.bill.policies.map((policy) => {
+                            return (
+                                <div>
+                                    {/* <div>
+                                        <strong>Policy Topic:</strong>{" "}
+                                        {policy.policyTopic}
+                                    </div>
+                                    <div>
+                                        <strong>Policy Direction:</strong>{" "}
+                                        {policy.policyDirection}
+                                    </div> */}
+                                    <div>
+                                        <strong>Policy Topic Strength:</strong>{" "}
+                                        {policy.policyTopicStrength}
+                                    </div>
+                                    <div>
+                                        <strong>Impact Level:</strong>{" "}
+                                        {policy.impactLevel}
+                                    </div>
+                                    <div>
+                                        <strong>AI Confidence:</strong>{" "}
+                                        {policy.confidence}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                );
+            },
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
         createDataTableColumn<LegislatorVote>({
             id: "subjects",
             name: "Subjects",

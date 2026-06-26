@@ -21,7 +21,7 @@ export type Bill = {
     floorSponsor: string;
     trackingId: string;
     summary: BillSummary;
-    billPolicies: BillPolicy[];
+    policies: BillPolicy[];
 };
 
 export type BillSummary = {
@@ -93,7 +93,7 @@ export const createBill = (raw: any): Bill => {
 
         link: String(raw.link ?? ""),
 
-        billPolicies: raw.bill_policies ? createAllBillPolicies(raw) : [],
+        policies: createAllBillPolicies(raw.policies) ?? [],
     };
 };
 
@@ -133,7 +133,7 @@ export const createBillFromVote = (raw: any): Bill => {
         senateVoteUrl: String(raw.senate_vote_url ?? ""),
 
         link: String(raw.link ?? ""),
-        billPolicies: raw.bill_policies ? createAllBillPolicies(raw) : [],
+        policies: [createBillPolicy(raw)],
     };
 };
 
@@ -190,28 +190,35 @@ export const createBillPolicy = (raw: any): BillPolicy => {
         throw new Error("Invalid policy topic payload");
     }
 
-    return {
+    const policy: BillPolicy = {
         sessionId: raw.session_id,
         billId: raw.bill_id,
         policyTopic: raw.policy_topic,
         policyTopicStrength: String(raw.policy_topic_strength ?? ""),
         policyDirection: String(raw.policy_direction ?? ""),
         impactLevel: String(raw.impact_level ?? ""),
-        confidence: Number(raw.confidence ?? null),
-        neutralSummary: String(raw.nuetral_summary ?? ""),
+        confidence: Number(raw.confidence ?? 0),
+        neutralSummary: String(raw.neutral_summary ?? ""),
     };
+
+    return policy;
 };
 
-export const createAllBillPolicies = (raw: any): BillPolicy[] => {
-    if (!Array.isArray(raw.bill_policies) || raw === null) {
-        throw new Error("Invalid policy topic payload");
+export const createAllBillPolicies = (rawPolicies: unknown): BillPolicy[] => {
+    let parsedPolicies: unknown = rawPolicies;
+
+    if (typeof rawPolicies === "string") {
+        try {
+            parsedPolicies = JSON.parse(rawPolicies);
+        } catch (err) {
+            console.error("Invalid policies JSON:", err);
+            return [];
+        }
     }
 
-    let policyList = [];
-    for (const policy of raw.bill_policies) {
-        const p = createBillPolicy(policy);
-        policyList.push(p);
+    if (!Array.isArray(parsedPolicies)) {
+        return [];
     }
 
-    return policyList;
+    return parsedPolicies.map((policy) => createBillPolicy(policy));
 };
