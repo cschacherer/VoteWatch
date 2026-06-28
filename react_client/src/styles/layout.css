@@ -48,3 +48,7 @@
 .verticalStack.centerHorizontally {
     align-items: center;
 }
+
+.centerText {
+    text-align: center;
+}

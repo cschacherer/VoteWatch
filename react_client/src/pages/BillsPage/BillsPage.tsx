@@ -6,6 +6,8 @@ import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import Badge from "../../components/Badge/Badge";
 import { BadgeType } from "../../components/Badge/Badge";
 import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
+import PolicyChip from "../../components/PolicyChip/PolicyChip";
+import { formatPolicyName } from "../../utils/stringFormat";
 
 //set all column tables here
 // 🔥 Column factory
@@ -19,14 +21,7 @@ function createBillColumns({
             id: "sessionId",
             name: "Session Id",
             selector: (row: Bill) => normalizeSessionId(row.sessionId),
-            width: "170px",
-            cell: (row) => (
-                <Badge
-                    type="sessionId"
-                    value={row.sessionId}
-                    onClick={(value) => filterBadgeClick("sessionId", value)}
-                ></Badge>
-            ),
+            omit: true,
             filterConfig: {
                 type: FilterType.Text,
             },
@@ -35,15 +30,7 @@ function createBillColumns({
             id: "billId",
             name: "Bill Id",
             selector: (row) => row.id,
-            width: "120px",
-            cell: (row) => (
-                <a
-                    className="noTextDecoration"
-                    href={`/bills/${row.sessionId}/${row.id}`}
-                >
-                    <Badge type="billId" value={row.id}></Badge>
-                </a>
-            ),
+            omit: true,
             filterConfig: {
                 type: FilterType.Text,
             },
@@ -53,8 +40,37 @@ function createBillColumns({
             name: "Title",
             selector: (row) => row.shortTitle,
             sortable: true,
-            width: "250px",
             wrap: true,
+            omit: true,
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Bill>({
+            id: "fullId",
+            name: "Bill",
+            selector: (row) => row.id + row.shortTitle,
+            sortable: true,
+            width: "300px",
+            wrap: true,
+            cell: (row) => (
+                <div className="verticalStack defaultGap centerHorizontally flexFillSpace">
+                    <a
+                        className="noTextDecoration"
+                        href={`/bills/${row.sessionId}/${row.id}`}
+                    >
+                        <Badge type="billId" value={row.id}></Badge>
+                    </a>
+                    <div className="bold centerText">{row.shortTitle}</div>
+                    <Badge
+                        type="sessionId"
+                        value={row.sessionId}
+                        onClick={(value) =>
+                            filterBadgeClick("sessionId", value)
+                        }
+                    ></Badge>
+                </div>
+            ),
             filterConfig: {
                 type: FilterType.Text,
             },
@@ -126,6 +142,50 @@ function createBillColumns({
                 type: FilterType.Number,
             },
         }),
+
+        createDataTableColumn<Bill>({
+            id: "policy",
+            name: "Policies",
+            selector: (row: Bill) => row.policies,
+            minWidth: "250px",
+            grow: 1,
+            cell: (row: Bill) => {
+                return (
+                    <div>
+                        {row.policies.map((policy) => {
+                            return <PolicyChip policy={policy}></PolicyChip>;
+                        })}
+                    </div>
+                );
+            },
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Bill>({
+            id: "policyTopic",
+            name: "Policy Topics",
+            selector: (row: Bill) =>
+                row.policies
+                    .map((policy) => formatPolicyName(policy.policyTopic))
+                    .join(", "),
+            omit: true,
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+        createDataTableColumn<Bill>({
+            id: "policyDirection",
+            name: "Policy Directions",
+            selector: (row: Bill) =>
+                row.policies
+                    .map((policy) => formatPolicyName(policy.policyDirection))
+                    .join(", "),
+            omit: true,
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
         createDataTableColumn<Bill>({
             id: "subjects",
             name: "Subjects",
@@ -142,48 +202,6 @@ function createBillColumns({
                     }
                 />
             ),
-            filterConfig: {
-                type: FilterType.Text,
-            },
-        }),
-        createDataTableColumn<Bill>({
-            id: "policy",
-            name: "Policies",
-            selector: (row: Bill) => row.policies,
-            minWidth: "250px",
-            grow: 1,
-            cell: (row: Bill) => {
-                return (
-                    <div>
-                        {row.policies.map((policy) => {
-                            return (
-                                <div>
-                                    {/* <div>
-                                                <strong>Policy Topic:</strong>{" "}
-                                                {policy.policyTopic}
-                                            </div>
-                                            <div>
-                                                <strong>Policy Direction:</strong>{" "}
-                                                {policy.policyDirection}
-                                            </div> */}
-                                    <div>
-                                        <strong>Policy Topic Strength:</strong>{" "}
-                                        {policy.policyTopicStrength}
-                                    </div>
-                                    <div>
-                                        <strong>Impact Level:</strong>{" "}
-                                        {policy.impactLevel}
-                                    </div>
-                                    <div>
-                                        <strong>AI Confidence:</strong>{" "}
-                                        {policy.confidence}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                );
-            },
             filterConfig: {
                 type: FilterType.Text,
             },

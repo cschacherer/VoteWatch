@@ -220,5 +220,10 @@ export const createAllBillPolicies = (rawPolicies: unknown): BillPolicy[] => {
         return [];
     }
 
-    return parsedPolicies.map((policy) => createBillPolicy(policy));
+    //sort by primary and then secondary
+    return parsedPolicies
+        .map((policy) => createBillPolicy(policy))
+        .sort((a, b) =>
+            a.policyTopicStrength.localeCompare(b.policyTopicStrength),
+        );
 };

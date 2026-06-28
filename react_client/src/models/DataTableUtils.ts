@@ -38,6 +38,7 @@ export type DataTableColumn<T> = {
     width?: string;
     minWidth?: string;
     maxWidth?: string;
+    omit?: boolean;
 
     cell?: (row: T) => React.ReactNode;
 
@@ -55,6 +56,7 @@ export function createDataTableColumn<T>(
         sortable: true,
         wrap: true,
         grow: 1,
+        omit: false,
 
         // allow overrides
         ...column,

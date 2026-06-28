@@ -71,6 +71,7 @@
 
     /* === BORDER RADIUS === */
     --border-radius-profile-img: 10%;
+    --border-radius-img: 10%;
 }
 
 
@@ -138,6 +139,12 @@
 .link {
     color: var(--color-link);
     text-decoration: underline;
+    cursor: pointer;
+}
+
+.cleanLink {
+    text-decoration: none;
+    color: inherit;
     cursor: pointer;
 }
 
@@ -339,4 +346,10 @@
     font-size: 13px;
     font-weight: 600;
     white-space: nowrap;
+}
+
+.centerPage {
+    width: 60%;
+    margin: 0 auto;
+    justify-content: center;
 }

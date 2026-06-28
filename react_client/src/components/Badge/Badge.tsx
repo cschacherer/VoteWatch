@@ -57,7 +57,7 @@ const Badge = ({ type, value, onClick }: BadgeProps) => {
         }
     } else if (type == BadgeType.SessionId) {
         value = normalizeSessionId(v);
-        valueStyle = style.badge__basic;
+        valueStyle = style.badge__soft;
     } else if (type == BadgeType.Subjects) {
         valueStyle = `${style.badge__basic} ${style.badge__subject}`;
     } else {

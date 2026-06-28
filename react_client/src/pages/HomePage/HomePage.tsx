@@ -1,14 +1,23 @@
 import DistrictFinder from "../../components/DistrictFinder/DistrictFinder";
 import style from "./HomePage.module.css";
+import capital_pic from "../../assets/blue_capital.jpg";
+import landscape_pic from "../../assets/landscape.jpg";
+import senate_bill_pic from "../../assets/senateBill.jpg";
+import legislature_pic from "../../assets/legislature.jpg";
 
 const HomePage = () => {
     return (
         <div className={`page pageScroll`}>
-            <div className={`verticalStack largeGap ${style.homePage__center}`}>
-                <div className="pageTitle">
-                    Hold Your Legislators Accountable
+            <div className={`verticalStack largeGap centerPage`}>
+                {/* Header Image Section */}
+                <div className={style.titleImage}>
+                    <img src={capital_pic}></img>
+                    <div className={style.titleImageOverlay}></div>
+                    <h1 className={style.titleImageText}>
+                        Hold Your Legislators Accountable
+                    </h1>
                 </div>
-                <div className="section outline defaultPadding">
+                <div className={`section outlineThin ${style.summaryText}`}>
                     <div>
                         {`It shouldn't be so hard to figure out what your elected
                 officials are voting on—but right now, it is. Important
@@ -30,8 +39,52 @@ const HomePage = () => {
                     </div>
                 </div>
 
-                <div>
-                    <DistrictFinder></DistrictFinder>
+                <div className={`section`}>
+                    <a className="cleanLink" href="/maps">
+                        <div
+                            className={`horizontalRow outlineThin ${style.sectionCard}`}
+                        >
+                            <img
+                                className={style.sectionCardLeftImg}
+                                src={landscape_pic}
+                            ></img>
+                            <div className={style.sectionCardText}>
+                                Find Your State Representatives
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                <div className={`section`}>
+                    <a className="cleanLink" href="/bills">
+                        <div
+                            className={`horizontalRow outlineThin ${style.sectionCard}`}
+                        >
+                            <div className={`${style.sectionCardText}`}>
+                                See Legislative Bills
+                            </div>
+                            <img
+                                className={style.sectionCardRightImg}
+                                src={senate_bill_pic}
+                            ></img>
+                        </div>
+                    </a>
+                </div>
+
+                <div className="section">
+                    <a className="cleanLink" href="/analysis">
+                        <div
+                            className={`horizontalRow outlineThin ${style.sectionCard}`}
+                        >
+                            <img
+                                className={style.sectionCardLeftImg}
+                                src={legislature_pic}
+                            ></img>
+                            <div className={style.sectionCardText}>
+                                Analyze Legislator's Votes
+                            </div>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>

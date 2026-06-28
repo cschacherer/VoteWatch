@@ -1,4 +1,91 @@
-.homePage__center {
-    width: 80%; 
+.centerPage {
+    width: 60%; 
     margin: 0 auto; 
+    justify-content: center; 
+}
+
+.titleImage {
+    position: relative;
+    width: fit-content;
+    margin: 0 auto;
+    
+}
+
+.titleImage img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+.titleImageOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 1; 
+    border-radius: 10px;
+}
+
+.titleImageText {
+    position: absolute;
+    top: 8%;
+    left: 50%;
+    transform: translate(-50%);
+    white-space: nowrap;
+
+    font-size: 3rem;
+    font-weight: var(--font-weight-bold);
+
+    text-align: center;
+    color: white;
+    z-index: 2;
+}
+
+.summaryText {
+    padding: 50px;
+    font-size: 1.3rem; 
+    /* font-family: 'Noto Serif', sans-serif; */
+}
+
+.sectionCard {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 325px;
+    width: 100%;
+    margin: 0 auto;
+
+    transition: transform 0.2s ease;
+}
+
+.sectionCard:hover {
+    transform: scale(0.95);
+}
+
+.sectionCardLeftImg,
+.sectionCardRightImg {
+    display: block;
+    width: 50%;
+    object-fit: cover;
+    height: 100%;
+}
+
+.sectionCardLeftImg {
+    border-radius: 10px 0 0 10px;
+}
+
+.sectionCardRightImg {
+    border-radius: 0 10px 10px 0;
+}
+
+.sectionCardText {
+    text-align: center;
+    font-size: 2.5rem;
+    width: 50%;
+    box-sizing: border-box;
+    padding: var(--space-8);
+
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
 }
