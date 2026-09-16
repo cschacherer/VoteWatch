@@ -17,3 +17,20 @@
     border-bottom: 1px solid #333;
     width: 10%;
 }
+
+.scoreRow {
+    display: grid;
+    grid-template-columns: min-content 1fr min-content;
+    align-items: center;
+    gap: 20px;
+}
+
+.scoreRow__left {
+}
+
+.scoreRow__center {
+    justify-self: center;
+}
+
+.scoreRow__right {
+}

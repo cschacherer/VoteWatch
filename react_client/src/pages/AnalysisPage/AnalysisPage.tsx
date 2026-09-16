@@ -19,6 +19,7 @@ import {
 import { getLegislatorAnalysisByYear } from "../../services/analysisService";
 import PolicyTopicSection from "../../components/PolicyTopicSection/PolicyTopicSection";
 import { ScoreSlider } from "../../components/ScoreSlider/ScoreSlider";
+import type { LegislatorCouplePolicyScore } from "../../models/LegislatorCouplePolicyScore";
 
 //Create all columns for SPONSORED BILLS TABLE
 function createLegislatorPolicyScoreColumns({
@@ -110,7 +111,7 @@ function createLegislatorPolicyScoreColumns({
 const AnalysisPage = () => {
     const [legislatorDetails, setLegislatorDetails] = useState<Legislator>();
     const [legislatorPolicyScores, setlegislatorPolicyScores] = useState<
-        LegislatorPolicyScore[]
+        LegislatorCouplePolicyScore[]
     >([]);
 
     const [policyTopics, setPolicyTopics] = useState<PolicyTopic[]>([]);
@@ -267,7 +268,6 @@ const AnalysisPage = () => {
                             <PolicyTopicSection
                                 legislatorPolicyScores={legislatorPolicyScores}
                             ></PolicyTopicSection>
-                            <ScoreSlider value={50} label="50"></ScoreSlider>
                         </div>
                     </div>
                 </div>

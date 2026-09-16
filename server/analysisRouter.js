@@ -13,7 +13,7 @@ analysisRouter.get("/:legislatorId/:year", async (req, res) => {
 
         const legislatorId = req.params.legislatorId;
         const year = req.params.year;
-        const legislatorData = await _db.getPolicyAnalysisForLegislatorByYear(
+        const legislatorData = await _db.getPolicyCouplesFromLegislatorAndYear(
             legislatorId,
             year,
         );

@@ -1,14 +1,9 @@
-import { useState, useEffect } from "react";
-import Col from "react-bootstrap/Col";
-import Row from "react-bootstrap/Row";
-import type { Vote, VoteValue } from "../../models/Vote";
-
 import style from "./PolicyTopicSection.module.css";
-import type { LegislatorPolicyScore } from "../../models/LegislatorPolicyScore";
-import PolicyDirectionSection from "../PolicyDirectionSection/PolicyDirectionSection";
+import type { LegislatorCouplePolicyScore } from "../../models/LegislatorCouplePolicyScore";
+import { ScoreSlider } from "../ScoreSlider/ScoreSlider";
 
 type PolicyTopicSectionProps = {
-    legislatorPolicyScores: LegislatorPolicyScore[];
+    legislatorPolicyScores: LegislatorCouplePolicyScore[];
 };
 
 const PolicyTopicSection = ({
@@ -23,74 +18,67 @@ const PolicyTopicSection = ({
             {distinctPolicyTopics.map((policyTopic) => {
                 return (
                     <div
-                        className="outlineThin section verticalStack"
+                        className="outlineThin section verticalStack defaultGap"
                         key={policyTopic}
                     >
                         <div className="smallFilledHeader">{policyTopic}</div>
-                        <div className="defaultPaddingHorizontal">
-                            <table className={`width100`}>
-                                <thead>
-                                    <tr>
-                                        <th
-                                            className={
-                                                style.policyTopicSection__directionColumnHeader
-                                            }
+                        <div className="defaultPadding defaultGap">
+                            {legislatorPolicyScores
+                                .filter((x) => x.policyTopic === policyTopic)
+                                .map((legislatorPolicyScore, index) =>
+                                    legislatorPolicyScore.allIncludedVotes != 0 ? (
+                                        <div
+                                            key={index}
+                                            className="outlineThin section verticalStack defaultGap defaultPadding"
                                         >
-                                            Policy Direction
-                                        </th>
-                                        <th
-                                            className={
-                                                style.policyTopicSection__width10ColumnHeader
-                                            }
-                                        >
-                                            Score
-                                        </th>
-                                        <th
-                                            className={
-                                                style.policyTopicSection__width20ColumnHeader
-                                            }
-                                        >
-                                            Yes Votes
-                                        </th>
-                                        <th
-                                            className={
-                                                style.policyTopicSection__width20ColumnHeader
-                                            }
-                                        >
-                                            No Votes
-                                        </th>
-                                        <th
-                                            className={
-                                                style.policyTopicSection__width20ColumnHeader
-                                            }
-                                        >
-                                            Absent Votes
-                                        </th>
-                                        <th
-                                            className={
-                                                style.policyTopicSection__width10ColumnHeader
-                                            }
-                                        >
-                                            Bills Included
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {legislatorPolicyScores
-                                        .filter(
-                                            (x) =>
-                                                x.policyTopic === policyTopic,
-                                        )
-                                        .map((legislatorPolicyScore, index) => (
-                                            <PolicyDirectionSection
-                                                key={index}
-                                                legislatorPolicyScore={
-                                                    legislatorPolicyScore
+                                            <div className="centerText">
+                                                <strong>
+                                                    {
+                                                        legislatorPolicyScore.policyNameLabel
+                                                    }
+                                                </strong>
+                                            </div>
+                                            <div className="horizontalRow centerHorizontally">
+                                                <div
+                                                    className={style.scoreRow__left}
+                                                >
+                                                    {/* {
+                                                        legislatorPolicyScore.leftPolicyDirection
+                                                    } */}
+                                                    <strong>Reduce</strong>
+                                                </div>
+                                                <div
+                                                    className={
+                                                        style.scoreRow__center
+                                                    }
+                                                >
+                                                    <ScoreSlider
+                                                        value={
+                                                            legislatorPolicyScore.score
+                                                        }
+                                                        showValueLabel={true}
+                                                    />
+                                                </div>
+                                                <div
+                                                    className={
+                                                        style.scoreRow__right
+                                                    }
+                                                >
+                                                    <strong>Increase</strong>
+                                                    {/* {
+                                                        legislatorPolicyScore.rightPolicyDirection
+                                                    } */}
+                                                </div>
+                                            </div>
+                                            <div className="centerText">
+                                                <strong>Votes Included:</strong>{" "}
+                                                {
+                                                    legislatorPolicyScore.allIncludedVotes
                                                 }
-                                            />
-                                        ))}
-                                </tbody>
-                            </table>
+                                            </div>
+                                        </div>
+                                    ) : null
+                                )}
                         </div>
                     </div>
                 );

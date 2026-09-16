@@ -4,6 +4,7 @@ import { endpointsAPI } from "./endpointsAPI";
 import { createBill } from "../models/Bill";
 import { createLegislatorVote } from "../models/LegislatorVote";
 import { createLegislatorPolicyScore } from "../models/LegislatorPolicyScore";
+import { createLegislatorCouplePolicyScore } from "../models/LegislatorCouplePolicyScore";
 
 export const getAllPolicyTopics = async () => {
     try {
@@ -23,7 +24,9 @@ export const getLegislatorAnalysisByYear = async (id: string, year: string) => {
             endpointsAPI.analysisOfLegislator(id, year),
         );
 
-        const policyScoreArray = response.data.map(createLegislatorPolicyScore);
+        const policyScoreArray = response.data.map(
+            createLegislatorCouplePolicyScore,
+        );
         return policyScoreArray;
     } catch (error) {
         let msg = getErrorMessage(error);
