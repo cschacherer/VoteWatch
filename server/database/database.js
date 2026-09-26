@@ -618,7 +618,7 @@ class Database {
         score,
     ) {
         try {
-            const sqlCommand = `INSERT OR IGNORE INTO leg_scores_policy_topic_couples (
+            const sqlCommand = `INSERT OR REPLACE INTO leg_scores_policy_topic_couples (
                 legislator_id,
                 year,
                 policy_topic_couple_name,
@@ -840,6 +840,7 @@ class Database {
     async getPolicyCouplesFromLegislatorAndYear(legislator_id, year) {
         const sqlCommand = `SELECT
             l.legislator_id,
+            l.year,
             p.policy_topic,
             l.policy_topic_couple_name,
             p.name_label,
@@ -1030,6 +1031,38 @@ class Database {
     `;
 
         const values = [legislatorId, policyTopic, policyDirection, year];
+
+        return await this._getAllRows(sqlCommand, values);
+    }
+
+    //every bill + vote for a legislator's policy couple, including absent votes (which are not scored)
+    async getAllBillsAndVotesForLegislatorByPolicyCouple(
+        legislatorId,
+        policyCoupleName,
+        year,
+    ) {
+        const sqlCommand = `
+        SELECT
+            bills.*,
+            votes.vote,
+            votes.legislator_id,
+            policy.*
+        FROM policy_topic_couples AS couple
+        JOIN policy
+            ON policy.policy_topic = couple.policy_topic
+            AND policy.policy_direction IN (couple.left_policy_direction, couple.right_policy_direction)
+        JOIN bills
+            ON bills.id = policy.bill_id
+            AND bills.session_id = policy.session_id
+        JOIN votes
+            ON votes.bill_id = bills.id
+            AND votes.session_id = bills.session_id
+        WHERE couple.policy_topic_couple_name = ?
+          AND votes.legislator_id = ?
+          AND bills.year = ?
+    `;
+
+        const values = [policyCoupleName, legislatorId, year];
 
         return await this._getAllRows(sqlCommand, values);
     }

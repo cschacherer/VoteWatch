@@ -1,9 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-    getLegislatorDetails,
-    getLegislatorVotes,
-    getLegislatorSponsoredBills,
-} from "../../services/legislatorService";
+import { getLegislatorDetails } from "../../services/legislatorService";
 import type { Legislator } from "../../models/Legislator";
 import type { LegislatorVote } from "../../models/LegislatorVote";
 import { useParams } from "react-router-dom";
@@ -12,24 +8,46 @@ import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
 import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
 import Badge from "../../components/Badge/Badge";
 import PropertyGroup from "../../components/PropertyGroup/PropertyGroup";
-import { type Bill, normalizeSessionId } from "../../models/Bill";
-
-import { type PolicyTopic, createPolicyTopics } from "../../models/PolicyTopic";
-import {
-    type LegislatorPolicyScore,
-    createLegislatorPolicyScore,
-} from "../../models/LegislatorPolicyScore";
+import { normalizeSessionId } from "../../models/Bill";
+import { VoteValue } from "../../models/Vote";
+import type { LegislatorCouplePolicyScore } from "../../models/LegislatorCouplePolicyScore";
 import {
     getLegislatorAnalysisByYear,
-    getLegislatorPolicyDirectionAnalysisByYear,
+    getLegislatorPolicyCoupleVotesByYear,
 } from "../../services/analysisService";
+import { ScoreSlider } from "../../components/ScoreSlider/ScoreSlider";
+import { formatPolicyName } from "../../utils/stringFormat";
+import style from "./AnalysisDetailsPage.module.css";
+
+type PolicySide = "left" | "right";
+
+//Yes on a bill pushes the score toward that bill's side, No pushes it toward the other side, Absent is not scored
+function getVoteEffect(vote: VoteValue, billSide: PolicySide) {
+    if (vote === VoteValue.Absent) return null;
+    if (vote === VoteValue.Yes) return billSide;
+    return billSide === "left" ? "right" : "left";
+}
 
 //Create all columns for VOTE TABLE
-function createAnalysisDetailsColumns({
-    filterBadgeClick,
-}: {
-    filterBadgeClick: (key: string, value: string) => void;
-}) {
+function createAnalysisDetailsColumns(
+    {
+        filterBadgeClick,
+    }: {
+        filterBadgeClick: (key: string, value: string) => void;
+    },
+    policyCoupleScore: LegislatorCouplePolicyScore | undefined,
+    billSide: PolicySide,
+) {
+    const effectLabel = (vote: VoteValue) => {
+        const effect = getVoteEffect(vote, billSide);
+        if (!effect || !policyCoupleScore) return "Not scored";
+        const direction =
+            effect === "left"
+                ? policyCoupleScore.leftPolicyDirection
+                : policyCoupleScore.rightPolicyDirection;
+        return `${effect === "left" ? "←" : "→"} Toward ${formatPolicyName(direction)}`;
+    };
+
     return [
         createDataTableColumn<LegislatorVote>({
             id: "sessionId",
@@ -75,6 +93,18 @@ function createAnalysisDetailsColumns({
             },
         }),
         createDataTableColumn<LegislatorVote>({
+            id: "summary",
+            name: "Summary",
+            selector: (row: LegislatorVote) =>
+                row.bill?.summary?.oneSentence ?? "",
+            grow: 2,
+            minWidth: "250px",
+            filterConfig: {
+                type: FilterType.Text,
+            },
+        }),
+
+        createDataTableColumn<LegislatorVote>({
             id: "vote",
             name: "Vote",
             selector: (row: LegislatorVote) => row.vote,
@@ -91,6 +121,28 @@ function createAnalysisDetailsColumns({
             filterConfig: {
                 type: FilterType.Select,
                 options: ["Yes", "No", "Absent"],
+            },
+        }),
+        createDataTableColumn<LegislatorVote>({
+            id: "effect",
+            name: "Effect on Score",
+            selector: (row: LegislatorVote) => effectLabel(row.vote),
+            width: "260px",
+            cell: (row: LegislatorVote) => {
+                const effect = getVoteEffect(row.vote, billSide);
+                const effectStyle = effect
+                    ? effect === "left"
+                        ? style.effect__left
+                        : style.effect__right
+                    : style.effect__none;
+                return (
+                    <span className={`${style.effect} ${effectStyle}`}>
+                        {effectLabel(row.vote)}
+                    </span>
+                );
+            },
+            filterConfig: {
+                type: FilterType.Text,
             },
         }),
         createDataTableColumn<LegislatorVote>({
@@ -125,17 +177,7 @@ function createAnalysisDetailsColumns({
         //         type: FilterType.Text,
         //     },
         // }),
-        createDataTableColumn<LegislatorVote>({
-            id: "summary",
-            name: "Summary",
-            selector: (row: LegislatorVote) =>
-                row.bill?.summary?.oneSentence ?? "",
-            grow: 2,
-            minWidth: "250px",
-            filterConfig: {
-                type: FilterType.Text,
-            },
-        }),
+
         // createDataTableColumn<LegislatorVote>({
         //     id: "generalProvisions",
         //     name: "General Provisions",
@@ -210,50 +252,123 @@ function createAnalysisDetailsColumns({
                 type: FilterType.Text,
             },
         }),
-        createDataTableColumn<LegislatorVote>({
-            id: "subjects",
-            name: "Subjects",
-            selector: (row: LegislatorVote) => row.bill.subjects,
-            minWidth: "250px",
-            grow: 1,
-            cell: (row: LegislatorVote) => (
-                <CollapsibleCell
-                    items={row.bill.subjects}
-                    onBadgeClick={(value) =>
-                        filterBadgeClick("subjects", value)
-                    }
-                />
-            ),
-            filterConfig: {
-                type: FilterType.Text,
-            },
-        }),
+        // createDataTableColumn<LegislatorVote>({
+        //     id: "subjects",
+        //     name: "Subjects",
+        //     selector: (row: LegislatorVote) => row.bill.subjects,
+        //     minWidth: "250px",
+        //     grow: 1,
+        //     cell: (row: LegislatorVote) => (
+        //         <CollapsibleCell
+        //             items={row.bill.subjects}
+        //             onBadgeClick={(value) =>
+        //                 filterBadgeClick("subjects", value)
+        //             }
+        //         />
+        //     ),
+        //     filterConfig: {
+        //         type: FilterType.Text,
+        //     },
+        // }),
     ];
 }
 
+//One side of the policy couple - the bills classified in that direction and how the legislator voted on them
+const PolicySideSection = ({
+    side,
+    policyCoupleScore,
+    votes,
+}: {
+    side: PolicySide;
+    policyCoupleScore: LegislatorCouplePolicyScore;
+    votes: LegislatorVote[];
+}) => {
+    const direction =
+        side === "left"
+            ? policyCoupleScore.leftPolicyDirection
+            : policyCoupleScore.rightPolicyDirection;
+    const otherDirection =
+        side === "left"
+            ? policyCoupleScore.rightPolicyDirection
+            : policyCoupleScore.leftPolicyDirection;
+
+    const sideVotes = votes.filter(
+        (x) => x.bill.policies[0]?.policyDirection === direction,
+    );
+    const countVotes = (vote: VoteValue) =>
+        sideVotes.filter((x) => x.vote === vote).length;
+
+    return (
+        <div
+            className={`${style.side} ${side === "left" ? style.side__left : style.side__right}`}
+        >
+            <div className={style.side__title}>
+                {side === "left" ? "← " : ""}Bills that{" "}
+                {formatPolicyName(direction)}
+                {side === "right" ? " →" : ""}
+            </div>
+            <div>
+                A <strong>Yes</strong> vote on these bills moves the score
+                toward <strong>{formatPolicyName(direction)}</strong>. A{" "}
+                <strong>No</strong> vote moves it toward{" "}
+                <strong>{formatPolicyName(otherDirection)}</strong>.
+            </div>
+            <div className={style.side__counts}>
+                <span>
+                    <strong>Bills:</strong> {sideVotes.length}
+                </span>
+                {[VoteValue.Yes, VoteValue.No, VoteValue.Absent].map(
+                    (vote) => (
+                        <span
+                            key={vote}
+                            className="horizontalRow smallGap centerVertically"
+                        >
+                            <Badge type="vote" value={vote} />
+                            {countVotes(vote)}
+                        </span>
+                    ),
+                )}
+            </div>
+            {sideVotes.length > 0 ? (
+                <GeneralTable
+                    columns={(helpers) =>
+                        createAnalysisDetailsColumns(
+                            helpers,
+                            policyCoupleScore,
+                            side,
+                        )
+                    }
+                    data={sideVotes}
+                    defaultSortId="sessionId"
+                    defaultSortAscending={false}
+                />
+            ) : (
+                <div className={style.effect__none}>
+                    No bills in {policyCoupleScore.year} were classified as{" "}
+                    {formatPolicyName(direction)}.
+                </div>
+            )}
+        </div>
+    );
+};
+
 const AnalysisDetailsPage = () => {
     const [legislatorDetails, setLegislatorDetails] = useState<Legislator>();
-    const [legislatorPolicyScores, setlegislatorPolicyScores] = useState<
-        LegislatorPolicyScore[]
-    >([]);
+    const [policyCoupleScore, setPolicyCoupleScore] =
+        useState<LegislatorCouplePolicyScore>();
     const [legislatorVotes, setLegislatorVotes] = useState<LegislatorVote[]>(
         [],
     );
 
-    // let legislatorId = "ARTHUJ";
-    let { legislatorId, year, policyTopic, policyDirection } =
-        useParams<string>();
+    let { legislatorId, year, policyCoupleName } = useParams<string>();
     if (!legislatorId) {
         legislatorId = "";
     }
     if (!year) {
         year = "";
     }
-    if (!policyTopic) {
-        policyTopic = "";
-    }
-    if (!policyDirection) {
-        policyDirection = "";
+    if (!policyCoupleName) {
+        policyCoupleName = "";
     }
 
     useEffect(() => {
@@ -269,11 +384,13 @@ const AnalysisDetailsPage = () => {
 
         const loadLegislatorPolicyAnalysis = async () => {
             try {
-                const policyScores = await getLegislatorAnalysisByYear(
-                    legislatorId,
-                    "2026",
+                const policyScores: LegislatorCouplePolicyScore[] =
+                    await getLegislatorAnalysisByYear(legislatorId, year);
+                setPolicyCoupleScore(
+                    policyScores.find(
+                        (x) => x.policyCoupleName === policyCoupleName,
+                    ),
                 );
-                setlegislatorPolicyScores(policyScores);
             } catch (error) {
                 console.log(error);
             }
@@ -281,13 +398,11 @@ const AnalysisDetailsPage = () => {
 
         const fetchVoteInformation = async () => {
             try {
-                const response =
-                    await getLegislatorPolicyDirectionAnalysisByYear(
-                        legislatorId,
-                        year,
-                        policyTopic,
-                        policyDirection,
-                    );
+                const response = await getLegislatorPolicyCoupleVotesByYear(
+                    legislatorId,
+                    year,
+                    policyCoupleName,
+                );
                 setLegislatorVotes(response);
             } catch (error) {
                 console.log(error);
@@ -297,7 +412,7 @@ const AnalysisDetailsPage = () => {
         fetchLegislatorInformation();
         loadLegislatorPolicyAnalysis();
         fetchVoteInformation();
-    }, []);
+    }, [legislatorId, year, policyCoupleName]);
 
     return (
         <>
@@ -318,13 +433,50 @@ const AnalysisDetailsPage = () => {
                                 ></PropertyGroup>
                                 <PropertyGroup
                                     title="Policy Topic"
-                                    value={policyTopic}
+                                    value={formatPolicyName(
+                                        policyCoupleScore?.policyTopic ?? "",
+                                    )}
                                 ></PropertyGroup>
                                 <PropertyGroup
-                                    title="Policy Direction"
-                                    value={policyDirection}
+                                    title="Policy"
+                                    value={policyCoupleScore?.policyNameLabel}
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="Votes Included"
+                                    value={policyCoupleScore?.allIncludedVotes}
+                                ></PropertyGroup>
+                                <PropertyGroup
+                                    title="Absent (Not Scored)"
+                                    value={
+                                        legislatorVotes.filter(
+                                            (x) => x.vote === VoteValue.Absent,
+                                        ).length
+                                    }
                                 ></PropertyGroup>
                             </div>
+                            {policyCoupleScore && (
+                                <div className="defaultPadding horizontalRow centerHorizontally centerVertically largeFont largeGap">
+                                    <span
+                                        className={`${style.directionLabel} ${style.directionLabel__left}`}
+                                    >
+                                        ←{" "}
+                                        {formatPolicyName(
+                                            policyCoupleScore.leftPolicyDirection,
+                                        )}
+                                    </span>
+                                    <ScoreSlider
+                                        value={policyCoupleScore.score}
+                                    />
+                                    <span
+                                        className={`${style.directionLabel} ${style.directionLabel__right}`}
+                                    >
+                                        {formatPolicyName(
+                                            policyCoupleScore.rightPolicyDirection,
+                                        )}{" "}
+                                        →
+                                    </span>
+                                </div>
+                            )}
 
                             {/* {legislatorPolicyScores.map((item) => (
                                 <div className="horizontalRow defaultGap">
@@ -342,20 +494,20 @@ const AnalysisDetailsPage = () => {
                                     </ul>
                                 </>
                             ))} */}
-                            <div className="defaultPadding height800">
-                                {
-                                    <GeneralTable
-                                        columns={(helpers) =>
-                                            createAnalysisDetailsColumns(
-                                                helpers,
-                                            )
-                                        }
-                                        data={legislatorVotes}
-                                        defaultSortId="sessionId"
-                                        defaultSortAscending={false}
+                            {policyCoupleScore && (
+                                <div className="defaultPadding verticalStack largeGap">
+                                    <PolicySideSection
+                                        side="left"
+                                        policyCoupleScore={policyCoupleScore}
+                                        votes={legislatorVotes}
                                     />
-                                }
-                            </div>
+                                    <PolicySideSection
+                                        side="right"
+                                        policyCoupleScore={policyCoupleScore}
+                                        votes={legislatorVotes}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

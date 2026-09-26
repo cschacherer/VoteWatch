@@ -35,6 +35,30 @@ export const getLegislatorAnalysisByYear = async (id: string, year: string) => {
     }
 };
 
+export const getLegislatorPolicyCoupleVotesByYear = async (
+    id: string,
+    year: string,
+    policyCoupleName: string,
+) => {
+    try {
+        const response = await apiClient.get(
+            endpointsAPI.analysisOfLegislatorPolicyCouple(
+                id,
+                year,
+                policyCoupleName,
+            ),
+        );
+
+        const legislatorPolicyVoteArray =
+            response.data.map(createLegislatorVote);
+        return legislatorPolicyVoteArray;
+    } catch (error) {
+        let msg = getErrorMessage(error);
+        console.log(msg);
+        throw new Error(msg);
+    }
+};
+
 export const getLegislatorPolicyDirectionAnalysisByYear = async (
     id: string,
     year: string,

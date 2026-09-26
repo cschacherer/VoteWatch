@@ -138,8 +138,6 @@ async function generateCouplePolicyDirectionScore(
                 noLeftVotes++;
                 netWeightedLeftVote -= policyWeight;
             }
-
-            totalWeightedLeftVote += policyWeight;
         }
 
         for (const rightVote of rightPolicyDirectionVotes) {
@@ -345,7 +343,7 @@ async function createScoresForAllLegislators() {
 
 //await createAllPolicyScores("PETERT");
 
-//await createScoresForAllLegislators();
+await createScoresForAllLegislators();
 
 // async function generatePolicyTopicTable() {
 //     let db = new Database();

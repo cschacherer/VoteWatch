@@ -8,14 +8,41 @@ import { BadgeType } from "../../components/Badge/Badge";
 import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
 import PolicyChip from "../../components/PolicyChip/PolicyChip";
 import { formatPolicyName } from "../../utils/stringFormat";
+import { Link } from "react-router-dom";
+import SearchableDropdown, {
+    type DropdownOption,
+} from "../../components/SearchableDropdown/SearchableDropdown";
+import style from "./BillsPage.module.css";
 
 //set all column tables here
-// 🔥 Column factory
-function createBillColumns({
-    filterBadgeClick,
-}: {
-    filterBadgeClick: (key: string, value: any) => void;
-}) {
+//when primaryOnly is on, the hidden policy topic/direction filter columns only include each bill's primary policy
+type BillColumnOptions = {
+    primaryOnly: boolean;
+    showSubjects: boolean;
+    onPolicySelect: (topic: string, direction: string | null) => void;
+    onSubjectSelect: (subject: string) => void;
+};
+
+function createBillColumns(
+    {
+        filterBadgeClick,
+    }: {
+        filterBadgeClick: (key: string, value: any) => void;
+    },
+    {
+        primaryOnly,
+        showSubjects,
+        onPolicySelect,
+        onSubjectSelect,
+    }: BillColumnOptions,
+) {
+    const filterablePolicies = (row: Bill) =>
+        primaryOnly
+            ? row.policies.filter(
+                  (policy) => policy.policyTopicStrength === "primary",
+              )
+            : row.policies;
+
     return [
         createDataTableColumn<Bill>({
             id: "sessionId",
@@ -54,14 +81,19 @@ function createBillColumns({
             width: "300px",
             wrap: true,
             cell: (row) => (
-                <div className="verticalStack defaultGap centerHorizontally flexFillSpace">
-                    <a
-                        className="noTextDecoration"
-                        href={`/bills/${row.sessionId}/${row.id}`}
+                <div className={style.billCell}>
+                    <Link
+                        className={style.billCell__id}
+                        to={`/bills/${row.sessionId}/${row.id}`}
                     >
-                        <Badge type="billId" value={row.id}></Badge>
-                    </a>
-                    <div className="bold centerText">{row.shortTitle}</div>
+                        {row.id}
+                    </Link>
+                    <Link
+                        className={style.billCell__title}
+                        to={`/bills/${row.sessionId}/${row.id}`}
+                    >
+                        {row.shortTitle}
+                    </Link>
                     <Badge
                         type="sessionId"
                         value={row.sessionId}
@@ -147,14 +179,26 @@ function createBillColumns({
             id: "policy",
             name: "Policies",
             selector: (row: Bill) => row.policies,
-            minWidth: "250px",
-            grow: 1,
+            minWidth: "300px",
+            grow: 1.5,
             cell: (row: Bill) => {
                 return (
-                    <div>
-                        {row.policies.map((policy) => {
-                            return <PolicyChip policy={policy}></PolicyChip>;
-                        })}
+                    <div className={style.policyList}>
+                        {row.policies.map((policy) => (
+                            <PolicyChip
+                                key={policy.policyTopic}
+                                policy={policy}
+                                onTopicClick={(p) =>
+                                    onPolicySelect(p.policyTopic, null)
+                                }
+                                onDirectionClick={(p) =>
+                                    onPolicySelect(
+                                        p.policyTopic,
+                                        p.policyDirection,
+                                    )
+                                }
+                            ></PolicyChip>
+                        ))}
                     </div>
                 );
             },
@@ -166,7 +210,7 @@ function createBillColumns({
             id: "policyTopic",
             name: "Policy Topics",
             selector: (row: Bill) =>
-                row.policies
+                filterablePolicies(row)
                     .map((policy) => formatPolicyName(policy.policyTopic))
                     .join(", "),
             omit: true,
@@ -178,7 +222,7 @@ function createBillColumns({
             id: "policyDirection",
             name: "Policy Directions",
             selector: (row: Bill) =>
-                row.policies
+                filterablePolicies(row)
                     .map((policy) => formatPolicyName(policy.policyDirection))
                     .join(", "),
             omit: true,
@@ -190,16 +234,15 @@ function createBillColumns({
             id: "subjects",
             name: "Subjects",
             selector: (row: Bill) => row.subjects,
+            omit: !showSubjects,
             sortable: true,
             grow: 1,
-            minWidth: "300px",
+            minWidth: "260px",
             wrap: true,
             cell: (row: Bill) => (
                 <CollapsibleCell
                     items={row.subjects}
-                    onBadgeClick={(value) =>
-                        filterBadgeClick("subjects", value)
-                    }
+                    onBadgeClick={(value) => onSubjectSelect(value)}
                 />
             ),
             filterConfig: {
@@ -209,14 +252,87 @@ function createBillColumns({
     ];
 }
 
+//an on/off switch with a label - the real checkbox is visually hidden and the track is drawn with CSS
+const ToggleSwitch = ({
+    label,
+    title,
+    checked,
+    onChange,
+}: {
+    label: string;
+    title?: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+}) => (
+    <label className={style.toggleSwitch} title={title}>
+        <input
+            type="checkbox"
+            role="switch"
+            checked={checked}
+            onChange={(e) => onChange(e.target.checked)}
+        />
+        <span className={style.toggleSwitch__track}></span>
+        {label}
+    </label>
+);
+
+//a selectable chip in the policy filter rows - clicking the active chip again clears it
+const PolicyFilterChip = ({
+    label,
+    count,
+    active,
+    onClick,
+}: {
+    label: string;
+    count?: number;
+    active: boolean;
+    onClick: () => void;
+}) => (
+    <button
+        className={`${style.filterChip} ${active ? style.filterChip__active : ""}`}
+        aria-pressed={active}
+        onClick={onClick}
+    >
+        {label}
+        {count !== undefined && (
+            <span className={style.filterChip__count}>{count}</span>
+        )}
+    </button>
+);
+
 const BillsPage = () => {
     const [bills, setBills] = useState<Bill[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedSession, setSelectedSession] = useState("all");
+    const [primaryOnly, setPrimaryOnly] = useState(false);
+    //raw keys, ie "education" and "increase_education_funding" - null means no policy filter
+    const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+    const [selectedDirection, setSelectedDirection] = useState<string | null>(
+        null,
+    );
+
+    const selectPolicy = (topic: string | null, direction: string | null) => {
+        setSelectedTopic(topic);
+        setSelectedDirection(direction);
+    };
+
+    const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+    const [showSubjects, setShowSubjects] = useState(true);
+
+    //counts of the rows currently shown in the table (after search + filters) - kept as numbers
+    //so repeated reports from GeneralTable with the same counts don't cause re-renders
+    const [shownCount, setShownCount] = useState(0);
+    const [shownPassedCount, setShownPassedCount] = useState(0);
+
+    const handleFilteredBills = (rows: Bill[]) => {
+        setShownCount(rows.length);
+        setShownPassedCount(rows.filter((bill) => bill.passed).length);
+    };
 
     useEffect(() => {
         const fetchBills = async () => {
             try {
                 const response = await getAllBills();
-                console.log(response);
                 setBills(response);
             } catch (e) {
                 if (e instanceof Error) {
@@ -224,21 +340,284 @@ const BillsPage = () => {
                 } else {
                     console.error("Unknown error getting all bills", e);
                 }
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchBills();
     }, []);
 
+    //newest session first - ie 2026GS, 2025S2, 2025S1, 2025GS
+    const sessions = [...new Set(bills.map((bill) => bill.sessionId))].sort(
+        (a, b) => b.localeCompare(a),
+    );
+
+    const sessionBills =
+        selectedSession === "all"
+            ? bills
+            : bills.filter((bill) => bill.sessionId === selectedSession);
+
+    //the policies that count for filtering - all of them, or only primary when the switch is on
+    const eligiblePolicies = (bill: Bill) =>
+        primaryOnly
+            ? bill.policies.filter(
+                  (policy) => policy.policyTopicStrength === "primary",
+              )
+            : bill.policies;
+
+    const billSubjects = (bill: Bill) => bill.subjects ?? [];
+
+    const matchesPolicy = (bill: Bill) =>
+        !selectedTopic ||
+        eligiblePolicies(bill).some(
+            (policy) =>
+                policy.policyTopic === selectedTopic &&
+                (!selectedDirection ||
+                    policy.policyDirection === selectedDirection),
+        );
+
+    const matchesSubject = (bill: Bill) =>
+        !selectedSubject || billSubjects(bill).includes(selectedSubject);
+
+    const tableBills = sessionBills.filter(
+        (bill) => matchesPolicy(bill) && matchesSubject(bill),
+    );
+
+    //each filter section's counts apply the session and the OTHER sections' filters but not its own,
+    //so every chip shows how many bills clicking it would give
+    const billsForPolicyCounts = sessionBills.filter(matchesSubject);
+    const billsForSubjectCounts = sessionBills.filter(matchesPolicy);
+
+    const countBillsBy = (
+        billList: Bill[],
+        getKeys: (bill: Bill) => string[],
+    ): Map<string, number> => {
+        const counts = new Map<string, number>();
+        for (const bill of billList) {
+            for (const key of new Set(getKeys(bill))) {
+                counts.set(key, (counts.get(key) ?? 0) + 1);
+            }
+        }
+        return counts;
+    };
+
+    const topicCounts = countBillsBy(billsForPolicyCounts, (bill) =>
+        eligiblePolicies(bill).map((policy) => policy.policyTopic),
+    );
+    const topicOptions = [...topicCounts.keys()].sort((a, b) =>
+        a.localeCompare(b),
+    );
+    //keep the selected topic visible even if the current session has none
+    if (selectedTopic && !topicCounts.has(selectedTopic)) {
+        topicOptions.push(selectedTopic);
+    }
+
+    const directionCounts = countBillsBy(billsForPolicyCounts, (bill) =>
+        eligiblePolicies(bill)
+            .filter((policy) => policy.policyTopic === selectedTopic)
+            .map((policy) => policy.policyDirection),
+    );
+    const directionOptions = [...directionCounts.keys()].sort(
+        (a, b) => (directionCounts.get(b) ?? 0) - (directionCounts.get(a) ?? 0),
+    );
+    if (selectedDirection && !directionCounts.has(selectedDirection)) {
+        directionOptions.push(selectedDirection);
+    }
+
+    const subjectCounts = countBillsBy(billsForSubjectCounts, billSubjects);
+    //most common first
+    const subjectOptions: DropdownOption[] = [...subjectCounts.keys()]
+        .sort(
+            (a, b) => (subjectCounts.get(b) ?? 0) - (subjectCounts.get(a) ?? 0),
+        )
+        .map((subject) => ({
+            value: subject,
+            label: subject,
+            count: subjectCounts.get(subject) ?? 0,
+        }));
+    //keep the selected subject in the list even if the other filters leave it with no bills
+    if (selectedSubject && !subjectCounts.has(selectedSubject)) {
+        subjectOptions.unshift({
+            value: selectedSubject,
+            label: selectedSubject,
+            count: 0,
+        });
+    }
+
+    const passRate = shownCount
+        ? Math.round((shownPassedCount / shownCount) * 100)
+        : 0;
+
+    const stats = [
+        { label: "Bills", value: shownCount.toLocaleString() },
+        { label: "Passed", value: shownPassedCount.toLocaleString() },
+        { label: "Pass Rate", value: `${passRate}%` },
+    ];
+
     return (
-        <div className="page">
-            <div className="pageTitle">Bills Bills Bills!</div>
-            <GeneralTable
-                columns={(helpers) => createBillColumns(helpers)}
-                data={bills}
-                defaultSortId="sessionId"
-                defaultSortAscending={false}
-            ></GeneralTable>
+        <div className={`page pageScroll ${style.billsPage}`}>
+            <div className={style.billsPage__content}>
+                {/* Header */}
+                <header className={style.header}>
+                    <div>
+                        <span className={style.header__eyebrow}>
+                            Utah State Legislature
+                        </span>
+                        <h1 className={style.header__title}>Bills</h1>
+                        <p className={style.header__subtitle}>
+                            Browse every bill with plain-English summaries,
+                            policy topics, and whether it passed.
+                        </p>
+                    </div>
+                    <div className={style.stats}>
+                        {stats.map((stat) => (
+                            <div key={stat.label} className={style.stat}>
+                                <div className={style.stat__value}>
+                                    {loading ? "—" : stat.value}
+                                </div>
+                                <div className={style.stat__label}>
+                                    {stat.label}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </header>
+
+                {/* Session Tabs */}
+                <div className={style.sessionTabs} role="tablist">
+                    {["all", ...sessions].map((session) => (
+                        <button
+                            key={session}
+                            role="tab"
+                            aria-selected={selectedSession === session}
+                            className={`${style.sessionTab} ${selectedSession === session ? style.sessionTab__active : ""}`}
+                            onClick={() => setSelectedSession(session)}
+                        >
+                            {session === "all"
+                                ? "All Sessions"
+                                : String(normalizeSessionId(session))}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Policy Filters */}
+                <section className={style.policyFilters}>
+                    <div className={style.policyFilters__header}>
+                        <span className={style.policyFilters__title}>
+                            Filter by policy
+                        </span>
+                        <ToggleSwitch
+                            label="Primary policies only"
+                            title="Only match bills where the topic or direction is the bill's primary policy"
+                            checked={primaryOnly}
+                            onChange={setPrimaryOnly}
+                        />
+                    </div>
+
+                    <div className={style.filterRow}>
+                        <span className={style.filterRow__label}>Topic</span>
+                        <div className={style.chips}>
+                            <PolicyFilterChip
+                                label="All Topics"
+                                active={!selectedTopic}
+                                onClick={() => selectPolicy(null, null)}
+                            />
+                            {topicOptions.map((topic) => (
+                                <PolicyFilterChip
+                                    key={topic}
+                                    label={formatPolicyName(topic)}
+                                    count={topicCounts.get(topic) ?? 0}
+                                    active={selectedTopic === topic}
+                                    onClick={() =>
+                                        selectPolicy(
+                                            selectedTopic === topic
+                                                ? null
+                                                : topic,
+                                            null,
+                                        )
+                                    }
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {selectedTopic && (
+                        <div className={style.filterRow}>
+                            <span className={style.filterRow__label}>
+                                Direction
+                            </span>
+                            <div className={style.chips}>
+                                <PolicyFilterChip
+                                    label={`All ${formatPolicyName(selectedTopic)}`}
+                                    active={!selectedDirection}
+                                    onClick={() =>
+                                        selectPolicy(selectedTopic, null)
+                                    }
+                                />
+                                {directionOptions.map((direction) => (
+                                    <PolicyFilterChip
+                                        key={direction}
+                                        label={formatPolicyName(direction)}
+                                        count={
+                                            directionCounts.get(direction) ?? 0
+                                        }
+                                        active={selectedDirection === direction}
+                                        onClick={() =>
+                                            selectPolicy(
+                                                selectedTopic,
+                                                selectedDirection === direction
+                                                    ? null
+                                                    : direction,
+                                            )
+                                        }
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </section>
+
+                {/* Subject Filter */}
+                <section
+                    className={`${style.policyFilters} ${style.subjectFilter}`}
+                >
+                    <span className={style.policyFilters__title}>
+                        Filter by subject
+                    </span>
+                    <SearchableDropdown
+                        options={subjectOptions}
+                        selectedValue={selectedSubject}
+                        onSelect={setSelectedSubject}
+                        allLabel="All Subjects"
+                        searchPlaceholder={`Search ${subjectOptions.length} subjects...`}
+                    />
+                    <div className={style.subjectFilter__toggle}>
+                        <ToggleSwitch
+                            label="Show subjects column"
+                            title="Show or hide the Subjects column in the table"
+                            checked={showSubjects}
+                            onChange={setShowSubjects}
+                        />
+                    </div>
+                </section>
+
+                <GeneralTable
+                    columns={(helpers) =>
+                        createBillColumns(helpers, {
+                            primaryOnly,
+                            showSubjects,
+                            onPolicySelect: selectPolicy,
+                            onSubjectSelect: setSelectedSubject,
+                        })
+                    }
+                    data={tableBills}
+                    defaultSortId="sessionId"
+                    defaultSortAscending={false}
+                    loading={loading}
+                    onFilteredDataChange={handleFilteredBills}
+                ></GeneralTable>
+            </div>
         </div>
     );
 };

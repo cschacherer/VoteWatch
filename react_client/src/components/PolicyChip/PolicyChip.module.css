@@ -1,3 +1,85 @@
 .policyChip {
-    padding: var(--space-4); 
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 12px;
+    border: 1px solid var(--color-table-border);
+    border-left: 3px solid #cbd5e1;
+    border-radius: 8px;
+    background-color: white;
+}
+
+.policyChip__primary {
+    border-left-color: var(--color-accent);
+}
+
+.policyChip__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+/* resets button styles first so .policyChip__topic below can set the topic font */
+.policyChip__textButton {
+    padding: 0;
+    border: none;
+    background: none;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.policyChip__textButton:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
+}
+
+.policyChip__topic {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.policyChip__strength {
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.policyChip__direction {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    font-size: 13px;
+    color: #4b5563;
+}
+
+.policyChip__impact {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background-color: #f1f5f9;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.policyChip__impactLow {
+    background-color: #f1f5f9;
+    color: #475569;
+}
+
+.policyChip__impactModerate {
+    background-color: #e0e7ff;
+    color: #3730a3;
+}
+
+.policyChip__impactHigh {
+    background-color: #1e293b;
+    color: white;
 }

@@ -38,9 +38,17 @@
     color: #374151;
 }
 
-.badge__subject {
+.badge__basic.badge__subject {
     font-size: 13px;
-    padding: 1px 14px;
+    font-weight: 500;
+    padding: 3px 12px;
+    border: none;
+    background-color: #f1f5f9;
+    color: #334155;
+}
+
+.badge__basic.badge__subject:hover {
+    background-color: #e2e8f0;
 }
 
 .badge__basic {

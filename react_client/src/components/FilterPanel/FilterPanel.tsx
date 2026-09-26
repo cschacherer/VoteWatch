@@ -53,7 +53,7 @@ export default function FilterPanel({
     return (
         <div>
             <button
-                className={`defaultButton ${style.filterPanel__showFiltersButton}`}
+                className={style.filterPanel__showFiltersButton}
                 onClick={() => setOpen(true)}
             >
                 Filters ({activeFilters.length})

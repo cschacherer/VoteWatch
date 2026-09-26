@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
 import FilterPanel from "../../components/FilterPanel/FilterPanel";
 import type { ActiveFilter } from "../../models/DataTableUtils";
@@ -13,6 +13,9 @@ type GeneralTableProps<T> = {
     }) => any[];
     defaultSortId: string;
     defaultSortAscending: boolean;
+    loading?: boolean;
+    //called with the rows currently shown after search + filters are applied
+    onFilteredDataChange?: (rows: T[]) => void;
 };
 
 export default function GeneralTable<T>({
@@ -20,6 +23,8 @@ export default function GeneralTable<T>({
     columns,
     defaultSortId,
     defaultSortAscending,
+    loading = false,
+    onFilteredDataChange,
 }: GeneralTableProps<T>) {
     const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
     const [filterText, setFilterText] = useState("");
@@ -113,21 +118,52 @@ export default function GeneralTable<T>({
             }),
         );
 
+    //filteredData is a new array every render, so this runs every render - parents should only
+    //store primitive values from it (like counts) so React can skip re-rendering when nothing changed
+    useEffect(() => {
+        onFilteredDataChange?.(filteredData);
+    });
+
     //Have to use the styles because using styles.generalTable wipe out a lot of the defaults
     //and we just want a couple of properties changes
     const customStyles = {
+        headRow: {
+            style: {
+                minHeight: "48px",
+                borderBottom: "1px solid var(--color-table-border)",
+            },
+        },
         headCells: {
             style: {
                 padding: "var(--padding-datatable-header)",
-                color: "var(--color-datatable-header-font)",
-                backgroundColor: "var(--color-datatable-header-bg)",
-                fontSize: "var(--font-size-datatable-header)",
+                color: "var(--color-table-header-text)",
+                backgroundColor: "var(--color-table-header-bg)",
+                fontSize: "12px",
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase" as const,
+            },
+        },
+        rows: {
+            style: {
+                borderBottom: "1px solid var(--color-table-border)",
+            },
+            highlightOnHoverStyle: {
+                backgroundColor: "var(--color-table-row-hover)",
+                borderBottomColor: "var(--color-table-border)",
+                outline: "none",
             },
         },
         cells: {
             style: {
                 padding: "var(--padding-datatable-header)",
                 fontSize: "var(--font-size-default)",
+                color: "#1f2937",
+            },
+        },
+        pagination: {
+            style: {
+                borderTop: "1px solid var(--color-table-border)",
             },
         },
     };
@@ -139,57 +175,69 @@ export default function GeneralTable<T>({
     return (
         <div className={style.generalTable__container}>
             <div className={style.generalTable__subHeader}>
-                <div className="horizontalRow defaultGap">
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        value={filterText}
-                        onChange={(e) => setFilterText(e.target.value)}
-                        style={{ flex: 1 }}
-                    />
-                    <button
-                        className="defaultButton"
-                        onClick={() => setFilterText("")}
-                    >
-                        Clear
-                    </button>
-                </div>
-
-                <div className="horizontalRow defaultGap">
+                <div className={style.generalTable__toolbar}>
+                    <div className={style.generalTable__search}>
+                        <svg
+                            className={style.generalTable__searchIcon}
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                            <circle cx="11" cy="11" r="7" />
+                            <line x1="16.5" y1="16.5" x2="21" y2="21" />
+                        </svg>
+                        <input
+                            type="text"
+                            placeholder="Search..."
+                            value={filterText}
+                            onChange={(e) => setFilterText(e.target.value)}
+                        />
+                        {filterText && (
+                            <button
+                                className={style.generalTable__clearSearch}
+                                onClick={() => setFilterText("")}
+                                aria-label="Clear search"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
                     <FilterPanel
                         filters={filters}
                         activeFilters={activeFilters}
                         onApplyFilters={setActiveFilters}
                     />
-                    {activeFilters.length > 0 && (
-                        <div
-                            className={`horizontalRow defaultGap width100 ${style.generalTable__activeFilterText}`}
-                        >
-                            <div className="justifySpaceBetween">
-                                <div className="horizontalRow defaultGap">
-                                    <span className="bold">
-                                        Active Filters:
-                                    </span>{" "}
-                                    {activeFilters.map((f) => (
-                                        <div>
-                                            <div>
-                                                <span key={f.key}>
-                                                    {`${f.label}: ${f.value}`}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <button
-                                    onClick={clearFilters}
-                                    className="defaultButton"
-                                >
-                                    Clear Filters
-                                </button>
-                            </div>
-                        </div>
-                    )}
                 </div>
+
+                {activeFilters.length > 0 && (
+                    <div className={style.generalTable__activeFilters}>
+                        {activeFilters.map((f, i) => (
+                            <span
+                                key={`${f.key}-${i}`}
+                                className={style.generalTable__filterChip}
+                            >
+                                <strong>{f.label ?? f.key}:</strong> {f.value}
+                                <button
+                                    onClick={() =>
+                                        setActiveFilters(
+                                            activeFilters.filter(
+                                                (_, index) => index !== i,
+                                            ),
+                                        )
+                                    }
+                                    aria-label={`Remove ${f.label ?? f.key} filter`}
+                                >
+                                    ×
+                                </button>
+                            </span>
+                        ))}
+                        <button
+                            onClick={clearFilters}
+                            className={style.generalTable__clearFilters}
+                        >
+                            Clear all
+                        </button>
+                    </div>
+                )}
             </div>
             <div className={style.generalTable__tableWrapper}>
                 <DataTable
@@ -200,8 +248,18 @@ export default function GeneralTable<T>({
                     customStyles={customStyles}
                     responsive
                     highlightOnHover
-                    striped
                     fixedHeader
+                    progressPending={loading}
+                    progressComponent={
+                        <div className={style.generalTable__message}>
+                            Loading...
+                        </div>
+                    }
+                    noDataComponent={
+                        <div className={style.generalTable__message}>
+                            No matching records
+                        </div>
+                    }
                     pagination
                     paginationPerPage={10}
                     paginationRowsPerPageOptions={[10, 20, 50]}

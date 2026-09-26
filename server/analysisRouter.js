@@ -24,6 +24,32 @@ analysisRouter.get("/:legislatorId/:year", async (req, res) => {
     }
 });
 
+//must be registered before /:legislatorId/:year/:policyTopic/:policyDirection or "couple" is read as a policy topic
+analysisRouter.get(
+    "/:legislatorId/:year/couple/:policyCoupleName",
+    async (req, res) => {
+        try {
+            console.log("get bills and legislator votes for a policy couple");
+
+            const legislatorId = req.params.legislatorId;
+            const year = req.params.year;
+            const policyCoupleName = req.params.policyCoupleName;
+
+            const legislatorData =
+                await _db.getAllBillsAndVotesForLegislatorByPolicyCouple(
+                    legislatorId,
+                    policyCoupleName,
+                    year,
+                );
+
+            res.json(legislatorData);
+        } catch (err) {
+            console.error("Error fetching policy couple votes:", err);
+            res.status(500).send("Internal Server Error");
+        }
+    },
+);
+
 analysisRouter.get(
     "/:legislatorId/:year/:policyTopic/:policyDirection",
     async (req, res) => {

@@ -3,6 +3,7 @@ import type { LegislatorCouplePolicyScore } from "../../models/LegislatorCoupleP
 import { ScoreSlider } from "../ScoreSlider/ScoreSlider";
 import { formatPolicyName } from "../../utils/stringFormat";
 import ExpandableSection from "../ExpandableSection/ExpandableSection";
+import { Link } from "react-router-dom";
 
 type PolicyTopicSectionProps = {
     legislatorPolicyScores: LegislatorCouplePolicyScore[];
@@ -84,14 +85,17 @@ const PolicyTopicSection = ({
                                                     } */}
                                                         </div>
                                                     </div>
-                                                    <div className="centerText">
+                                                    <Link
+                                                        className="centerText link"
+                                                        to={`/analysis/${legislatorPolicyScore.legislatorId}/${legislatorPolicyScore.year}/${legislatorPolicyScore.policyCoupleName}`}
+                                                    >
                                                         <strong>
                                                             Votes Included:
                                                         </strong>{" "}
                                                         {
                                                             legislatorPolicyScore.allIncludedVotes
                                                         }
-                                                    </div>
+                                                    </Link>
                                                 </div>
                                             </div>
                                         ) : null,

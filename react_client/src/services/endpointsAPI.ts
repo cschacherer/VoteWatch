@@ -23,4 +23,9 @@ export const endpointsAPI = {
         policyTopic: string,
         policyDirection: string,
     ) => `analysis/${legislatorId}/${year}/${policyTopic}/${policyDirection}`,
+    analysisOfLegislatorPolicyCouple: (
+        legislatorId: string,
+        year: string,
+        policyCoupleName: string,
+    ) => `analysis/${legislatorId}/${year}/couple/${policyCoupleName}`,
 };

@@ -33,7 +33,7 @@ function App() {
                     element={<LegislatorDetailsPage />}
                 />
                 <Route
-                    path="/analysis/:legislatorId/:year/:policyTopic/:policyDirection"
+                    path="/analysis/:legislatorId/:year/:policyCoupleName"
                     element={<AnalysisDetailsPage />}
                 />
             </Route>

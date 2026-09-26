@@ -1,0 +1,341 @@
+/* the page scrolls (global pageScroll class) past the header and filters, and the table gets its own
+   fixed-height scroll area */
+.billsPage {
+    background-color: #f8fafc;
+}
+
+.billsPage__content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 12px 0 24px;
+}
+
+/* the table needs a definite height so its body can scroll - flex: none because GeneralTable's
+   own flex: 1 would otherwise override the height */
+.billsPage__content > :last-child {
+    flex: none;
+    height: 80vh;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.header__eyebrow {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+}
+
+.header__title {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0f172a;
+}
+
+.header__subtitle {
+    margin: 8px 0 0;
+    font-size: 1.1rem;
+    color: #4b5563;
+}
+
+.stats {
+    display: flex;
+    gap: 12px;
+}
+
+.stat {
+    min-width: 120px;
+    padding: 14px 20px;
+    border: 1px solid var(--color-table-border);
+    border-radius: 14px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.stat__value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #0f172a;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+/* POLICY FILTERS */
+.policyFilters {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 20px;
+    border: 1px solid var(--color-table-border);
+    border-radius: 14px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.policyFilters__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.policyFilters__title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.filterRow {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.filterRow__label {
+    flex-shrink: 0;
+    width: 80px;
+    padding-top: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* subject filter - title and dropdown on one line, column switch pushed to the right */
+.subjectFilter {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+}
+
+.subjectFilter__toggle {
+    margin-left: auto;
+}
+
+.filterChip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border: 1px solid var(--color-table-border);
+    border-radius: 999px;
+    background-color: #f8fafc;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        color 0.2s ease;
+}
+
+.filterChip:hover {
+    border-color: #cbd5e1;
+    background-color: #f1f5f9;
+}
+
+.filterChip__active,
+.filterChip__active:hover {
+    border-color: var(--color-accent);
+    background-color: var(--color-accent-bg);
+    color: var(--color-accent-dark);
+    font-weight: 600;
+}
+
+.filterChip__count {
+    min-width: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background-color: #e2e8f0;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    color: #475569;
+    font-variant-numeric: tabular-nums;
+}
+
+.filterChip__active .filterChip__count {
+    background-color: var(--color-accent);
+    color: white;
+}
+
+/* SESSION TABS */
+.sessionTabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.sessionTab {
+    padding: 8px 18px;
+    border: 1px solid var(--color-table-border);
+    border-radius: 999px;
+    background-color: white;
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+    transition:
+        background-color 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.sessionTab:hover {
+    border-color: #cbd5e1;
+    background-color: #f1f5f9;
+}
+
+.sessionTab__active,
+.sessionTab__active:hover {
+    border-color: var(--color-accent);
+    background-color: var(--color-accent);
+    color: white;
+}
+
+/* ON/OFF SWITCH (ToggleSwitch) - the real checkbox is hidden and the track/thumb is drawn with CSS */
+.toggleSwitch {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #374151;
+    cursor: pointer;
+    user-select: none;
+}
+
+.toggleSwitch input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.toggleSwitch__track {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    border-radius: 999px;
+    background-color: #cbd5e1;
+    transition: background-color 0.2s ease;
+}
+
+.toggleSwitch__track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.toggleSwitch input:checked + .toggleSwitch__track {
+    background-color: var(--color-accent);
+}
+
+.toggleSwitch input:checked + .toggleSwitch__track::after {
+    transform: translateX(18px);
+}
+
+.toggleSwitch input:focus-visible + .toggleSwitch__track {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+/* BILL CELL */
+.billCell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 4px 0;
+}
+
+.billCell__id {
+    padding: 2px 10px;
+    border-radius: 6px;
+    background-color: var(--color-accent-bg);
+    color: var(--color-accent-dark);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+}
+
+.billCell__title {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #0f172a;
+    text-decoration: none;
+}
+
+.billCell__id:hover,
+.billCell__title:hover {
+    text-decoration: underline;
+}
+
+.policyList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 0;
+}
+
+/* on small screens the header takes too much height, so let the whole page scroll instead */
+@media (max-width: 768px) {
+    .stats {
+        width: 100%;
+    }
+
+    .filterRow {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .filterRow__label {
+        padding-top: 0;
+    }
+
+
+    .stat {
+        flex: 1;
+        min-width: 0;
+    }
+}

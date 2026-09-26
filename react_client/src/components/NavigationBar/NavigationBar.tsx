@@ -1,53 +1,57 @@
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
+import { Link, NavLink } from "react-router-dom";
 import BinocularIcon from "../../assets/icons-binoculars1.svg";
 
 import style from "./NavigationBar.module.css";
 
+const navLinks = [
+    { label: "Home", to: "/" },
+    { label: "Bills", to: "/bills" },
+    { label: "Legislators", to: "/legislators" },
+    { label: "Analysis", to: "/analysis" },
+    { label: "Maps", to: "/maps" },
+];
+
 const NavigationBar = () => {
     return (
-        <Navbar expand="lg" className={style.navigationBar__background}>
-            <Navbar.Collapse className={style.navigationBar__container}>
-                <Navbar.Brand href="/" className={style.navigationBar__brand}>
-                    <img
-                        className={style.navigationBar__icon}
-                        src={BinocularIcon}
-                    />
-                    Utah Vote Watch
-                </Navbar.Brand>
-                <div className={style.navigationBar__linkContainer}>
-                    <Nav.Link className={style.navigationBar__link} href="/">
-                        Home
-                    </Nav.Link>
+        <Navbar expand="md" collapseOnSelect className={style.navigationBar}>
+            <Navbar.Brand
+                as={Link}
+                to="/"
+                className={style.navigationBar__brand}
+            >
+                <img
+                    className={style.navigationBar__icon}
+                    src={BinocularIcon}
+                    alt=""
+                />
+                Utah Vote Watch
+            </Navbar.Brand>
 
-                    <Nav.Link
-                        className={style.navigationBar__link}
-                        href="/bills"
-                    >
-                        Bills
-                    </Nav.Link>
+            <Navbar.Toggle
+                aria-controls="main-navigation"
+                className={style.navigationBar__toggle}
+            />
 
-                    <Nav.Link
-                        className={style.navigationBar__link}
-                        href="/legislators"
-                    >
-                        Legislators
-                    </Nav.Link>
-
-                    <Nav.Link
-                        className={style.navigationBar__link}
-                        href="/analysis"
-                    >
-                        Analysis
-                    </Nav.Link>
-
-                    <Nav.Link
-                        className={style.navigationBar__link}
-                        href="/maps"
-                    >
-                        Maps
-                    </Nav.Link>
-                </div>
+            <Navbar.Collapse
+                id="main-navigation"
+                className={style.navigationBar__collapse}
+            >
+                <Nav className={style.navigationBar__links}>
+                    {navLinks.map((link) => (
+                        <Nav.Link
+                            key={link.to}
+                            as={NavLink}
+                            to={link.to}
+                            end={link.to === "/"}
+                            eventKey={link.to}
+                            className={style.navigationBar__link}
+                        >
+                            {link.label}
+                        </Nav.Link>
+                    ))}
+                </Nav>
             </Navbar.Collapse>
         </Navbar>
     );

@@ -44,7 +44,24 @@
     --color-senate: red; 
     --color-house: blue; 
     --color-republican: red; 
-    --color-democrat: blue; 
+    --color-democrat: blue;
+
+    /* brand accent - nav bar and home page */
+    --color-accent: #2563eb;
+    --color-accent-dark: #1e40af;
+    --color-accent-bg: #eff6ff;
+
+    /* tables (GeneralTable) */
+    --color-table-border: #e5e7eb;
+    --color-table-header-bg: #f8fafc;
+    --color-table-header-text: #475569;
+    --color-table-row-hover: #f8fafc;
+
+    /* policy couple sides - kept neutral so they don't read as party or yes/no colors */
+    --color-policy-left: #6d28d9;
+    --color-policy-left-bg: #f3e8ff;
+    --color-policy-right: #0f766e;
+    --color-policy-right-bg: #ccfbf1;
 
     /* === SPACING === */
     /* Base scale */

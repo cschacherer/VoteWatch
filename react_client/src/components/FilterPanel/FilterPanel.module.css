@@ -4,10 +4,21 @@
 }
 
 .filterPanel__showFiltersButton {
-    padding: var(--space-2);
-    margin: var(--space-4) 0px;
+    height: 44px;
+    padding: 0 20px;
     box-sizing: border-box;
-    width: 200px;
+    border: 1px solid var(--color-table-border);
+    border-radius: 10px;
+    background-color: white;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+}
+
+.filterPanel__showFiltersButton:hover {
+    background-color: #f8fafc;
 }
 
 .filterPanel__container {
