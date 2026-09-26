@@ -1,6 +1,8 @@
 import style from "./PolicyTopicSection.module.css";
 import type { LegislatorCouplePolicyScore } from "../../models/LegislatorCouplePolicyScore";
 import { ScoreSlider } from "../ScoreSlider/ScoreSlider";
+import { formatPolicyName } from "../../utils/stringFormat";
+import ExpandableSection from "../ExpandableSection/ExpandableSection";
 
 type PolicyTopicSectionProps = {
     legislatorPolicyScores: LegislatorCouplePolicyScore[];
@@ -14,72 +16,88 @@ const PolicyTopicSection = ({
     ];
 
     return (
-        <div className="section defaultGap verticalStack largeGap defaultPaddingHorizontal">
+        <div className="section verticalStack largeGap ">
             {distinctPolicyTopics.map((policyTopic) => {
                 return (
-                    <div
-                        className="outlineThin section verticalStack defaultGap"
-                        key={policyTopic}
-                    >
-                        <div className="smallFilledHeader">{policyTopic}</div>
-                        <div className="defaultPadding defaultGap">
-                            {legislatorPolicyScores
-                                .filter((x) => x.policyTopic === policyTopic)
-                                .map((legislatorPolicyScore, index) =>
-                                    legislatorPolicyScore.allIncludedVotes != 0 ? (
-                                        <div
-                                            key={index}
-                                            className="outlineThin section verticalStack defaultGap defaultPadding"
-                                        >
-                                            <div className="centerText">
-                                                <strong>
-                                                    {
-                                                        legislatorPolicyScore.policyNameLabel
-                                                    }
-                                                </strong>
-                                            </div>
-                                            <div className="horizontalRow centerHorizontally">
-                                                <div
-                                                    className={style.scoreRow__left}
-                                                >
-                                                    {/* {
+                    <div className="section largeGap" key={policyTopic}>
+                        <ExpandableSection
+                            header={formatPolicyName(policyTopic)}
+                            defaultExpanded={true}
+                        >
+                            <div className="largePadding horizontalRow largeGap">
+                                {legislatorPolicyScores
+                                    .filter(
+                                        (x) => x.policyTopic === policyTopic,
+                                    )
+                                    .map((legislatorPolicyScore, index) =>
+                                        legislatorPolicyScore.allIncludedVotes !=
+                                        0 ? (
+                                            <div
+                                                key={index}
+                                                className="section verticalStack largeGap topicHeight centerVertically justifySpaceBetween"
+                                            >
+                                                <div className="outlineThin largePadding largeGap verticalStack topicHeight centerVertically">
+                                                    <div className="centerText largeFont">
+                                                        <strong>
+                                                            {
+                                                                legislatorPolicyScore.policyNameLabel
+                                                            }
+                                                        </strong>
+                                                    </div>
+                                                    <div className="horizontalRow centerHorizontally largeFont">
+                                                        <div
+                                                            className={
+                                                                style.scoreRow__left
+                                                            }
+                                                        >
+                                                            {/* {
                                                         legislatorPolicyScore.leftPolicyDirection
                                                     } */}
-                                                    <strong>Reduce</strong>
-                                                </div>
-                                                <div
-                                                    className={
-                                                        style.scoreRow__center
-                                                    }
-                                                >
-                                                    <ScoreSlider
-                                                        value={
-                                                            legislatorPolicyScore.score
-                                                        }
-                                                        showValueLabel={true}
-                                                    />
-                                                </div>
-                                                <div
-                                                    className={
-                                                        style.scoreRow__right
-                                                    }
-                                                >
-                                                    <strong>Increase</strong>
-                                                    {/* {
+                                                            <strong>
+                                                                Reduce
+                                                            </strong>
+                                                        </div>
+                                                        <div
+                                                            className={
+                                                                style.scoreRow__center
+                                                            }
+                                                        >
+                                                            <ScoreSlider
+                                                                value={
+                                                                    legislatorPolicyScore.score
+                                                                }
+                                                                showValueLabel={
+                                                                    true
+                                                                }
+                                                            />
+                                                        </div>
+                                                        <div
+                                                            className={
+                                                                style.scoreRow__right
+                                                            }
+                                                        >
+                                                            <strong>
+                                                                Increase
+                                                            </strong>
+                                                            {/* {
                                                         legislatorPolicyScore.rightPolicyDirection
                                                     } */}
+                                                        </div>
+                                                    </div>
+                                                    <div className="centerText">
+                                                        <strong>
+                                                            Votes Included:
+                                                        </strong>{" "}
+                                                        {
+                                                            legislatorPolicyScore.allIncludedVotes
+                                                        }
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="centerText">
-                                                <strong>Votes Included:</strong>{" "}
-                                                {
-                                                    legislatorPolicyScore.allIncludedVotes
-                                                }
-                                            </div>
-                                        </div>
-                                    ) : null
-                                )}
-                        </div>
+                                        ) : null,
+                                    )}
+                            </div>
+                        </ExpandableSection>
                     </div>
                 );
             })}

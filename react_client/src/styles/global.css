@@ -85,6 +85,14 @@
     font-size: 25px;
 }
 
+.largeFont {
+    font-size: var(--font-size-lg); 
+}
+
+.mediumFont {
+    font-size: var(--font-size-md);
+}
+
 .bold {
     font-weight: 600;
 }
@@ -178,6 +186,10 @@
 
 .defaultPadding {
     padding: var(--space-4);
+}
+
+.largePadding {
+    padding: var(--space-8);
 }
 
 .defaultPaddingHorizontal {
@@ -352,4 +364,8 @@
     width: 60%;
     margin: 0 auto;
     justify-content: center;
+}
+
+.topicHeight {
+    height: 300px;
 }

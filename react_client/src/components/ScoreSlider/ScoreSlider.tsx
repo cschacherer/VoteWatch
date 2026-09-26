@@ -69,7 +69,7 @@ export function ScoreSlider({
                             color: selectedColor,
                         }}
                     >
-                        {label ?? numericValue}
+                        {label ?? numericValue.toFixed(0)}
                     </div>
                 )}
             </div>
