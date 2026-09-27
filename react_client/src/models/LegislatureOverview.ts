@@ -3,7 +3,10 @@ import { type Bill, createBillFromVote } from "./Bill";
 
 export type AnalysisYear = {
     year: string;
+    //true when scores for this year are stored - years without them are scored live for a legislator
     hasScores: boolean;
+    //this year's sessions, newest first - ie ["2025S2", "2025S1", "2025GS"]
+    sessions: string[];
 };
 
 //one legislator's score on one policy couple (only couples they had counted votes on)
@@ -114,6 +117,7 @@ export const createPolicyCoupleOutcome = (raw: any): PolicyCoupleOutcome => {
 export const createAnalysisYear = (raw: any): AnalysisYear => ({
     year: String(raw.year ?? ""),
     hasScores: Boolean(raw.has_scores),
+    sessions: Array.isArray(raw.sessions) ? raw.sessions.map(String) : [],
 });
 
 export const createLegislatureOverview = (raw: any): LegislatureOverview => {

@@ -6,9 +6,10 @@ import {
 import type { AnalysisYear } from "../../models/LegislatureOverview";
 import type { LegislatorCouplePolicyScore } from "../../models/LegislatorCouplePolicyScore";
 import { formatPolicyName } from "../../utils/stringFormat";
-import PillTabs from "../PillTabs/PillTabs";
+import { normalizeSessionId } from "../../models/Bill";
 import FilterCard, { FilterRow } from "../FilterCard/FilterCard";
 import FilterChip from "../FilterChip/FilterChip";
+import ChipSelect from "../ChipSelect/ChipSelect";
 import PolicyTopicSection from "../PolicyTopicSection/PolicyTopicSection";
 
 import style from "./LegislatorPolicyScores.module.css";
@@ -16,17 +17,27 @@ import style from "./LegislatorPolicyScores.module.css";
 type LegislatorPolicyScoresProps = {
     legislatorId: string;
     legislatorName?: string;
-    //year to show first - falls back to the newest year with scores
+    //year to show first - falls back to the newest year
     year?: string | null;
+    //one of that year's sessions, or null for the whole year
+    session?: string | null;
     onYearChange?: (year: string) => void;
+    onSessionChange?: (session: string | null) => void;
 };
 
-//one legislator's policy couple scores for a year - year tabs, topic chips, and a card per topic
+//"2025 Special Session 1" -> "Special Session 1" (the year is already picked above)
+const sessionLabel = (sessionId: string) =>
+    String(normalizeSessionId(sessionId)).replace(/^\d{4}\s*/, "");
+
+//one legislator's policy couple scores for a year or one session - year and session chips, topic chips,
+//and a card per topic. Stored scores are per year, so a session (or an unscored year) is computed live
 const LegislatorPolicyScores = ({
     legislatorId,
     legislatorName,
     year,
+    session,
     onYearChange,
+    onSessionChange,
 }: LegislatorPolicyScoresProps) => {
     const [years, setYears] = useState<AnalysisYear[]>([]);
     const [policyScores, setPolicyScores] = useState<
@@ -35,9 +46,19 @@ const LegislatorPolicyScores = ({
     const [loading, setLoading] = useState(true);
     const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
-    const scoredYears = years.filter((y) => y.hasScores).map((y) => y.year);
+    //newest first - every year with bills can be scored
+    const yearOptions = years.map((y) => y.year);
     const selectedYear =
-        year && scoredYears.includes(year) ? year : scoredYears[0];
+        year && yearOptions.includes(year) ? year : yearOptions[0];
+    const yearSessions =
+        years.find((y) => y.year === selectedYear)?.sessions ?? [];
+    //ignore a session that isn't in the selected year (ie an old link)
+    const selectedSession =
+        session && yearSessions.includes(session) ? session : null;
+    //what the scores cover, ie "2025" or "2025 Special Session 1"
+    const periodLabel = selectedSession
+        ? String(normalizeSessionId(selectedSession))
+        : selectedYear;
 
     useEffect(() => {
         const fetchYears = async () => {
@@ -62,6 +83,7 @@ const LegislatorPolicyScores = ({
                     await getLegislatorAnalysisByYear(
                         legislatorId,
                         selectedYear,
+                        selectedSession,
                     ),
                 );
             } catch (error) {
@@ -73,7 +95,7 @@ const LegislatorPolicyScores = ({
         };
 
         fetchScores();
-    }, [legislatorId, selectedYear]);
+    }, [legislatorId, selectedYear, selectedSession]);
 
     //only couples with votes have a meaningful score
     const topicCounts = new Map<string, number>();
@@ -94,7 +116,7 @@ const LegislatorPolicyScores = ({
         : //without a topic filter, hide topics that have no scored couples at all
           policyScores.filter((score) => topicCounts.has(score.policyTopic));
 
-    if (!loading && scoredYears.length === 0) {
+    if (!loading && yearOptions.length === 0) {
         return <div className={style.message}>No policy scores yet.</div>;
     }
 
@@ -111,43 +133,60 @@ const LegislatorPolicyScores = ({
                 count to see every bill behind a score.
             </div>
 
-            <FilterCard
-                title="Filter scores"
-                action={
-                    scoredYears.length > 1 && selectedYear ? (
-                        <PillTabs
-                            options={scoredYears.map((y) => ({
-                                value: y,
-                                label: y,
-                            }))}
-                            selectedValue={selectedYear}
-                            onSelect={(y) => {
+            <FilterCard title="Filter analysis">
+                <FilterRow label="Year">
+                    {yearOptions.map((y) => (
+                        <FilterChip
+                            key={y}
+                            label={y}
+                            active={selectedYear === y}
+                            onClick={() => {
                                 setSelectedTopic(null);
                                 onYearChange?.(y);
                             }}
                         />
-                    ) : undefined
-                }
-            >
-                <FilterRow label="Topic">
-                    <FilterChip
-                        label="All Topics"
-                        active={!selectedTopic}
-                        onClick={() => setSelectedTopic(null)}
-                    />
-                    {topicOptions.map((topic) => (
-                        <FilterChip
-                            key={topic}
-                            label={formatPolicyName(topic)}
-                            count={topicCounts.get(topic) ?? 0}
-                            active={selectedTopic === topic}
-                            onClick={() =>
-                                setSelectedTopic(
-                                    selectedTopic === topic ? null : topic,
-                                )
-                            }
-                        />
                     ))}
+                </FilterRow>
+
+                {/* a one-session year has nothing to narrow down */}
+                {yearSessions.length > 1 && (
+                    <FilterRow label="Session">
+                        <FilterChip
+                            label={`All ${selectedYear}`}
+                            active={!selectedSession}
+                            onClick={() => {
+                                setSelectedTopic(null);
+                                onSessionChange?.(null);
+                            }}
+                        />
+                        {yearSessions.map((s) => (
+                            <FilterChip
+                                key={s}
+                                label={sessionLabel(s)}
+                                active={selectedSession === s}
+                                onClick={() => {
+                                    setSelectedTopic(null);
+                                    onSessionChange?.(
+                                        selectedSession === s ? null : s,
+                                    );
+                                }}
+                            />
+                        ))}
+                    </FilterRow>
+                )}
+
+                <FilterRow label="Topic">
+                    <ChipSelect
+                        options={topicOptions.map((topic) => ({
+                            value: topic,
+                            label: formatPolicyName(topic),
+                            count: topicCounts.get(topic) ?? 0,
+                        }))}
+                        selectedValue={selectedTopic}
+                        onSelect={setSelectedTopic}
+                        allLabel="All Topics"
+                        searchPlaceholder="Search topics..."
+                    />
                 </FilterRow>
             </FilterCard>
 
@@ -156,10 +195,13 @@ const LegislatorPolicyScores = ({
             ) : topicOptions.length === 0 ? (
                 <div className={style.message}>
                     No policy scores for {legislatorName ?? "this legislator"}{" "}
-                    in {selectedYear} yet.
+                    in {periodLabel} yet.
                 </div>
             ) : (
-                <PolicyTopicSection legislatorPolicyScores={shownScores} />
+                <PolicyTopicSection
+                    legislatorPolicyScores={shownScores}
+                    session={selectedSession}
+                />
             )}
         </div>
     );

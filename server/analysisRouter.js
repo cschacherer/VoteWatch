@@ -54,15 +54,32 @@ analysisRouter.get("/overview/:year", async (req, res) => {
 analysisRouter.get("/:legislatorId/:year", async (req, res) => {
     //send back the legislator id information
     try {
-        console.log("get legislator sponsored bills");
+        console.log("get legislator policy couple scores");
 
         const legislatorId = req.params.legislatorId;
         const year = req.params.year;
-        const legislatorData = await _db.getPolicyCouplesFromLegislatorAndYear(
+        //optional ?session=2026GS - scores are only stored per year, so a session is computed live
+        const session = req.query.session || null;
+
+        if (!session) {
+            const storedScores =
+                await _db.getPolicyCouplesFromLegislatorAndYear(
+                    legislatorId,
+                    year,
+                );
+            if (storedScores.length > 0) {
+                res.json(storedScores);
+                return;
+            }
+        }
+
+        //a session, or a year that was never scored
+        const liveScores = await _db.getLiveCoupleScoresForLegislator(
             legislatorId,
             year,
+            session,
         );
-        res.json(legislatorData);
+        res.json(liveScores);
     } catch (err) {
         console.error("Error fetching legislator details:", err);
         res.status(500).send("Internal Server Error");
@@ -79,12 +96,15 @@ analysisRouter.get(
             const legislatorId = req.params.legislatorId;
             const year = req.params.year;
             const policyCoupleName = req.params.policyCoupleName;
+            //optional ?session=2026GS - only that session's bills
+            const session = req.query.session || null;
 
             const legislatorData =
                 await _db.getAllBillsAndVotesForLegislatorByPolicyCouple(
                     legislatorId,
                     policyCoupleName,
                     year,
+                    session,
                 );
 
             res.json(legislatorData);

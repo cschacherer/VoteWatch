@@ -10,11 +10,14 @@ import style from "./PolicyTopicSection.module.css";
 
 type PolicyTopicSectionProps = {
     legislatorPolicyScores: LegislatorCouplePolicyScore[];
+    //set when the scores are for one session, so the vote links show that session's bills
+    session?: string | null;
 };
 
 //one card per policy topic, with a score bar for each policy couple the legislator has votes on
 const PolicyTopicSection = ({
     legislatorPolicyScores,
+    session,
 }: PolicyTopicSectionProps) => {
     const distinctPolicyTopics = [
         ...new Set(legislatorPolicyScores.map((x) => x.policyTopic)),
@@ -63,7 +66,7 @@ const PolicyTopicSection = ({
                                         </span>
                                         <Link
                                             className={style.couple__votes}
-                                            to={`/analysis/${couple.legislatorId}/${couple.year}/${couple.policyCoupleName}`}
+                                            to={`/analysis/${couple.legislatorId}/${couple.year}/${couple.policyCoupleName}${session ? `?session=${session}` : ""}`}
                                             title="See every bill in this score"
                                         >
                                             {couple.allIncludedVotes}{" "}

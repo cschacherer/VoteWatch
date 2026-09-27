@@ -2,9 +2,9 @@
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    font-size: var(--font-size-md);
+    font-size: var(--font-size-sm);
     font-weight: 600;
-    color: #374151;
+    color: var(--color-lighter-text); 
     cursor: pointer;
     user-select: none;
 }

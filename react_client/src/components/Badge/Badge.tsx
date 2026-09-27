@@ -60,14 +60,20 @@ const Badge = ({ type, value, onClick }: BadgeProps) => {
         valueStyle = style.badge__soft;
     } else if (type == BadgeType.Subjects) {
         valueStyle = `${style.badge__basic} ${style.badge__subject}`;
+    } else if (type == BadgeType.BillId) {
+        valueStyle = `${style.badge__billId}`;
     } else {
         valueStyle = style.badge__basic;
     }
 
-    const className = `${style.badge__default} ${valueStyle}`;
+    //badges without a click handler are plain labels - no pointer cursor or hover zoom
+    const className = `${style.badge__default} ${valueStyle} ${onClick ? style.badge__clickable : ""}`;
 
     return (
-        <span className={className} onClick={() => onClick?.(value)}>
+        <span
+            className={className}
+            onClick={onClick ? () => onClick(value) : undefined}
+        >
             {Icon && <Icon className={style.badge__icon} />}
             {value}
         </span>

@@ -1,0 +1,19 @@
+/* chips on tablets and up, the dropdown on phones - same 768px breakpoint as the rest of the app */
+.chips {
+    display: contents;
+}
+
+.dropdown {
+    display: none;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .chips {
+        display: none;
+    }
+
+    .dropdown {
+        display: block;
+    }
+}

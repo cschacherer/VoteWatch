@@ -3,17 +3,17 @@ import { Link, useParams } from "react-router-dom";
 import { getPolicyCoupleOutcome } from "../../services/analysisService";
 import type { PolicyCoupleOutcome } from "../../models/LegislatureOverview";
 import { type Bill, normalizeSessionId } from "../../models/Bill";
-import {
-    FilterType,
-    createDataTableColumn,
-    formatDate,
-} from "../../models/DataTableUtils";
+import { createDataTableColumn, formatDate } from "../../models/DataTableUtils";
 import {
     formatPolicyName,
     shortenDirectionPair,
 } from "../../utils/stringFormat";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import BillCell from "../../components/BillCell/BillCell";
+import {
+    billCellSearchText,
+    policyChipSearchText,
+} from "../../utils/searchText";
 import PolicyChip from "../../components/PolicyChip/PolicyChip";
 import PolicyScoreBar from "../../components/PolicyScoreBar/PolicyScoreBar";
 import { StatCards } from "../../components/PageHeader/PageHeader";
@@ -29,6 +29,7 @@ function createOutcomeColumns() {
             id: "bill",
             name: "Bill",
             selector: (row: Bill) => row.id + row.shortTitle,
+            searchText: billCellSearchText,
             width: "280px",
             cell: (row: Bill) => (
                 <BillCell
@@ -37,26 +38,26 @@ function createOutcomeColumns() {
                     shortTitle={row.shortTitle}
                 />
             ),
-            filterConfig: { type: FilterType.Text },
         }),
         createDataTableColumn<Bill>({
             id: "policy",
             name: "Policy Weight",
             selector: (row: Bill) => row.policies[0]?.impactLevel ?? "",
+            searchText: (row: Bill) =>
+                row.policies[0] ? policyChipSearchText(row.policies[0]) : [],
             width: "260px",
             cell: (row: Bill) =>
                 row.policies[0] ? (
                     <PolicyChip policy={row.policies[0]} />
                 ) : null,
-            filterConfig: { type: FilterType.Text },
         }),
         createDataTableColumn<Bill>({
             id: "datePassed",
             name: "Passed",
             selector: (row: Bill) => row.datePassed,
+            searchText: (row: Bill) => formatDate(row.datePassed),
             width: "130px",
             cell: (row: Bill) => formatDate(row.datePassed),
-            filterConfig: { type: FilterType.Text },
         }),
         createDataTableColumn<Bill>({
             id: "summary",
@@ -64,7 +65,6 @@ function createOutcomeColumns() {
             selector: (row: Bill) => row.summary?.oneSentence ?? "",
             grow: 2,
             minWidth: "300px",
-            filterConfig: { type: FilterType.Text },
         }),
         //hidden - kept so session stays sortable and available in the Filters panel
         createDataTableColumn<Bill>({
@@ -72,7 +72,6 @@ function createOutcomeColumns() {
             name: "Session",
             selector: (row: Bill) => normalizeSessionId(row.sessionId),
             omit: true,
-            filterConfig: { type: FilterType.Text },
         }),
     ];
 }
@@ -114,7 +113,8 @@ const OutcomeSideSection = ({
         {bills.length > 0 ? (
             <div className={style.side__table}>
                 <GeneralTable
-                    columns={() => createOutcomeColumns()}
+                    keyField="rowKey"
+                    columns={createOutcomeColumns()}
                     data={bills}
                     defaultSortId="sessionId"
                     defaultSortAscending={false}

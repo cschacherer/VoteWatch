@@ -3,12 +3,14 @@ import { Link } from "react-router-dom";
 import { getAllLegislators } from "../../services/legislatorService";
 import type { Legislator } from "../../models/Legislator";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
-import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
+import { createDataTableColumn } from "../../models/DataTableUtils";
 import Badge from "../../components/Badge/Badge";
 import ListPage from "../../components/ListPage/ListPage";
 import PageHeader from "../../components/PageHeader/PageHeader";
-import PillTabs from "../../components/PillTabs/PillTabs";
-import FilterCard, { FilterRow } from "../../components/FilterCard/FilterCard";
+import FilterCard, {
+    ClearFiltersButton,
+    FilterRow,
+} from "../../components/FilterCard/FilterCard";
 import FilterChip from "../../components/FilterChip/FilterChip";
 import SearchableDropdown, {
     type DropdownOption,
@@ -24,57 +26,70 @@ const legislatorCounties = (legislator: Legislator) =>
         .filter(Boolean);
 
 //set all column tables here
-//party and county clicks go to the page-level filters, so GeneralTable's helpers aren't needed here
-function createLegislatorColumns(
-    _helpers: {
-        filterBadgeClick: (key: string, value: string) => void;
-    },
-    {
-        onPartySelect,
-        onCountySelect,
-    }: {
-        onPartySelect: (party: string) => void;
-        onCountySelect: (county: string) => void;
-    },
-) {
+//clicking a chamber, district, party, or county in a row selects that filter at the top of the page
+function createLegislatorColumns({
+    onChamberSelect,
+    onDistrictSelect,
+    onPartySelect,
+    onCountySelect,
+}: {
+    onChamberSelect: (chamber: string) => void;
+    onDistrictSelect: (chamber: string, district: number) => void;
+    onPartySelect: (party: string) => void;
+    onCountySelect: (county: string) => void;
+}) {
     return [
         createDataTableColumn<Legislator>({
             id: "fullName",
             name: "Name",
             selector: (row) => row.fullName,
+            //the cell shows the name plus the chamber and district
+            searchText: (row: Legislator) => [
+                row.formatName,
+                row.fullName,
+                `${row.house} · District ${row.district}`,
+            ],
             minWidth: "280px",
             grow: 1.5,
+            //the photo and name link to the legislator, the chamber and district are filter buttons
             cell: (row: Legislator) => (
-                <Link className={style.nameCell} to={`/legislators/${row.id}`}>
-                    <img
-                        className={style.nameCell__photo}
-                        src={row.image}
-                        alt=""
-                    />
+                <div className={style.nameCell}>
+                    <Link to={`/legislators/${row.id}`} tabIndex={-1}>
+                        <img
+                            className={style.nameCell__photo}
+                            src={row.image}
+                            alt=""
+                        />
+                    </Link>
                     <div>
-                        <div className={style.nameCell__name}>
+                        <Link
+                            className={style.nameCell__name}
+                            to={`/legislators/${row.id}`}
+                        >
                             {row.formatName}
-                        </div>
+                        </Link>
                         <div className={style.nameCell__district}>
-                            {row.house} · District {row.district}
+                            <button
+                                className={style.nameCell__filterButton}
+                                title={`Show only ${row.house} members`}
+                                onClick={() => onChamberSelect(row.house)}
+                            >
+                                {row.house}
+                            </button>
+                            {" · "}
+                            <button
+                                className={style.nameCell__filterButton}
+                                title={`Show only ${row.house} District ${row.district}`}
+                                onClick={() =>
+                                    onDistrictSelect(row.house, row.district)
+                                }
+                            >
+                                {`District ${row.district}`}
+                            </button>
                         </div>
                     </div>
-                </Link>
+                </div>
             ),
-            filterConfig: {
-                type: FilterType.Text,
-            },
-        }),
-        //hidden - the chamber tabs and the name cell cover it, but it stays available in the Filters panel
-        createDataTableColumn<Legislator>({
-            id: "house",
-            name: "Chamber",
-            selector: (row: Legislator) => row.house,
-            omit: true,
-            filterConfig: {
-                type: FilterType.Select,
-                options: ["House", "Senate"],
-            },
         }),
         createDataTableColumn<Legislator>({
             id: "party",
@@ -88,19 +103,12 @@ function createLegislatorColumns(
                     onClick={(value) => onPartySelect(value)}
                 />
             ),
-            filterConfig: {
-                type: FilterType.Select,
-                options: ["Republican", "Democrat", "Forward Party"],
-            },
         }),
         createDataTableColumn<Legislator>({
             id: "district",
             name: "District",
             selector: (row: Legislator) => row.district,
-            width: "110px",
-            filterConfig: {
-                type: FilterType.Number,
-            },
+            width: "140px",
         }),
         createDataTableColumn<Legislator>({
             id: "counties",
@@ -119,9 +127,6 @@ function createLegislatorColumns(
                     ))}
                 </div>
             ),
-            filterConfig: {
-                type: FilterType.Text,
-            },
         }),
         createDataTableColumn<Legislator>({
             id: "contact",
@@ -139,18 +144,12 @@ function createLegislatorColumns(
                     )}
                 </div>
             ),
-            filterConfig: {
-                type: FilterType.Text,
-            },
         }),
         createDataTableColumn<Legislator>({
             id: "serviceStart",
             name: "Service Start",
             selector: (row: Legislator) => row.serviceStart,
             minWidth: "160px",
-            filterConfig: {
-                type: FilterType.Text,
-            },
         }),
     ];
 }
@@ -158,7 +157,10 @@ function createLegislatorColumns(
 const LegislatorsPage = () => {
     const [legislators, setLegislators] = useState<Legislator[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedChamber, setSelectedChamber] = useState("all");
+    const [selectedChamber, setSelectedChamber] = useState<string | null>(null);
+    const [selectedDistrict, setSelectedDistrict] = useState<number | null>(
+        null,
+    );
     const [selectedParty, setSelectedParty] = useState<string | null>(null);
     const [selectedCounty, setSelectedCounty] = useState<string | null>(null);
 
@@ -193,12 +195,17 @@ const LegislatorsPage = () => {
         fetchLegislators();
     }, []);
 
-    const chamberLegislators =
-        selectedChamber === "all"
-            ? legislators
-            : legislators.filter(
-                  (legislator) => legislator.house === selectedChamber,
-              );
+    //clicking a district in a row also picks its chamber - House 12 and Senate 12 are different seats
+    const selectDistrictFromRow = (chamber: string, district: number) => {
+        setSelectedChamber(chamber);
+        setSelectedDistrict(district);
+    };
+
+    const matchesChamber = (legislator: Legislator) =>
+        !selectedChamber || legislator.house === selectedChamber;
+
+    const matchesDistrict = (legislator: Legislator) =>
+        selectedDistrict === null || legislator.district === selectedDistrict;
 
     const matchesParty = (legislator: Legislator) =>
         !selectedParty || legislator.party === selectedParty;
@@ -207,11 +214,44 @@ const LegislatorsPage = () => {
         !selectedCounty ||
         legislatorCounties(legislator).includes(selectedCounty);
 
-    const tableLegislators = chamberLegislators.filter(
-        (legislator) => matchesParty(legislator) && matchesCounty(legislator),
-    );
+    const filters = [
+        matchesChamber,
+        matchesDistrict,
+        matchesParty,
+        matchesCounty,
+    ];
 
-    //each filter's counts apply the chamber and the OTHER filter but not its own,
+    //how many filters are on - drives the "Clear all filters" button
+    const activeFilterCount = [
+        selectedChamber !== null,
+        selectedDistrict !== null,
+        selectedParty !== null,
+        selectedCounty !== null,
+    ].filter(Boolean).length;
+
+    const clearAllFilters = () => {
+        setSelectedChamber(null);
+        setSelectedDistrict(null);
+        setSelectedParty(null);
+        setSelectedCounty(null);
+    };
+
+    //clicking a value in a table row filters to just that value - every other filter goes back to
+    //"All". The state updates are batched, so the clicked filter set after the clear wins
+    const filterFromRow = (applyFilter: () => void) => {
+        clearAllFilters();
+        applyFilter();
+    };
+
+    //legislators passing every filter except skip - used for the faceted counts
+    const legislatorsMatching = (skip?: (legislator: Legislator) => boolean) =>
+        legislators.filter((legislator) =>
+            filters.every((matches) => matches === skip || matches(legislator)),
+        );
+
+    const tableLegislators = legislatorsMatching();
+
+    //each filter's counts apply every OTHER filter but not its own,
     //so every option shows how many legislators picking it would give
     const countBy = (
         list: Legislator[],
@@ -226,9 +266,35 @@ const LegislatorsPage = () => {
         return counts;
     };
 
-    const partyCounts = countBy(
-        chamberLegislators.filter(matchesCounty),
-        (l) => (l.party ? [l.party] : []),
+    const chamberOptions = ["House", "Senate"];
+    const chamberCounts = countBy(legislatorsMatching(matchesChamber), (l) =>
+        l.house ? [l.house] : [],
+    );
+
+    const districtCounts = countBy(legislatorsMatching(matchesDistrict), (l) =>
+        l.district ? [String(l.district)] : [],
+    );
+    const districtOptions: DropdownOption[] = [...districtCounts.keys()]
+        .sort((a, b) => Number(a) - Number(b))
+        .map((district) => ({
+            value: district,
+            label: `District ${district}`,
+            count: districtCounts.get(district) ?? 0,
+        }));
+    //keep the selected district in the list even if the other filters leave it with no legislators
+    if (
+        selectedDistrict !== null &&
+        !districtCounts.has(String(selectedDistrict))
+    ) {
+        districtOptions.unshift({
+            value: String(selectedDistrict),
+            label: `District ${selectedDistrict}`,
+            count: 0,
+        });
+    }
+
+    const partyCounts = countBy(legislatorsMatching(matchesParty), (l) =>
+        l.party ? [l.party] : [],
     );
     //most members first
     const partyOptions = [...partyCounts.keys()].sort(
@@ -239,7 +305,7 @@ const LegislatorsPage = () => {
     }
 
     const countyCounts = countBy(
-        chamberLegislators.filter(matchesParty),
+        legislatorsMatching(matchesCounty),
         legislatorCounties,
     );
     const countyOptions: DropdownOption[] = [...countyCounts.keys()]
@@ -282,17 +348,38 @@ const LegislatorsPage = () => {
                 loading={loading}
             />
 
-            <PillTabs
-                options={[
-                    { value: "all", label: "All Legislators" },
-                    { value: "House", label: "House" },
-                    { value: "Senate", label: "Senate" },
-                ]}
-                selectedValue={selectedChamber}
-                onSelect={setSelectedChamber}
-            />
+            <FilterCard
+                title="Filter legislators"
+                action={
+                    <ClearFiltersButton
+                        count={activeFilterCount}
+                        onClick={clearAllFilters}
+                    />
+                }
+            >
+                <FilterRow label="Chamber">
+                    <FilterChip
+                        label="All Chambers"
+                        active={!selectedChamber}
+                        onClick={() => setSelectedChamber(null)}
+                    />
+                    {chamberOptions.map((chamber) => (
+                        <FilterChip
+                            key={chamber}
+                            label={chamber}
+                            count={chamberCounts.get(chamber) ?? 0}
+                            active={selectedChamber === chamber}
+                            onClick={() =>
+                                setSelectedChamber(
+                                    selectedChamber === chamber
+                                        ? null
+                                        : chamber,
+                                )
+                            }
+                        />
+                    ))}
+                </FilterRow>
 
-            <FilterCard title="Filter legislators">
                 <FilterRow label="Party">
                     <FilterChip
                         label="All Parties"
@@ -313,6 +400,23 @@ const LegislatorsPage = () => {
                         />
                     ))}
                 </FilterRow>
+                <FilterRow label="District">
+                    <SearchableDropdown
+                        options={districtOptions}
+                        selectedValue={
+                            selectedDistrict === null
+                                ? null
+                                : String(selectedDistrict)
+                        }
+                        onSelect={(value) =>
+                            setSelectedDistrict(
+                                value === null ? null : Number(value),
+                            )
+                        }
+                        allLabel="All Districts"
+                        searchPlaceholder={`Search ${districtOptions.length} districts...`}
+                    />
+                </FilterRow>
                 <FilterRow label="County">
                     <SearchableDropdown
                         options={countyOptions}
@@ -325,12 +429,18 @@ const LegislatorsPage = () => {
             </FilterCard>
 
             <GeneralTable
-                columns={(helpers) =>
-                    createLegislatorColumns(helpers, {
-                        onPartySelect: setSelectedParty,
-                        onCountySelect: setSelectedCounty,
-                    })
-                }
+                columns={createLegislatorColumns({
+                    onChamberSelect: (chamber) =>
+                        filterFromRow(() => setSelectedChamber(chamber)),
+                    onDistrictSelect: (chamber, district) =>
+                        filterFromRow(() =>
+                            selectDistrictFromRow(chamber, district),
+                        ),
+                    onPartySelect: (party) =>
+                        filterFromRow(() => setSelectedParty(party)),
+                    onCountySelect: (county) =>
+                        filterFromRow(() => setSelectedCounty(county)),
+                })}
                 data={tableLegislators}
                 defaultSortId="fullName"
                 defaultSortAscending={true}

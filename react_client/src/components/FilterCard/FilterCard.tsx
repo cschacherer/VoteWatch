@@ -46,17 +46,37 @@ const FilterCard = ({
 };
 
 //a labeled row of chips inside a FilterCard, ie "TOPIC  [All Topics] [Education 235] ..."
+//action is a control for this row's filter (ie a ToggleSwitch), shown below the chips
 export const FilterRow = ({
     label,
+    action,
     children,
 }: {
     label: string;
+    action?: ReactNode;
     children: ReactNode;
 }) => (
     <div className={style.filterRow}>
         <span className={style.filterRow__label}>{label}</span>
-        <div className={style.filterRow__chips}>{children}</div>
+        <div className={style.filterRow__body}>
+            <div className={style.filterRow__chips}>{children}</div>
+            {action && <div className={style.filterRow__action}>{action}</div>}
+        </div>
     </div>
 );
+
+//"× Clear all filters (N)" for a FilterCard's action - renders nothing while no filters are on
+export const ClearFiltersButton = ({
+    count,
+    onClick,
+}: {
+    count: number;
+    onClick: () => void;
+}) =>
+    count > 0 ? (
+        <button className={style.clearFilters} onClick={onClick}>
+            × Clear all filters ({count})
+        </button>
+    ) : null;
 
 export default FilterCard;

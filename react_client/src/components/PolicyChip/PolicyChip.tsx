@@ -75,7 +75,8 @@ const PolicyChip = ({
                 <span
                     className={`${style.policyChip__impact} ${impactStyles[policy.impactLevel] ?? ""}`}
                 >
-                    {formatPolicyName(policy.impactLevel)} impact
+                    {/* one string (one text node) so a search for "high impact" can highlight it */}
+                    {`${formatPolicyName(policy.impactLevel)} impact`}
                 </span>
             </div>
         </div>

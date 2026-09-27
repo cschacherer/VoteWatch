@@ -79,7 +79,7 @@
 .hero__title {
     margin: 0;
     font-size: var(--font-size-display);
-    font-weight: 800;
+    font-weight: 700;
     letter-spacing: -0.02em;
     line-height: 1.15;
     color: #0f172a;
@@ -97,7 +97,7 @@
 .hero__lead {
     max-width: 820px;
     margin: 0;
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-md);
     line-height: 1.6;
     color: #374151;
 }

@@ -8,26 +8,13 @@
     height: 100%;
 }
 
-.generalTable__subHeader {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    padding: 0px;
-}
-
-/* SEARCH + FILTER TOOLBAR */
-.generalTable__toolbar {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-}
-
+/* SEARCH */
 .generalTable__search {
     position: relative;
     display: flex;
     align-items: center;
-    flex: 1;
+    /* sits directly in the column container now, so it must not grow vertically */
+    flex: none;
 }
 
 .generalTable__search input {
@@ -77,53 +64,6 @@
 
 .generalTable__clearSearch:hover {
     background-color: #f1f5f9;
-}
-
-/* ACTIVE FILTER CHIPS */
-.generalTable__activeFilters {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2);
-}
-
-.generalTable__filterChip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 6px 4px 12px;
-    border-radius: 999px;
-    background-color: var(--color-accent-bg);
-    color: var(--color-accent-dark);
-    font-size: var(--font-size-sm);
-}
-
-.generalTable__filterChip button {
-    width: 22px;
-    height: 22px;
-    border: none;
-    border-radius: 50%;
-    background: transparent;
-    color: inherit;
-    font-size: var(--font-size-md);
-    line-height: 1;
-}
-
-.generalTable__filterChip button:hover {
-    background-color: rgba(37, 99, 235, 0.15);
-}
-
-.generalTable__clearFilters {
-    border: none;
-    background: transparent;
-    color: #6b7280;
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-}
-
-.generalTable__clearFilters:hover {
-    color: #111827;
-    text-decoration: underline;
 }
 
 /* TABLE */

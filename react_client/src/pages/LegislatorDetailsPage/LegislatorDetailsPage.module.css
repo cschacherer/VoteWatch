@@ -155,3 +155,11 @@
         height: 100px;
     }
 }
+
+/* the Policies column - one PolicyChip per policy, stacked */
+.policyList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 4px 0;
+}

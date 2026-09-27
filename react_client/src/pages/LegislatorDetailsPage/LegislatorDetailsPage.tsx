@@ -11,14 +11,28 @@ import { type Bill, normalizeSessionId } from "../../models/Bill";
 import { VoteValue } from "../../models/Vote";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import CollapsibleCell from "../../components/CollapsibleCell/CollapsibleCell";
-import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
+import { createDataTableColumn } from "../../models/DataTableUtils";
 import Badge from "../../components/Badge/Badge";
 import BillCell from "../../components/BillCell/BillCell";
+import {
+    billCellSearchText,
+    policyChipSearchText,
+} from "../../utils/searchText";
+import { formatPolicyName } from "../../utils/stringFormat";
+import PolicyChip from "../../components/PolicyChip/PolicyChip";
+import ChipSelect from "../../components/ChipSelect/ChipSelect";
 import ListPage from "../../components/ListPage/ListPage";
 import { StatCards } from "../../components/PageHeader/PageHeader";
 import PillTabs from "../../components/PillTabs/PillTabs";
-import FilterCard, { FilterRow } from "../../components/FilterCard/FilterCard";
+import FilterCard, {
+    ClearFiltersButton,
+    FilterRow,
+} from "../../components/FilterCard/FilterCard";
+import ToggleSwitch from "../../components/ToggleSwitch/ToggleSwitch";
 import FilterChip from "../../components/FilterChip/FilterChip";
+import SearchableDropdown, {
+    type DropdownOption,
+} from "../../components/SearchableDropdown/SearchableDropdown";
 import LegislatorPolicyScores from "../../components/LegislatorPolicyScores/LegislatorPolicyScores";
 
 import style from "./LegislatorDetailsPage.module.css";
@@ -38,54 +52,68 @@ const roleLabels: Record<SponsorRole, string> = {
     floor: "Floor Sponsor",
 };
 
-//hidden columns kept so session and year stay available in the Filters panel
-function createHiddenFilterColumns<T>(getBill: (row: T) => Bill) {
-    return [
-        createDataTableColumn<T>({
-            id: "sessionId",
-            name: "Session",
-            selector: (row: T) => normalizeSessionId(getBill(row).sessionId),
-            omit: true,
-            filterConfig: {
-                type: FilterType.Text,
-            },
-        }),
-        createDataTableColumn<T>({
-            id: "year",
-            name: "Year",
-            selector: (row: T) => getBill(row).year,
-            omit: true,
-            filterConfig: {
-                type: FilterType.Number,
-            },
-        }),
-    ];
+type BillStatus = "passed" | "failed";
+
+const statusOf = (bill: Bill): BillStatus =>
+    bill.passed ? "passed" : "failed";
+
+//clicking a value in a row selects the matching filter at the top of the page
+type BillClickHandlers = {
+    onSessionSelect: (sessionId: string) => void;
+    onStatusSelect: (status: BillStatus) => void;
+    onSubjectSelect: (subject: string) => void;
+    onPolicySelect: (topic: string, direction: string | null) => void;
+};
+
+//hidden - only used for the default newest-session-first sort
+function createSessionSortColumn<T>(getBill: (row: T) => Bill) {
+    return createDataTableColumn<T>({
+        id: "sessionId",
+        name: "Session",
+        selector: (row: T) => normalizeSessionId(getBill(row).sessionId),
+        omit: true,
+    });
 }
 
-//columns shared by both tables - summary, passed, and subjects
+function createBillColumn<T>(
+    getBill: (row: T) => Bill,
+    { onSessionSelect }: BillClickHandlers,
+) {
+    return createDataTableColumn<T>({
+        id: "bill",
+        name: "Bill",
+        selector: (row: T) => getBill(row).id + getBill(row).shortTitle,
+        searchText: (row: T) => billCellSearchText(getBill(row)),
+        width: "280px",
+        cell: (row: T) => (
+            <BillCell
+                id={getBill(row).id}
+                sessionId={getBill(row).sessionId}
+                shortTitle={getBill(row).shortTitle}
+                onSessionClick={onSessionSelect}
+            />
+        ),
+    });
+}
+
+//columns shared by both tables - passed, summary, policies, and subjects
 function createSharedBillColumns<T>(
     getBill: (row: T) => Bill,
-    filterBadgeClick: (key: string, value: string) => void,
+    { onStatusSelect, onSubjectSelect, onPolicySelect }: BillClickHandlers,
 ) {
     return [
         createDataTableColumn<T>({
             id: "passed",
             name: "Passed",
-            selector: (row: T) => (getBill(row).passed ? "passed" : "failed"),
+            selector: (row: T) => statusOf(getBill(row)),
             width: "130px",
             cell: (row: T) => (
                 <Badge
                     type="passed"
                     value={getBill(row).passed}
-                    onClick={(value) =>
-                        filterBadgeClick("passed", value.toLowerCase())
-                    }
+                    onClick={() => onStatusSelect(statusOf(getBill(row)))}
                 />
             ),
-            filterConfig: {
-                type: FilterType.Select,
-                options: ["PASSED", "FAILED"],
-            },
         }),
         createDataTableColumn<T>({
             id: "summary",
@@ -93,8 +121,36 @@ function createSharedBillColumns<T>(
             selector: (row: T) => getBill(row).summary?.oneSentence ?? "",
             grow: 2,
             minWidth: "300px",
-            filterConfig: {
-                type: FilterType.Text,
+        }),
+        createDataTableColumn<T>({
+            id: "policy",
+            name: "Policies",
+            selector: (row: T) => getBill(row).policies,
+            searchText: (row: T) =>
+                getBill(row).policies.flatMap(policyChipSearchText),
+            minWidth: "300px",
+            sortable: false,
+            grow: 1.5,
+            cell: (row: T) => {
+                return (
+                    <div className={style.policyList}>
+                        {getBill(row).policies.map((policy) => (
+                            <PolicyChip
+                                key={policy.policyTopic}
+                                policy={policy}
+                                onTopicClick={(p) =>
+                                    onPolicySelect(p.policyTopic, null)
+                                }
+                                onDirectionClick={(p) =>
+                                    onPolicySelect(
+                                        p.policyTopic,
+                                        p.policyDirection,
+                                    )
+                                }
+                            ></PolicyChip>
+                        ))}
+                    </div>
+                );
             },
         }),
         createDataTableColumn<T>({
@@ -105,47 +161,22 @@ function createSharedBillColumns<T>(
             cell: (row: T) => (
                 <CollapsibleCell
                     items={getBill(row).subjects}
-                    onBadgeClick={(value) =>
-                        filterBadgeClick("subjects", value)
-                    }
+                    onBadgeClick={(value) => onSubjectSelect(value)}
                 />
             ),
-            filterConfig: {
-                type: FilterType.Text,
-            },
         }),
     ];
 }
 
 //Create all columns for VOTE TABLE
 function createVoteColumns(
-    {
-        filterBadgeClick,
-    }: {
-        filterBadgeClick: (key: string, value: string) => void;
-    },
     onVoteSelect: (vote: VoteValue) => void,
+    handlers: BillClickHandlers,
 ) {
     const getBill = (row: LegislatorVote) => row.bill;
 
     return [
-        createDataTableColumn<LegislatorVote>({
-            id: "bill",
-            name: "Bill",
-            selector: (row: LegislatorVote) =>
-                row.bill.id + row.bill.shortTitle,
-            width: "280px",
-            cell: (row: LegislatorVote) => (
-                <BillCell
-                    id={row.bill.id}
-                    sessionId={row.bill.sessionId}
-                    shortTitle={row.bill.shortTitle}
-                />
-            ),
-            filterConfig: {
-                type: FilterType.Text,
-            },
-        }),
+        createBillColumn(getBill, handlers),
         createDataTableColumn<LegislatorVote>({
             id: "vote",
             name: "Vote",
@@ -158,45 +189,22 @@ function createVoteColumns(
                     onClick={() => onVoteSelect(row.vote)}
                 />
             ),
-            filterConfig: {
-                type: FilterType.Select,
-                options: ["Yes", "No", "Absent"],
-            },
         }),
-        ...createSharedBillColumns(getBill, filterBadgeClick),
-        ...createHiddenFilterColumns(getBill),
+        ...createSharedBillColumns(getBill, handlers),
+        createSessionSortColumn(getBill),
     ];
 }
 
 //Create all columns for SPONSORED BILLS TABLE
 function createSponsoredColumns(
-    {
-        filterBadgeClick,
-    }: {
-        filterBadgeClick: (key: string, value: string) => void;
-    },
     getRole: (bill: Bill) => SponsorRole,
     onRoleSelect: (role: SponsorRole) => void,
+    handlers: BillClickHandlers,
 ) {
     const getBill = (row: Bill) => row;
 
     return [
-        createDataTableColumn<Bill>({
-            id: "bill",
-            name: "Bill",
-            selector: (row: Bill) => row.id + row.shortTitle,
-            width: "280px",
-            cell: (row: Bill) => (
-                <BillCell
-                    id={row.id}
-                    sessionId={row.sessionId}
-                    shortTitle={row.shortTitle}
-                />
-            ),
-            filterConfig: {
-                type: FilterType.Text,
-            },
-        }),
+        createBillColumn(getBill, handlers),
         createDataTableColumn<Bill>({
             id: "role",
             name: "Role",
@@ -210,13 +218,9 @@ function createSponsoredColumns(
                     {roleLabels[getRole(row)]}
                 </button>
             ),
-            filterConfig: {
-                type: FilterType.Select,
-                options: Object.values(roleLabels),
-            },
         }),
-        ...createSharedBillColumns(getBill, filterBadgeClick),
-        ...createHiddenFilterColumns(getBill),
+        ...createSharedBillColumns(getBill, handlers),
+        createSessionSortColumn(getBill),
     ];
 }
 
@@ -242,21 +246,71 @@ const LegislatorDetailsPage = () => {
     const [votesLoading, setVotesLoading] = useState(true);
     const [sponsoredLoading, setSponsoredLoading] = useState(true);
 
-    //the tab and scores year live in the URL (?tab=scores&year=2026) so other pages can link straight to them
+    //the tab and scores year/session live in the URL (?tab=scores&year=2025&session=2025S1) so other
+    //pages can link straight to them
     const [searchParams, setSearchParams] = useSearchParams();
     const tabParam = searchParams.get("tab") as DetailsView | null;
     const view: DetailsView =
         tabParam && detailsViews.includes(tabParam) ? tabParam : "votes";
     const scoresYear = searchParams.get("year");
+    const scoresSession = searchParams.get("session");
 
-    const updateParams = (changes: Record<string, string>) => {
+    //an empty or null value removes that param
+    const updateParams = (changes: Record<string, string | null>) => {
         const next = new URLSearchParams(searchParams);
-        Object.entries(changes).forEach(([key, value]) => next.set(key, value));
+        Object.entries(changes).forEach(([key, value]) =>
+            value ? next.set(key, value) : next.delete(key),
+        );
         setSearchParams(next, { replace: true });
     };
     const [selectedSession, setSelectedSession] = useState<string | null>(null);
     const [selectedVote, setSelectedVote] = useState<VoteValue | null>(null);
     const [selectedRole, setSelectedRole] = useState<SponsorRole | null>(null);
+    const [selectedStatus, setSelectedStatus] = useState<BillStatus | null>(
+        null,
+    );
+    const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
+    const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+    const [selectedDirection, setSelectedDirection] = useState<string | null>(
+        null,
+    );
+
+    const [primaryOnly, setPrimaryOnly] = useState(false);
+
+    //direction belongs to a topic, so they're always set together
+    const selectPolicy = (topic: string | null, direction: string | null) => {
+        setSelectedTopic(topic);
+        setSelectedDirection(direction);
+    };
+
+    //how many filters are on - "primary only" counts because it changes which bills match. Vote and
+    //role only count on their own tab, since each only filters that tab's table
+    const activeFilterCount = [
+        selectedSession !== null,
+        view === "votes" ? selectedVote !== null : selectedRole !== null,
+        selectedStatus !== null,
+        selectedSubject !== null,
+        selectedTopic !== null,
+        selectedDirection !== null,
+        primaryOnly,
+    ].filter(Boolean).length;
+
+    const clearAllFilters = () => {
+        setSelectedSession(null);
+        setSelectedVote(null);
+        setSelectedRole(null);
+        setSelectedStatus(null);
+        setSelectedSubject(null);
+        selectPolicy(null, null);
+        setPrimaryOnly(false);
+    };
+
+    //clicking a value in a table row filters to just that value - every other filter goes back to
+    //"All". The state updates are batched, so the clicked filter set after the clear wins
+    const filterFromRow = (applyFilter: () => void) => {
+        clearAllFilters();
+        applyFilter();
+    };
 
     let { legislatorId } = useParams<string>();
     if (!legislatorId) {
@@ -314,28 +368,146 @@ const LegislatorDetailsPage = () => {
         matchesSession(b.sessionId),
     );
 
-    const tableVotes = sessionVotes.filter(
-        (v) => !selectedVote || v.vote === selectedVote,
+    const matchesStatus = (bill: Bill) =>
+        !selectedStatus || statusOf(bill) === selectedStatus;
+    const matchesSubject = (bill: Bill) =>
+        !selectedSubject || (bill.subjects ?? []).includes(selectedSubject);
+    //the policies that count for filtering - all of them, or only primary when the switch is on
+    const eligiblePolicies = (bill: Bill) =>
+        primaryOnly
+            ? bill.policies.filter(
+                  (policy) => policy.policyTopicStrength === "primary",
+              )
+            : bill.policies;
+    const matchesPolicy = (bill: Bill) =>
+        !selectedTopic ||
+        eligiblePolicies(bill).some(
+            (policy) =>
+                policy.policyTopic === selectedTopic &&
+                (!selectedDirection ||
+                    policy.policyDirection === selectedDirection),
+        );
+    const matchesVote = (vote: VoteValue) =>
+        !selectedVote || vote === selectedVote;
+    const matchesRole = (bill: Bill) =>
+        !selectedRole || getRole(bill) === selectedRole;
+
+    const tableVotes = legislatorVotes.filter(
+        (v) =>
+            matchesSession(v.bill.sessionId) &&
+            matchesVote(v.vote) &&
+            matchesStatus(v.bill) &&
+            matchesSubject(v.bill) &&
+            matchesPolicy(v.bill),
     );
-    const tableSponsored = sessionSponsored.filter(
-        (b) => !selectedRole || getRole(b) === selectedRole,
+    const tableSponsored = sponsoredBills.filter(
+        (b) =>
+            matchesSession(b.sessionId) &&
+            matchesRole(b) &&
+            matchesStatus(b) &&
+            matchesSubject(b) &&
+            matchesPolicy(b),
     );
 
-    //each filter's counts apply the other filter but not its own
-    const sessionCounts =
+    //the open tab's rows as { bill, vote or role }, so the filter counts below work for either tab
+    const viewRows =
         view === "votes"
-            ? countBy(
-                  legislatorVotes.filter(
-                      (v) => !selectedVote || v.vote === selectedVote,
-                  ),
-                  (v) => v.bill.sessionId,
-              )
-            : countBy(
-                  sponsoredBills.filter(
-                      (b) => !selectedRole || getRole(b) === selectedRole,
-                  ),
-                  (b) => b.sessionId,
-              );
+            ? legislatorVotes.map((v) => ({
+                  bill: v.bill,
+                  matchesOwnFilter: matchesVote(v.vote),
+                  ownKey: v.vote as string,
+              }))
+            : sponsoredBills.map((b) => ({
+                  bill: b,
+                  matchesOwnFilter: matchesRole(b),
+                  ownKey: getRole(b) as string,
+              }));
+
+    //each filter's counts apply every OTHER filter but not its own, so each chip shows how many rows
+    //clicking it would give
+    const rowsExcept = (
+        skip: "session" | "own" | "status" | "subject" | "policy",
+    ) =>
+        viewRows.filter(
+            (row) =>
+                (skip === "session" || matchesSession(row.bill.sessionId)) &&
+                (skip === "own" || row.matchesOwnFilter) &&
+                (skip === "status" || matchesStatus(row.bill)) &&
+                (skip === "subject" || matchesSubject(row.bill)) &&
+                (skip === "policy" || matchesPolicy(row.bill)),
+        );
+
+    const sessionCounts = countBy(
+        rowsExcept("session"),
+        (row) => row.bill.sessionId,
+    );
+    //vote counts on the voting tab, role counts on the sponsored tab
+    const ownCounts = countBy(rowsExcept("own"), (row) => row.ownKey);
+    const statusCounts = countBy(rowsExcept("status"), (row) =>
+        statusOf(row.bill),
+    );
+
+    const subjectCounts = new Map<string, number>();
+    for (const row of rowsExcept("subject")) {
+        for (const subject of new Set(row.bill.subjects ?? [])) {
+            subjectCounts.set(subject, (subjectCounts.get(subject) ?? 0) + 1);
+        }
+    }
+    //most common first
+    const subjectOptions: DropdownOption[] = [...subjectCounts.keys()]
+        .sort(
+            (a, b) => (subjectCounts.get(b) ?? 0) - (subjectCounts.get(a) ?? 0),
+        )
+        .map((subject) => ({
+            value: subject,
+            label: subject,
+            count: subjectCounts.get(subject) ?? 0,
+        }));
+    //keep the selected subject in the list even if the other filters leave it with no rows
+    if (selectedSubject && !subjectCounts.has(selectedSubject)) {
+        subjectOptions.unshift({
+            value: selectedSubject,
+            label: selectedSubject,
+            count: 0,
+        });
+    }
+
+    //topic counts, then the selected topic's direction counts - a bill counts once per topic
+    const policyRows = rowsExcept("policy");
+    const topicCounts = new Map<string, number>();
+    const directionCounts = new Map<string, number>();
+    for (const row of policyRows) {
+        for (const topic of new Set(
+            eligiblePolicies(row.bill).map((policy) => policy.policyTopic),
+        )) {
+            topicCounts.set(topic, (topicCounts.get(topic) ?? 0) + 1);
+        }
+        for (const direction of new Set(
+            eligiblePolicies(row.bill)
+                .filter((policy) => policy.policyTopic === selectedTopic)
+                .map((policy) => policy.policyDirection),
+        )) {
+            directionCounts.set(
+                direction,
+                (directionCounts.get(direction) ?? 0) + 1,
+            );
+        }
+    }
+    const topicOptions = [...topicCounts.keys()].sort((a, b) =>
+        a.localeCompare(b),
+    );
+    //keep the selected topic and direction visible even if the other filters leave them with no rows
+    if (selectedTopic && !topicCounts.has(selectedTopic)) {
+        topicOptions.push(selectedTopic);
+    }
+    //most bills first
+    const directionOptions = [...directionCounts.keys()].sort(
+        (a, b) => (directionCounts.get(b) ?? 0) - (directionCounts.get(a) ?? 0),
+    );
+    if (selectedDirection && !directionCounts.has(selectedDirection)) {
+        directionOptions.push(selectedDirection);
+    }
+
     //newest session first - sessions from both lists so the chips don't change when switching tabs
     const sessionOptions = [
         ...new Set([
@@ -344,13 +516,24 @@ const LegislatorDetailsPage = () => {
         ]),
     ].sort((a, b) => b.localeCompare(a));
 
+    //the stat cards describe the legislator, so they only follow the session filter
     const voteCounts = countBy(sessionVotes, (v) => v.vote);
-    const roleCounts = countBy(sessionSponsored, getRole);
 
     const yesCount = voteCounts.get(VoteValue.Yes) ?? 0;
     const noCount = voteCounts.get(VoteValue.No) ?? 0;
     const absentCount = voteCounts.get(VoteValue.Absent) ?? 0;
     const castCount = yesCount + noCount;
+
+    const billClickHandlers: BillClickHandlers = {
+        onSessionSelect: (sessionId) =>
+            filterFromRow(() => setSelectedSession(sessionId)),
+        onStatusSelect: (status) =>
+            filterFromRow(() => setSelectedStatus(status)),
+        onSubjectSelect: (subject) =>
+            filterFromRow(() => setSelectedSubject(subject)),
+        onPolicySelect: (topic, direction) =>
+            filterFromRow(() => selectPolicy(topic, direction)),
+    };
 
     const stats = [
         { label: "Votes Cast", value: castCount.toLocaleString() },
@@ -360,7 +543,7 @@ const LegislatorDetailsPage = () => {
             value: `${absentCount} (${formatPercent(absentCount, sessionVotes.length)})`,
         },
         {
-            label: "Bills Sponsored",
+            label: "Sponsored",
             value: sessionSponsored.length.toLocaleString(),
         },
     ];
@@ -405,7 +588,7 @@ const LegislatorDetailsPage = () => {
                             {counties.map((county) => (
                                 <Badge
                                     key={county}
-                                    type="subjects"
+                                    type="basic"
                                     value={`${county} County`}
                                 />
                             ))}
@@ -421,7 +604,7 @@ const LegislatorDetailsPage = () => {
                                     className={`${style.actionButton} ${style.actionButton__primary}`}
                                     href={`mailto:${legislatorDetails.email}`}
                                 >
-                                    Email
+                                    {legislatorDetails.email}
                                 </a>
                             )}
                             {legislatorDetails?.phone && (
@@ -461,7 +644,7 @@ const LegislatorDetailsPage = () => {
                         value: "sponsored",
                         label: `Sponsored Bills (${sessionSponsored.length.toLocaleString()})`,
                     },
-                    { value: "scores", label: "Policy Scores" },
+                    { value: "scores", label: "Voting Analysis" },
                 ]}
                 selectedValue={view}
                 onSelect={(value) => updateParams({ tab: value })}
@@ -472,12 +655,23 @@ const LegislatorDetailsPage = () => {
                     legislatorId={legislatorId}
                     legislatorName={legislatorDetails?.formatName}
                     year={scoresYear}
-                    onYearChange={(year) => updateParams({ year })}
+                    session={scoresSession}
+                    //a new year clears the session, since the old one belongs to a different year
+                    onYearChange={(year) => updateParams({ year, session: null })}
+                    onSessionChange={(session) => updateParams({ session })}
                 />
             )}
 
             {view !== "scores" && (
-                <FilterCard title="Filter">
+                <FilterCard
+                    title="Filter"
+                    action={
+                        <ClearFiltersButton
+                            count={activeFilterCount}
+                            onClick={clearAllFilters}
+                        />
+                    }
+                >
                     <FilterRow label="Session">
                         <FilterChip
                             label="All Sessions"
@@ -512,7 +706,7 @@ const LegislatorDetailsPage = () => {
                                 <FilterChip
                                     key={vote}
                                     label={voteLabels[vote]}
-                                    count={voteCounts.get(vote) ?? 0}
+                                    count={ownCounts.get(vote) ?? 0}
                                     active={selectedVote === vote}
                                     onClick={() =>
                                         setSelectedVote(
@@ -534,7 +728,7 @@ const LegislatorDetailsPage = () => {
                                     <FilterChip
                                         key={role}
                                         label={roleLabels[role]}
-                                        count={roleCounts.get(role) ?? 0}
+                                        count={ownCounts.get(role) ?? 0}
                                         active={selectedRole === role}
                                         onClick={() =>
                                             setSelectedRole(
@@ -548,16 +742,106 @@ const LegislatorDetailsPage = () => {
                             )}
                         </FilterRow>
                     )}
+
+                    <FilterRow label="Status">
+                        <FilterChip
+                            label="All Bills"
+                            active={!selectedStatus}
+                            onClick={() => setSelectedStatus(null)}
+                        />
+                        {(["passed", "failed"] as BillStatus[]).map(
+                            (status) => (
+                                <FilterChip
+                                    key={status}
+                                    label={
+                                        status === "passed"
+                                            ? "Passed"
+                                            : "Did Not Pass"
+                                    }
+                                    count={statusCounts.get(status) ?? 0}
+                                    active={selectedStatus === status}
+                                    onClick={() =>
+                                        setSelectedStatus(
+                                            selectedStatus === status
+                                                ? null
+                                                : status,
+                                        )
+                                    }
+                                />
+                            ),
+                        )}
+                    </FilterRow>
+
+                    <FilterRow
+                        label="Topic"
+                        action={
+                            <ToggleSwitch
+                                label="Primary policies only"
+                                title="Only match bills where the topic or direction is the bill's primary policy"
+                                checked={primaryOnly}
+                                onChange={setPrimaryOnly}
+                            />
+                        }
+                    >
+                        <ChipSelect
+                            options={topicOptions.map((topic) => ({
+                                value: topic,
+                                label: formatPolicyName(topic),
+                                count: topicCounts.get(topic) ?? 0,
+                            }))}
+                            selectedValue={selectedTopic}
+                            onSelect={(topic) => selectPolicy(topic, null)}
+                            allLabel="All Topics"
+                            searchPlaceholder="Search topics..."
+                        />
+                    </FilterRow>
+
+                    {selectedTopic && (
+                        <FilterRow label="Direction">
+                            <FilterChip
+                                label={`All ${formatPolicyName(selectedTopic)}`}
+                                active={!selectedDirection}
+                                onClick={() => selectPolicy(selectedTopic, null)}
+                            />
+                            {directionOptions.map((direction) => (
+                                <FilterChip
+                                    key={direction}
+                                    label={formatPolicyName(direction)}
+                                    count={directionCounts.get(direction) ?? 0}
+                                    active={selectedDirection === direction}
+                                    onClick={() =>
+                                        selectPolicy(
+                                            selectedTopic,
+                                            selectedDirection === direction
+                                                ? null
+                                                : direction,
+                                        )
+                                    }
+                                />
+                            ))}
+                        </FilterRow>
+                    )}
+
+                    <FilterRow label="Subject">
+                        <SearchableDropdown
+                            options={subjectOptions}
+                            selectedValue={selectedSubject}
+                            onSelect={setSelectedSubject}
+                            allLabel="All Subjects"
+                            searchPlaceholder={`Search ${subjectOptions.length} subjects...`}
+                        />
+                    </FilterRow>
                 </FilterCard>
             )}
 
-            {/* keyed by view so each table keeps its own search/filters instead of sharing state */}
+            {/* keyed by view so each table keeps its own search text and sort */}
             {view === "votes" ? (
                 <GeneralTable
                     key="votes"
-                    columns={(helpers) =>
-                        createVoteColumns(helpers, setSelectedVote)
-                    }
+                    columns={createVoteColumns(
+                        (vote) => filterFromRow(() => setSelectedVote(vote)),
+                        billClickHandlers,
+                    )}
                     data={tableVotes}
                     defaultSortId="sessionId"
                     defaultSortAscending={false}
@@ -566,13 +850,12 @@ const LegislatorDetailsPage = () => {
             ) : view === "sponsored" ? (
                 <GeneralTable
                     key="sponsored"
-                    columns={(helpers) =>
-                        createSponsoredColumns(
-                            helpers,
-                            getRole,
-                            setSelectedRole,
-                        )
-                    }
+                    keyField="rowKey"
+                    columns={createSponsoredColumns(
+                        getRole,
+                        (role) => filterFromRow(() => setSelectedRole(role)),
+                        billClickHandlers,
+                    )}
                     data={tableSponsored}
                     defaultSortId="sessionId"
                     defaultSortAscending={false}

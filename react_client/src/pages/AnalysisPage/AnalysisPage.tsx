@@ -10,14 +10,14 @@ import type {
     LegislatorCoupleScore,
     LegislatorParticipation,
 } from "../../models/LegislatureOverview";
-import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
+import { createDataTableColumn } from "../../models/DataTableUtils";
 import { formatPolicyName } from "../../utils/stringFormat";
 import Badge from "../../components/Badge/Badge";
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import PageHeader from "../../components/PageHeader/PageHeader";
 import PillTabs from "../../components/PillTabs/PillTabs";
 import FilterCard, { FilterRow } from "../../components/FilterCard/FilterCard";
-import FilterChip from "../../components/FilterChip/FilterChip";
+import ChipSelect from "../../components/ChipSelect/ChipSelect";
 import ToggleSwitch from "../../components/ToggleSwitch/ToggleSwitch";
 import PolicyOutcomeCard from "../../components/PolicyOutcomeCard/PolicyOutcomeCard";
 import PolicySpectrum, {
@@ -45,6 +45,12 @@ function createParticipationColumns() {
             id: "name",
             name: "Legislator",
             selector: (row) => row.fullName,
+            //the cell shows the name plus the chamber and district
+            searchText: (row) => [
+                row.formatName,
+                row.fullName,
+                `${row.house} · District ${row.district}`,
+            ],
             minWidth: "260px",
             grow: 1.5,
             cell: (row) => (
@@ -62,12 +68,11 @@ function createParticipationColumns() {
                             {row.formatName}
                         </div>
                         <div className={style.nameCell__district}>
-                            {row.house} · District {row.district}
+                            {`${row.house} · District ${row.district}`}
                         </div>
                     </div>
                 </Link>
             ),
-            filterConfig: { type: FilterType.Text },
         }),
         createDataTableColumn<LegislatorParticipation>({
             id: "party",
@@ -75,17 +80,12 @@ function createParticipationColumns() {
             selector: (row) => row.party,
             width: "170px",
             cell: (row) => <Badge type="party" value={row.party} />,
-            filterConfig: {
-                type: FilterType.Select,
-                options: ["Republican", "Democrat", "Forward Party"],
-            },
         }),
         createDataTableColumn<LegislatorParticipation>({
             id: "votesCast",
             name: "Votes Cast",
             selector: (row) => row.yesVotes + row.noVotes,
             width: "140px",
-            filterConfig: { type: FilterType.Number },
         }),
         createDataTableColumn<LegislatorParticipation>({
             id: "yesPercent",
@@ -95,14 +95,12 @@ function createParticipationColumns() {
             width: "140px",
             cell: (row) =>
                 `${percent(row.yesVotes, row.yesVotes + row.noVotes)}%`,
-            filterConfig: { type: FilterType.Number },
         }),
         createDataTableColumn<LegislatorParticipation>({
             id: "absentVotes",
             name: "Missed Votes",
             selector: (row) => row.absentVotes,
             width: "150px",
-            filterConfig: { type: FilterType.Number },
         }),
         createDataTableColumn<LegislatorParticipation>({
             id: "absentPercent",
@@ -130,7 +128,6 @@ function createParticipationColumns() {
                     </div>
                 );
             },
-            filterConfig: { type: FilterType.Number },
         }),
     ];
 }
@@ -261,7 +258,12 @@ const AnalysisPage = () => {
         });
 
     //POLICY OUTCOMES - what passed per topic and direction (whole legislature, not split by chamber)
-    const policyOutcomes = overview?.policyOutcomes ?? [];
+    //alphabetical by topic name - the grid and the topic chips both use this order
+    const policyOutcomes = [...(overview?.policyOutcomes ?? [])].sort((a, b) =>
+        formatPolicyName(a.policyTopic).localeCompare(
+            formatPolicyName(b.policyTopic),
+        ),
+    );
     const shownOutcomes = outcomeTopic
         ? policyOutcomes.filter((t) => t.policyTopic === outcomeTopic)
         : policyOutcomes;
@@ -351,38 +353,21 @@ const AnalysisPage = () => {
                         <>
                             <FilterCard title="Filter topics">
                                 <FilterRow label="Topic">
-                                    <FilterChip
-                                        label="All Topics"
-                                        active={!outcomeTopic}
-                                        onClick={() => setOutcomeTopic(null)}
-                                    />
-                                    {[...policyOutcomes]
-                                        .sort((a, b) =>
-                                            a.policyTopic.localeCompare(
-                                                b.policyTopic,
-                                            ),
-                                        )
-                                        .map((topic) => (
-                                            <FilterChip
-                                                key={topic.policyTopic}
-                                                label={formatPolicyName(
+                                    <ChipSelect
+                                        options={policyOutcomes.map(
+                                            (topic) => ({
+                                                value: topic.policyTopic,
+                                                label: formatPolicyName(
                                                     topic.policyTopic,
-                                                )}
-                                                count={topic.bills}
-                                                active={
-                                                    outcomeTopic ===
-                                                    topic.policyTopic
-                                                }
-                                                onClick={() =>
-                                                    setOutcomeTopic(
-                                                        outcomeTopic ===
-                                                            topic.policyTopic
-                                                            ? null
-                                                            : topic.policyTopic,
-                                                    )
-                                                }
-                                            />
-                                        ))}
+                                                ),
+                                                count: topic.bills,
+                                            }),
+                                        )}
+                                        selectedValue={outcomeTopic}
+                                        onSelect={setOutcomeTopic}
+                                        allLabel="All Topics"
+                                        searchPlaceholder="Search topics..."
+                                    />
                                 </FilterRow>
                             </FilterCard>
 
@@ -450,26 +435,17 @@ const AnalysisPage = () => {
                                 }
                             >
                                 <FilterRow label="Topic">
-                                    <FilterChip
-                                        label="All Topics"
-                                        active={!selectedTopic}
-                                        onClick={() => setSelectedTopic(null)}
+                                    <ChipSelect
+                                        options={topicOptions.map((topic) => ({
+                                            value: topic,
+                                            label: formatPolicyName(topic),
+                                            count: topicCounts.get(topic) ?? 0,
+                                        }))}
+                                        selectedValue={selectedTopic}
+                                        onSelect={setSelectedTopic}
+                                        allLabel="All Topics"
+                                        searchPlaceholder="Search topics..."
                                     />
-                                    {topicOptions.map((topic) => (
-                                        <FilterChip
-                                            key={topic}
-                                            label={formatPolicyName(topic)}
-                                            count={topicCounts.get(topic) ?? 0}
-                                            active={selectedTopic === topic}
-                                            onClick={() =>
-                                                setSelectedTopic(
-                                                    selectedTopic === topic
-                                                        ? null
-                                                        : topic,
-                                                )
-                                            }
-                                        />
-                                    ))}
                                 </FilterRow>
                                 <FilterRow label="Include">
                                     <ToggleSwitch
@@ -548,7 +524,7 @@ const AnalysisPage = () => {
                     </div>
                     <div className={style.tableContainer}>
                         <GeneralTable
-                            columns={() => createParticipationColumns()}
+                            columns={createParticipationColumns()}
                             data={participation}
                             defaultSortId="name"
                             defaultSortAscending={true}

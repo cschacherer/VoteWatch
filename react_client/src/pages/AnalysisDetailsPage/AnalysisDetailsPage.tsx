@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getLegislatorDetails } from "../../services/legislatorService";
 import {
     getLegislatorAnalysisByYear,
@@ -10,7 +10,7 @@ import type { LegislatorVote } from "../../models/LegislatorVote";
 import type { LegislatorCouplePolicyScore } from "../../models/LegislatorCouplePolicyScore";
 import { normalizeSessionId } from "../../models/Bill";
 import { VoteValue } from "../../models/Vote";
-import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
+import { createDataTableColumn } from "../../models/DataTableUtils";
 import {
     formatPolicyName,
     shortenDirectionPair,
@@ -18,6 +18,10 @@ import {
 import GeneralTable from "../../components/GeneralTable/GeneralTable";
 import Badge from "../../components/Badge/Badge";
 import BillCell from "../../components/BillCell/BillCell";
+import {
+    billCellSearchText,
+    policyChipSearchText,
+} from "../../utils/searchText";
 import PolicyChip from "../../components/PolicyChip/PolicyChip";
 import PolicyScoreBar from "../../components/PolicyScoreBar/PolicyScoreBar";
 import { StatCards } from "../../components/PageHeader/PageHeader";
@@ -46,11 +50,6 @@ function getBillSide(
 
 //Create all columns for VOTE TABLE
 function createAnalysisDetailsColumns(
-    {
-        filterBadgeClick,
-    }: {
-        filterBadgeClick: (key: string, value: string) => void;
-    },
     sideLabels: Record<PolicySide, string>,
     billSide: PolicySide,
 ) {
@@ -66,6 +65,7 @@ function createAnalysisDetailsColumns(
             name: "Bill",
             selector: (row: LegislatorVote) =>
                 row.bill.id + row.bill.shortTitle,
+            searchText: (row: LegislatorVote) => billCellSearchText(row.bill),
             width: "260px",
             cell: (row: LegislatorVote) => (
                 <BillCell
@@ -74,28 +74,15 @@ function createAnalysisDetailsColumns(
                     shortTitle={row.bill.shortTitle}
                 />
             ),
-            filterConfig: {
-                type: FilterType.Text,
-            },
         }),
         createDataTableColumn<LegislatorVote>({
             id: "vote",
             name: "Vote",
             selector: (row: LegislatorVote) => row.vote,
-            width: "110px",
+            width: "150px",
             cell: (row: LegislatorVote) => (
-                <Badge
-                    type="vote"
-                    value={row.vote}
-                    onClick={(value) =>
-                        filterBadgeClick("vote", value.toLowerCase())
-                    }
-                />
+                <Badge type="vote" value={row.vote} />
             ),
-            filterConfig: {
-                type: FilterType.Select,
-                options: ["Yes", "No", "Absent"],
-            },
         }),
         createDataTableColumn<LegislatorVote>({
             id: "effect",
@@ -115,23 +102,21 @@ function createAnalysisDetailsColumns(
                     </span>
                 );
             },
-            filterConfig: {
-                type: FilterType.Text,
-            },
         }),
         createDataTableColumn<LegislatorVote>({
             id: "policy",
             name: "Policy Weight",
             selector: (row: LegislatorVote) =>
                 row.bill.policies[0]?.impactLevel ?? "",
+            searchText: (row: LegislatorVote) =>
+                row.bill.policies[0]
+                    ? policyChipSearchText(row.bill.policies[0])
+                    : [],
             width: "250px",
             cell: (row: LegislatorVote) =>
                 row.bill.policies[0] ? (
                     <PolicyChip policy={row.bill.policies[0]} />
                 ) : null,
-            filterConfig: {
-                type: FilterType.Text,
-            },
         }),
         createDataTableColumn<LegislatorVote>({
             id: "passed",
@@ -140,18 +125,8 @@ function createAnalysisDetailsColumns(
                 row.bill.passed ? "passed" : "failed",
             width: "120px",
             cell: (row: LegislatorVote) => (
-                <Badge
-                    type="passed"
-                    value={row.bill.passed}
-                    onClick={(value) =>
-                        filterBadgeClick("passed", value.toLowerCase())
-                    }
-                />
+                <Badge type="passed" value={row.bill.passed} />
             ),
-            filterConfig: {
-                type: FilterType.Select,
-                options: ["PASSED", "FAILED"],
-            },
         }),
         createDataTableColumn<LegislatorVote>({
             id: "summary",
@@ -160,9 +135,6 @@ function createAnalysisDetailsColumns(
                 row.bill?.summary?.oneSentence ?? "",
             grow: 2,
             minWidth: "260px",
-            filterConfig: {
-                type: FilterType.Text,
-            },
         }),
         //hidden - kept so session stays sortable and available in the Filters panel
         createDataTableColumn<LegislatorVote>({
@@ -171,9 +143,6 @@ function createAnalysisDetailsColumns(
             selector: (row: LegislatorVote) =>
                 normalizeSessionId(row.bill.sessionId),
             omit: true,
-            filterConfig: {
-                type: FilterType.Text,
-            },
         }),
     ];
 }
@@ -184,11 +153,14 @@ const PolicySideSection = ({
     couple,
     sideLabels,
     votes,
+    periodLabel,
 }: {
     side: PolicySide;
     couple: LegislatorCouplePolicyScore;
     sideLabels: Record<PolicySide, string>;
     votes: LegislatorVote[];
+    //the year or session the score covers, ie "2025 Special Session 1"
+    periodLabel: string;
 }) => {
     const direction =
         side === "left"
@@ -239,13 +211,7 @@ const PolicySideSection = ({
             {sideVotes.length > 0 ? (
                 <div className={style.side__table}>
                     <GeneralTable
-                        columns={(helpers) =>
-                            createAnalysisDetailsColumns(
-                                helpers,
-                                sideLabels,
-                                side,
-                            )
-                        }
+                        columns={createAnalysisDetailsColumns(sideLabels, side)}
                         data={sideVotes}
                         defaultSortId="sessionId"
                         defaultSortAscending={false}
@@ -253,7 +219,7 @@ const PolicySideSection = ({
                 </div>
             ) : (
                 <p className={style.side__empty}>
-                    No bills in {couple.year} were classified as{" "}
+                    No bills in {periodLabel} were classified as{" "}
                     {formatPolicyName(direction)}.
                 </p>
             )}
@@ -281,17 +247,24 @@ const AnalysisDetailsPage = () => {
         policyCoupleName = "";
     }
 
+    //optional ?session=2026GS - the score and bills for one session instead of the whole year
+    const [searchParams] = useSearchParams();
+    const session = searchParams.get("session");
+    //what the score covers, ie "2025" or "2025 Special Session 1"
+    const periodLabel = session ? String(normalizeSessionId(session)) : year;
+
     useEffect(() => {
         const fetchAll = async () => {
             setLoading(true);
             try {
                 const [details, policyScores, votes] = await Promise.all([
                     getLegislatorDetails(legislatorId),
-                    getLegislatorAnalysisByYear(legislatorId, year),
+                    getLegislatorAnalysisByYear(legislatorId, year, session),
                     getLegislatorPolicyCoupleVotesByYear(
                         legislatorId,
                         year,
                         policyCoupleName,
+                        session,
                     ),
                 ]);
                 setLegislatorDetails(details);
@@ -309,10 +282,10 @@ const AnalysisDetailsPage = () => {
         };
 
         fetchAll();
-    }, [legislatorId, year, policyCoupleName]);
+    }, [legislatorId, year, policyCoupleName, session]);
 
-    //back to the Policy Scores tab on the legislator's profile
-    const backLink = `/legislators/${legislatorId}?tab=scores&year=${year}`;
+    //back to the Policy Scores tab on the legislator's profile, on the same year and session
+    const backLink = `/legislators/${legislatorId}?tab=scores&year=${year}${session ? `&session=${session}` : ""}`;
 
     if (loading || !policyCoupleScore) {
         return (
@@ -373,7 +346,7 @@ const AnalysisDetailsPage = () => {
                 <section className={style.hero}>
                     <span className={style.hero__eyebrow}>
                         {formatPolicyName(policyCoupleScore.policyTopic)} ·{" "}
-                        {year}
+                        {periodLabel}
                     </span>
                     <h1 className={style.hero__title}>
                         {policyCoupleScore.policyNameLabel}
@@ -429,12 +402,14 @@ const AnalysisDetailsPage = () => {
                     couple={policyCoupleScore}
                     sideLabels={sideLabels}
                     votes={legislatorVotes}
+                    periodLabel={periodLabel}
                 />
                 <PolicySideSection
                     side="right"
                     couple={policyCoupleScore}
                     sideLabels={sideLabels}
                     votes={legislatorVotes}
+                    periodLabel={periodLabel}
                 />
             </div>
         </div>

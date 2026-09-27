@@ -1,3 +1,7 @@
+//"?session=2026GS" for the analysis routes that can narrow a year to one session, or "" for the whole year
+const sessionQuery = (session?: string | null) =>
+    session ? `?session=${encodeURIComponent(session)}` : "";
+
 export const endpointsAPI = {
     // BILLS
     bills: "/bills",
@@ -19,8 +23,12 @@ export const endpointsAPI = {
     legislatureOverview: (year: string) => `analysis/overview/${year}`,
     policyCoupleOutcome: (year: string, policyCoupleName: string) =>
         `analysis/outcomes/${year}/${policyCoupleName}`,
-    analysisOfLegislator: (legislatorId: string, year: string) =>
-        `analysis/${legislatorId}/${year}/`,
+    //session is optional - without it the scores are for the whole year
+    analysisOfLegislator: (
+        legislatorId: string,
+        year: string,
+        session?: string | null,
+    ) => `analysis/${legislatorId}/${year}/${sessionQuery(session)}`,
     analysisOfLegislatorPolicy: (
         legislatorId: string,
         year: string,
@@ -31,5 +39,7 @@ export const endpointsAPI = {
         legislatorId: string,
         year: string,
         policyCoupleName: string,
-    ) => `analysis/${legislatorId}/${year}/couple/${policyCoupleName}`,
+        session?: string | null,
+    ) =>
+        `analysis/${legislatorId}/${year}/couple/${policyCoupleName}${sessionQuery(session)}`,
 };

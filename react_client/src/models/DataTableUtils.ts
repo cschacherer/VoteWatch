@@ -1,31 +1,5 @@
-export const FilterType = {
-    Text: "text",
-    Number: "number",
-    Select: "select",
-} as const;
-
-export type FilterType = (typeof FilterType)[keyof typeof FilterType];
-
-export type FilterConfig = {
-    key?: string;
-    label?: string;
-    type: FilterType;
-    options?: string[];
-    onApplyFilters?: (filters: ActiveFilter[]) => void;
-};
-
-export type FilterableBadge = {
-    key?: string;
-    value: string;
-};
-
-export type ActiveFilter = {
-    key: string;
-    value: string;
-    label?: string;
-    operator?: "contains" | "equals" | "=" | ">" | "<" | ">=" | "<=";
-};
-
+//filtering lives in each page's own filters (FilterCard chips and dropdowns) - clicking a value in a
+//table cell selects the matching page filter, so columns only describe how to display and sort
 export type DataTableColumn<T> = {
     id: string;
     name: string;
@@ -42,7 +16,10 @@ export type DataTableColumn<T> = {
 
     cell?: (row: T) => React.ReactNode;
 
-    filterConfig?: FilterConfig;
+    //the text this column shows, for the table search - only needed when the cell displays something
+    //different from selector (ie a bill cell shows the number, title, and session). Hidden (omit)
+    //columns are never searched
+    searchText?: (row: T) => string | number | (string | number)[];
 };
 
 export function createDataTableColumn<T>(
@@ -60,20 +37,7 @@ export function createDataTableColumn<T>(
 
         // allow overrides
         ...column,
-
-        // handle nested defaults
-        filterConfig: column.filterConfig
-            ? {
-                  type: column.filterConfig.type,
-                  options: column.filterConfig.options,
-              }
-            : undefined,
     };
-}
-
-export function sendBadgeFilter(key: string, value: string) {
-    const newFilters = [{ key, value }];
-    return newFilters;
 }
 
 export function formatDate(dateString?: string | null) {

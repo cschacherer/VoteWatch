@@ -33,7 +33,26 @@
     color: #6b7280;
 }
 
-.nameCell:hover .nameCell__name {
+.nameCell__name {
+    text-decoration: none;
+}
+
+.nameCell__name:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
+}
+
+/* chamber and district - clicking one filters the table */
+.nameCell__filterButton {
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.nameCell__filterButton:hover {
     color: var(--color-accent);
     text-decoration: underline;
 }

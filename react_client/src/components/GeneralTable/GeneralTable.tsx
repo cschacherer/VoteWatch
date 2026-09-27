@@ -1,21 +1,63 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DataTable from "react-data-table-component";
-import FilterPanel from "../../components/FilterPanel/FilterPanel";
-import type { ActiveFilter } from "../../models/DataTableUtils";
+import type { DataTableColumn } from "../../models/DataTableUtils";
 
 import "../../styles/global.css";
 import style from "./GeneralTable.module.css";
 
+// ----- SEARCH HIGHLIGHTING -----
+//matches are painted with the CSS Custom Highlight API (styled by ::highlight(table-search) in global.css).
+//It highlights text ranges without changing the DOM, so it works inside any cell component
+//(BillCell, PolicyChip, badges...) and doesn't fight React over the markup
+const SEARCH_HIGHLIGHT = "table-search";
+//queries shorter than this still filter the rows, but one letter would highlight half the table
+const MIN_HIGHLIGHT_LENGTH = 3;
+
+//ranges from every table on the page - a page can have more than one GeneralTable, and they all
+//share the one named highlight
+const searchRangesByTable = new Map<symbol, Range[]>();
+
+function paintSearchHighlights() {
+    const ranges = [...searchRangesByTable.values()].flat();
+    if (ranges.length > 0) {
+        CSS.highlights.set(SEARCH_HIGHLIGHT, new Highlight(...ranges));
+    } else {
+        CSS.highlights.delete(SEARCH_HIGHLIGHT);
+    }
+}
+
+//every case-insensitive match of query in the text inside root (matches split across two elements,
+//ie a chip's label and its count, aren't found)
+function findTextMatches(root: Node, query: string): Range[] {
+    const ranges: Range[] = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const text = node.textContent?.toLowerCase() ?? "";
+        let index = text.indexOf(query);
+        while (index !== -1) {
+            const range = document.createRange();
+            range.setStart(node, index);
+            range.setEnd(node, index + query.length);
+            ranges.push(range);
+            index = text.indexOf(query, index + query.length);
+        }
+    }
+
+    return ranges;
+}
+
 type GeneralTableProps<T> = {
+    //already filtered by the page's own filters - the table only adds free-text search
     data: T[];
-    columns: (helpers: {
-        filterBadgeClick: (key: string, value: string) => void;
-    }) => any[];
+    columns: DataTableColumn<T>[];
     defaultSortId: string;
     defaultSortAscending: boolean;
     loading?: boolean;
-    //called with the rows currently shown after search + filters are applied
+    //called with the rows currently shown after search is applied
     onFilteredDataChange?: (rows: T[]) => void;
+    //row property with a unique value, used as the React key - duplicate keys leave stale rows on screen
+    keyField?: string;
 };
 
 export default function GeneralTable<T>({
@@ -25,98 +67,83 @@ export default function GeneralTable<T>({
     defaultSortAscending,
     loading = false,
     onFilteredDataChange,
+    keyField = "id",
 }: GeneralTableProps<T>) {
-    const [activeFilters, setActiveFilters] = useState<ActiveFilter[]>([]);
     const [filterText, setFilterText] = useState("");
 
-    function filterBadgeClick(key: string, value: string) {
-        setActiveFilters([{ key, value }]);
-    }
+    const tableRef = useRef<HTMLDivElement>(null);
+    const tableId = useRef(Symbol("GeneralTable")).current;
 
-    const builtColumns = columns({
-        filterBadgeClick,
-    });
+    //highlight the search text in the visible cells - re-runs when the table's DOM changes (paging,
+    //sorting, "Show more"), since those happen inside DataTable without re-rendering this component
+    useEffect(() => {
+        const table = tableRef.current;
+        //older browsers without the Highlight API just don't get highlighting
+        if (!table || !("highlights" in CSS)) return;
 
-    const filters = builtColumns.map((col) => ({
-        key: col.id,
-        label: col.name,
-        type: col.filterConfig!.type,
-        options: col.filterConfig!.options!,
-        onApplyFilters: setActiveFilters,
-    }));
+        const query = filterText.toLowerCase();
 
-    function matchesSearch(obj: any, search: string): boolean {
-        if (!obj) return false;
-
-        // primitive values
-        if (typeof obj === "string" || typeof obj === "number") {
-            return String(obj).toLowerCase().includes(search);
-        }
-
-        // arrays
-        if (Array.isArray(obj)) {
-            return obj.some((item) => matchesSearch(item, search));
-        }
-
-        // objects
-        if (typeof obj === "object") {
-            return Object.values(obj).some((value) =>
-                matchesSearch(value, search),
+        const highlightMatches = () => {
+            const body = table.querySelector(".rdt_TableBody") ?? table;
+            searchRangesByTable.set(
+                tableId,
+                query.trim().length >= MIN_HIGHLIGHT_LENGTH
+                    ? findTextMatches(body, query)
+                    : [],
             );
-        }
+            paintSearchHighlights();
+        };
 
-        return false;
-    }
+        highlightMatches();
+
+        //batch bursts of DOM changes into one re-scan per frame
+        let frame = 0;
+        const observer = new MutationObserver(() => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(highlightMatches);
+        });
+        observer.observe(table, {
+            childList: true,
+            subtree: true,
+            characterData: true,
+        });
+
+        return () => {
+            observer.disconnect();
+            cancelAnimationFrame(frame);
+            searchRangesByTable.delete(tableId);
+            paintSearchHighlights();
+        };
+    }, [filterText, tableId]);
+
+    //search only looks at what the table shows: each visible column's searchText, or its selector value
+    //when that's plain text/numbers. Objects are skipped so hidden fields (ie a bill's full text) never match
+    const toSearchStrings = (value: unknown): string[] => {
+        if (typeof value === "string" || typeof value === "number") {
+            return [String(value)];
+        }
+        if (Array.isArray(value)) {
+            return value.flatMap(toSearchStrings);
+        }
+        return [];
+    };
+
+    const visibleColumns = columns.filter((column) => !column.omit);
+
+    const matchesSearch = (row: T, search: string) =>
+        visibleColumns.some((column) =>
+            toSearchStrings(
+                column.searchText
+                    ? column.searchText(row)
+                    : column.selector(row),
+            ).some((text) => text.toLowerCase().includes(search)),
+        );
 
     //this is the data that will actually appear in the DataTable - we pre filter it.
-    const filteredData = data
-        .filter((row) => matchesSearch(row, filterText.toLowerCase()))
-        .filter((row) =>
-            activeFilters.every((filter) => {
-                if (!filter.key || !filter.value) return true;
-
-                const column = builtColumns.find((c) => c.id === filter.key);
-                if (!column) return true;
-
-                //set label
-                filter.label = column.name;
-
-                const value = column.selector(row);
-
-                //number filter
-                if (filter.operator && !isNaN(Number(value))) {
-                    const rowVal = Number(value);
-                    const filterVal = Number(filter.value);
-
-                    switch (filter.operator) {
-                        case "=":
-                            return rowVal === filterVal;
-                        case ">":
-                            return rowVal > filterVal;
-                        case "<":
-                            return rowVal < filterVal;
-                        case ">=":
-                            return rowVal >= filterVal;
-                        case "<=":
-                            return rowVal <= filterVal;
-                    }
-                }
-
-                // array filter (for subjects)
-                if (Array.isArray(value)) {
-                    return value.some(
-                        (v) =>
-                            String(v).toLowerCase() ===
-                            filter.value.toLowerCase(),
-                    );
-                }
-
-                //string filter
-                return String(value ?? "")
-                    .toLowerCase()
-                    .includes(filter.value.toLowerCase());
-            }),
-        );
+    const search = filterText.trim().toLowerCase();
+    const filteredData = search
+        ? data.filter((row) => matchesSearch(row, search))
+        : data;
 
     //filteredData is a new array every render, so this runs every render - parents should only
     //store primitive values from it (like counts) so React can skip re-rendering when nothing changed
@@ -138,7 +165,7 @@ export default function GeneralTable<T>({
                 padding: "var(--padding-datatable-header)",
                 color: "var(--color-table-header-text)",
                 backgroundColor: "var(--color-table-header-bg)",
-                fontSize: "var(--font-size-xs)",
+                fontSize: "var(--font-size-sm)",
                 fontWeight: 700,
                 letterSpacing: "0.06em",
                 textTransform: "uppercase" as const,
@@ -168,81 +195,38 @@ export default function GeneralTable<T>({
         },
     };
 
-    const clearFilters = () => {
-        setActiveFilters([]);
-    };
-
     return (
         <div className={style.generalTable__container}>
-            <div className={style.generalTable__subHeader}>
-                <div className={style.generalTable__toolbar}>
-                    <div className={style.generalTable__search}>
-                        <svg
-                            className={style.generalTable__searchIcon}
-                            viewBox="0 0 24 24"
-                            aria-hidden="true"
-                        >
-                            <circle cx="11" cy="11" r="7" />
-                            <line x1="16.5" y1="16.5" x2="21" y2="21" />
-                        </svg>
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            value={filterText}
-                            onChange={(e) => setFilterText(e.target.value)}
-                        />
-                        {filterText && (
-                            <button
-                                className={style.generalTable__clearSearch}
-                                onClick={() => setFilterText("")}
-                                aria-label="Clear search"
-                            >
-                                ×
-                            </button>
-                        )}
-                    </div>
-                    <FilterPanel
-                        filters={filters}
-                        activeFilters={activeFilters}
-                        onApplyFilters={setActiveFilters}
-                    />
-                </div>
-
-                {activeFilters.length > 0 && (
-                    <div className={style.generalTable__activeFilters}>
-                        {activeFilters.map((f, i) => (
-                            <span
-                                key={`${f.key}-${i}`}
-                                className={style.generalTable__filterChip}
-                            >
-                                <strong>{f.label ?? f.key}:</strong> {f.value}
-                                <button
-                                    onClick={() =>
-                                        setActiveFilters(
-                                            activeFilters.filter(
-                                                (_, index) => index !== i,
-                                            ),
-                                        )
-                                    }
-                                    aria-label={`Remove ${f.label ?? f.key} filter`}
-                                >
-                                    ×
-                                </button>
-                            </span>
-                        ))}
-                        <button
-                            onClick={clearFilters}
-                            className={style.generalTable__clearFilters}
-                        >
-                            Clear all
-                        </button>
-                    </div>
+            <div className={style.generalTable__search}>
+                <svg
+                    className={style.generalTable__searchIcon}
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                >
+                    <circle cx="11" cy="11" r="7" />
+                    <line x1="16.5" y1="16.5" x2="21" y2="21" />
+                </svg>
+                <input
+                    type="text"
+                    placeholder="Search..."
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                />
+                {filterText && (
+                    <button
+                        className={style.generalTable__clearSearch}
+                        onClick={() => setFilterText("")}
+                        aria-label="Clear search"
+                    >
+                        ×
+                    </button>
                 )}
             </div>
-            <div className={style.generalTable__tableWrapper}>
+            <div className={style.generalTable__tableWrapper} ref={tableRef}>
                 <DataTable
-                    columns={builtColumns}
+                    columns={columns}
                     data={filteredData}
+                    keyField={keyField}
                     defaultSortFieldId={defaultSortId}
                     defaultSortAsc={defaultSortAscending}
                     customStyles={customStyles}

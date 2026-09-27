@@ -1,5 +1,7 @@
 export type Bill = {
     id: string;
+    //unique table row key - bill numbers repeat across sessions (ie HB0012 in 2025GS and 2026GS)
+    rowKey: string;
     shortTitle: string;
     generalProvisions: string;
     highlightedProvisions: string;
@@ -62,6 +64,7 @@ export const createBill = (raw: any): Bill => {
 
     return {
         id: String(raw.id ?? ""),
+        rowKey: `${raw.session_id ?? ""}-${raw.id ?? ""}`,
         shortTitle: String(raw.short_title ?? ""),
 
         generalProvisions: String(raw.general_provisions ?? ""),
@@ -104,6 +107,7 @@ export const createBillFromVote = (raw: any): Bill => {
 
     return {
         id: String(raw.bill_id ?? raw.id ?? ""),
+        rowKey: `${raw.session_id ?? ""}-${raw.bill_id ?? raw.id ?? ""}`,
         shortTitle: String(raw.short_title ?? ""),
 
         generalProvisions: String(raw.general_provisions ?? ""),
@@ -133,7 +137,12 @@ export const createBillFromVote = (raw: any): Bill => {
         senateVoteUrl: String(raw.senate_vote_url ?? ""),
 
         link: String(raw.link ?? ""),
-        policies: [createBillPolicy(raw)],
+        //rows with a policies array (legislator votes) have every policy, otherwise the row is
+        //joined with one policy row (analysis rows)
+        policies:
+            raw.policies !== undefined
+                ? createAllBillPolicies(raw.policies)
+                : [createBillPolicy(raw)],
     };
 };
 

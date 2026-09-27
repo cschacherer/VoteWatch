@@ -23,6 +23,22 @@
     color: #0f172a;
 }
 
+/* CLEAR ALL FILTERS - in the card header, shown only while at least one filter is on */
+.clearFilters {
+    padding: 6px 12px;
+    border: 1px solid #fecaca;
+    border-radius: 999px;
+    background-color: #fef2f2;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: #b91c1c;
+    transition: background-color 0.2s ease;
+}
+
+.clearFilters:hover {
+    background-color: #fee2e2;
+}
+
 /* INLINE - title, control, and action on one line, action pushed to the right */
 .filterCard__inline {
     flex-direction: row;
@@ -36,8 +52,10 @@
 }
 
 /* ROWS */
+/* label on the left, the row's chips (and action, if any) on the right */
 .filterRow {
     display: flex;
+    flex-direction: row;
     align-items: flex-start;
     gap: 16px;
 }
@@ -45,12 +63,13 @@
 .filterRow__label {
     flex-shrink: 0;
     width: 80px;
+    /* lines the label up with the text of the first line of chips */
     padding-top: 6px;
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-sm);
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #6b7280;
+    color: var(--color-lighter-text);
 }
 
 .filterRow__chips {
@@ -59,9 +78,20 @@
     gap: 6px;
 }
 
+/* chips, with the row's action underneath */
+.filterRow__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
 @media (max-width: 768px) {
     .filterRow {
         flex-direction: column;
+        /* stretch so dropdowns in a row (ie ChipSelect on phones) fill the card width */
+        align-items: stretch;
         gap: 6px;
     }
 

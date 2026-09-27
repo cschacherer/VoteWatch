@@ -22,10 +22,15 @@ export const getAllPolicyTopics = async () => {
     }
 };
 
-export const getLegislatorAnalysisByYear = async (id: string, year: string) => {
+//session is optional - the server computes one session's scores live, since only years are stored
+export const getLegislatorAnalysisByYear = async (
+    id: string,
+    year: string,
+    session?: string | null,
+) => {
     try {
         const response = await apiClient.get(
-            endpointsAPI.analysisOfLegislator(id, year),
+            endpointsAPI.analysisOfLegislator(id, year, session),
         );
 
         const policyScoreArray = response.data.map(
@@ -43,6 +48,7 @@ export const getLegislatorPolicyCoupleVotesByYear = async (
     id: string,
     year: string,
     policyCoupleName: string,
+    session?: string | null,
 ) => {
     try {
         const response = await apiClient.get(
@@ -50,6 +56,7 @@ export const getLegislatorPolicyCoupleVotesByYear = async (
                 id,
                 year,
                 policyCoupleName,
+                session,
             ),
         );
 
