@@ -8,10 +8,16 @@ import { BadgeType } from "../../components/Badge/Badge";
 import { FilterType, createDataTableColumn } from "../../models/DataTableUtils";
 import PolicyChip from "../../components/PolicyChip/PolicyChip";
 import { formatPolicyName } from "../../utils/stringFormat";
-import { Link } from "react-router-dom";
+import BillCell from "../../components/BillCell/BillCell";
 import SearchableDropdown, {
     type DropdownOption,
 } from "../../components/SearchableDropdown/SearchableDropdown";
+import ListPage from "../../components/ListPage/ListPage";
+import PageHeader from "../../components/PageHeader/PageHeader";
+import PillTabs from "../../components/PillTabs/PillTabs";
+import FilterCard, { FilterRow } from "../../components/FilterCard/FilterCard";
+import FilterChip from "../../components/FilterChip/FilterChip";
+import ToggleSwitch from "../../components/ToggleSwitch/ToggleSwitch";
 import style from "./BillsPage.module.css";
 
 //set all column tables here
@@ -81,27 +87,14 @@ function createBillColumns(
             width: "300px",
             wrap: true,
             cell: (row) => (
-                <div className={style.billCell}>
-                    <Link
-                        className={style.billCell__id}
-                        to={`/bills/${row.sessionId}/${row.id}`}
-                    >
-                        {row.id}
-                    </Link>
-                    <Link
-                        className={style.billCell__title}
-                        to={`/bills/${row.sessionId}/${row.id}`}
-                    >
-                        {row.shortTitle}
-                    </Link>
-                    <Badge
-                        type="sessionId"
-                        value={row.sessionId}
-                        onClick={(value) =>
-                            filterBadgeClick("sessionId", value)
-                        }
-                    ></Badge>
-                </div>
+                <BillCell
+                    id={row.id}
+                    sessionId={row.sessionId}
+                    shortTitle={row.shortTitle}
+                    onSessionClick={(value) =>
+                        filterBadgeClick("sessionId", value)
+                    }
+                />
             ),
             filterConfig: {
                 type: FilterType.Text,
@@ -251,54 +244,6 @@ function createBillColumns(
         }),
     ];
 }
-
-//an on/off switch with a label - the real checkbox is visually hidden and the track is drawn with CSS
-const ToggleSwitch = ({
-    label,
-    title,
-    checked,
-    onChange,
-}: {
-    label: string;
-    title?: string;
-    checked: boolean;
-    onChange: (checked: boolean) => void;
-}) => (
-    <label className={style.toggleSwitch} title={title}>
-        <input
-            type="checkbox"
-            role="switch"
-            checked={checked}
-            onChange={(e) => onChange(e.target.checked)}
-        />
-        <span className={style.toggleSwitch__track}></span>
-        {label}
-    </label>
-);
-
-//a selectable chip in the policy filter rows - clicking the active chip again clears it
-const PolicyFilterChip = ({
-    label,
-    count,
-    active,
-    onClick,
-}: {
-    label: string;
-    count?: number;
-    active: boolean;
-    onClick: () => void;
-}) => (
-    <button
-        className={`${style.filterChip} ${active ? style.filterChip__active : ""}`}
-        aria-pressed={active}
-        onClick={onClick}
-    >
-        {label}
-        {count !== undefined && (
-            <span className={style.filterChip__count}>{count}</span>
-        )}
-    </button>
-);
 
 const BillsPage = () => {
     const [bills, setBills] = useState<Bill[]>([]);
@@ -456,169 +401,124 @@ const BillsPage = () => {
     ];
 
     return (
-        <div className={`page pageScroll ${style.billsPage}`}>
-            <div className={style.billsPage__content}>
-                {/* Header */}
-                <header className={style.header}>
-                    <div>
-                        <span className={style.header__eyebrow}>
-                            Utah State Legislature
-                        </span>
-                        <h1 className={style.header__title}>Bills</h1>
-                        <p className={style.header__subtitle}>
-                            Browse every bill with plain-English summaries,
-                            policy topics, and whether it passed.
-                        </p>
-                    </div>
-                    <div className={style.stats}>
-                        {stats.map((stat) => (
-                            <div key={stat.label} className={style.stat}>
-                                <div className={style.stat__value}>
-                                    {loading ? "—" : stat.value}
-                                </div>
-                                <div className={style.stat__label}>
-                                    {stat.label}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </header>
+        <ListPage>
+            <PageHeader
+                eyebrow="Utah State Legislature"
+                title="Bills"
+                subtitle="Browse every bill with plain-English summaries, policy topics, and whether it passed."
+                stats={stats}
+                loading={loading}
+            />
 
-                {/* Session Tabs */}
-                <div className={style.sessionTabs} role="tablist">
-                    {["all", ...sessions].map((session) => (
-                        <button
-                            key={session}
-                            role="tab"
-                            aria-selected={selectedSession === session}
-                            className={`${style.sessionTab} ${selectedSession === session ? style.sessionTab__active : ""}`}
-                            onClick={() => setSelectedSession(session)}
-                        >
-                            {session === "all"
-                                ? "All Sessions"
-                                : String(normalizeSessionId(session))}
-                        </button>
-                    ))}
-                </div>
+            <PillTabs
+                options={[
+                    { value: "all", label: "All Sessions" },
+                    ...sessions.map((session) => ({
+                        value: session,
+                        label: String(normalizeSessionId(session)),
+                    })),
+                ]}
+                selectedValue={selectedSession}
+                onSelect={setSelectedSession}
+            />
 
-                {/* Policy Filters */}
-                <section className={style.policyFilters}>
-                    <div className={style.policyFilters__header}>
-                        <span className={style.policyFilters__title}>
-                            Filter by policy
-                        </span>
-                        <ToggleSwitch
-                            label="Primary policies only"
-                            title="Only match bills where the topic or direction is the bill's primary policy"
-                            checked={primaryOnly}
-                            onChange={setPrimaryOnly}
-                        />
-                    </div>
-
-                    <div className={style.filterRow}>
-                        <span className={style.filterRow__label}>Topic</span>
-                        <div className={style.chips}>
-                            <PolicyFilterChip
-                                label="All Topics"
-                                active={!selectedTopic}
-                                onClick={() => selectPolicy(null, null)}
-                            />
-                            {topicOptions.map((topic) => (
-                                <PolicyFilterChip
-                                    key={topic}
-                                    label={formatPolicyName(topic)}
-                                    count={topicCounts.get(topic) ?? 0}
-                                    active={selectedTopic === topic}
-                                    onClick={() =>
-                                        selectPolicy(
-                                            selectedTopic === topic
-                                                ? null
-                                                : topic,
-                                            null,
-                                        )
-                                    }
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    {selectedTopic && (
-                        <div className={style.filterRow}>
-                            <span className={style.filterRow__label}>
-                                Direction
-                            </span>
-                            <div className={style.chips}>
-                                <PolicyFilterChip
-                                    label={`All ${formatPolicyName(selectedTopic)}`}
-                                    active={!selectedDirection}
-                                    onClick={() =>
-                                        selectPolicy(selectedTopic, null)
-                                    }
-                                />
-                                {directionOptions.map((direction) => (
-                                    <PolicyFilterChip
-                                        key={direction}
-                                        label={formatPolicyName(direction)}
-                                        count={
-                                            directionCounts.get(direction) ?? 0
-                                        }
-                                        active={selectedDirection === direction}
-                                        onClick={() =>
-                                            selectPolicy(
-                                                selectedTopic,
-                                                selectedDirection === direction
-                                                    ? null
-                                                    : direction,
-                                            )
-                                        }
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </section>
-
-                {/* Subject Filter */}
-                <section
-                    className={`${style.policyFilters} ${style.subjectFilter}`}
-                >
-                    <span className={style.policyFilters__title}>
-                        Filter by subject
-                    </span>
-                    <SearchableDropdown
-                        options={subjectOptions}
-                        selectedValue={selectedSubject}
-                        onSelect={setSelectedSubject}
-                        allLabel="All Subjects"
-                        searchPlaceholder={`Search ${subjectOptions.length} subjects...`}
+            <FilterCard
+                title="Filter by policy"
+                action={
+                    <ToggleSwitch
+                        label="Primary policies only"
+                        title="Only match bills where the topic or direction is the bill's primary policy"
+                        checked={primaryOnly}
+                        onChange={setPrimaryOnly}
                     />
-                    <div className={style.subjectFilter__toggle}>
-                        <ToggleSwitch
-                            label="Show subjects column"
-                            title="Show or hide the Subjects column in the table"
-                            checked={showSubjects}
-                            onChange={setShowSubjects}
+                }
+            >
+                <FilterRow label="Topic">
+                    <FilterChip
+                        label="All Topics"
+                        active={!selectedTopic}
+                        onClick={() => selectPolicy(null, null)}
+                    />
+                    {topicOptions.map((topic) => (
+                        <FilterChip
+                            key={topic}
+                            label={formatPolicyName(topic)}
+                            count={topicCounts.get(topic) ?? 0}
+                            active={selectedTopic === topic}
+                            onClick={() =>
+                                selectPolicy(
+                                    selectedTopic === topic ? null : topic,
+                                    null,
+                                )
+                            }
                         />
-                    </div>
-                </section>
+                    ))}
+                </FilterRow>
 
-                <GeneralTable
-                    columns={(helpers) =>
-                        createBillColumns(helpers, {
-                            primaryOnly,
-                            showSubjects,
-                            onPolicySelect: selectPolicy,
-                            onSubjectSelect: setSelectedSubject,
-                        })
-                    }
-                    data={tableBills}
-                    defaultSortId="sessionId"
-                    defaultSortAscending={false}
-                    loading={loading}
-                    onFilteredDataChange={handleFilteredBills}
-                ></GeneralTable>
-            </div>
-        </div>
+                {selectedTopic && (
+                    <FilterRow label="Direction">
+                        <FilterChip
+                            label={`All ${formatPolicyName(selectedTopic)}`}
+                            active={!selectedDirection}
+                            onClick={() => selectPolicy(selectedTopic, null)}
+                        />
+                        {directionOptions.map((direction) => (
+                            <FilterChip
+                                key={direction}
+                                label={formatPolicyName(direction)}
+                                count={directionCounts.get(direction) ?? 0}
+                                active={selectedDirection === direction}
+                                onClick={() =>
+                                    selectPolicy(
+                                        selectedTopic,
+                                        selectedDirection === direction
+                                            ? null
+                                            : direction,
+                                    )
+                                }
+                            />
+                        ))}
+                    </FilterRow>
+                )}
+            </FilterCard>
+
+            <FilterCard
+                title="Filter by subject"
+                layout="inline"
+                action={
+                    <ToggleSwitch
+                        label="Show subjects column"
+                        title="Show or hide the Subjects column in the table"
+                        checked={showSubjects}
+                        onChange={setShowSubjects}
+                    />
+                }
+            >
+                <SearchableDropdown
+                    options={subjectOptions}
+                    selectedValue={selectedSubject}
+                    onSelect={setSelectedSubject}
+                    allLabel="All Subjects"
+                    searchPlaceholder={`Search ${subjectOptions.length} subjects...`}
+                />
+            </FilterCard>
+
+            <GeneralTable
+                columns={(helpers) =>
+                    createBillColumns(helpers, {
+                        primaryOnly,
+                        showSubjects,
+                        onPolicySelect: selectPolicy,
+                        onSubjectSelect: setSelectedSubject,
+                    })
+                }
+                data={tableBills}
+                defaultSortId="sessionId"
+                defaultSortAscending={false}
+                loading={loading}
+                onFilteredDataChange={handleFilteredBills}
+            ></GeneralTable>
+        </ListPage>
     );
 };
 

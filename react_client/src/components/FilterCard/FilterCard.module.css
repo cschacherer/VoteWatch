@@ -1,0 +1,71 @@
+.filterCard {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 20px;
+    border: 1px solid var(--color-table-border);
+    border-radius: 14px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.filterCard__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.filterCard__title {
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* INLINE - title, control, and action on one line, action pushed to the right */
+.filterCard__inline {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+}
+
+.filterCard__inlineAction {
+    margin-left: auto;
+}
+
+/* ROWS */
+.filterRow {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.filterRow__label {
+    flex-shrink: 0;
+    width: 80px;
+    padding-top: 6px;
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.filterRow__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+@media (max-width: 768px) {
+    .filterRow {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .filterRow__label {
+        padding-top: 0;
+    }
+}

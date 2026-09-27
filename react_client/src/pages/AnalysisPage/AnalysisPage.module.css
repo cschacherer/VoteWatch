@@ -1,21 +1,189 @@
-/* Simple dropdown styles to match app layout */
-.select {
-	padding: 6px 8px;
-	border-radius: 4px;
-	border: 1px solid #cfcfcf;
-	background: white;
-	font-size: 14px;
+/* header, tabs, filter cards, and charts live in the shared components
+   (PageHeader, PillTabs, FilterCard, FilterChip, PolicySpectrum, GeneralTable) */
+
+.analysisPage {
+    background-color: #f8fafc;
 }
 
-.select:focus {
-	outline: none;
-	box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.12);
-	border-color: #80bdff;
+.analysisPage__content {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 12px 0 32px;
 }
 
-.horizontal {
-	display: flex;
-	gap: 12px;
-	align-items: center;
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
 }
 
+/* SECTIONS */
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.section__header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.section__title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #0f172a;
+}
+
+.section__subtitle {
+    max-width: 900px;
+    margin: 0;
+    font-size: var(--font-size-md);
+    line-height: 1.6;
+    color: #4b5563;
+}
+
+.card {
+    padding: 22px 24px;
+    border: 1px solid var(--color-table-border);
+    border-radius: 16px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.message {
+    padding: 48px;
+    border: 1px dashed var(--color-table-border);
+    border-radius: 14px;
+    font-size: var(--font-size-md);
+    text-align: center;
+    color: #6b7280;
+}
+
+/* POLICY SPECTRUMS */
+.spectrumGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 20px;
+}
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+    font-size: var(--font-size-sm);
+    color: #4b5563;
+}
+
+.legend > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend__swatch {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.legend__rep {
+    background-color: #dc2626;
+}
+
+.legend__dem {
+    background-color: #2563eb;
+}
+
+.legend__other {
+    background-color: #9ca3af;
+}
+
+/* POLICY OUTCOMES */
+.outcomeGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    align-items: start;
+    gap: 20px;
+}
+
+/* PARTICIPATION TABLE */
+.tableContainer {
+    display: flex;
+    flex-direction: column;
+    height: 75vh;
+}
+
+.nameCell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0;
+    color: inherit;
+    text-decoration: none;
+}
+
+.nameCell__photo {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top;
+    background-color: #e2e8f0;
+}
+
+.nameCell__name {
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.nameCell__district {
+    font-size: var(--font-size-sm);
+    color: #6b7280;
+}
+
+.nameCell:hover .nameCell__name {
+    color: var(--color-accent);
+    text-decoration: underline;
+}
+
+.meter {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    font-variant-numeric: tabular-nums;
+}
+
+.meter__track {
+    flex: 1;
+    height: 8px;
+    overflow: hidden;
+    border-radius: 999px;
+    background-color: #f1f5f9;
+}
+
+.meter__fill {
+    height: 100%;
+    background-color: #eab308;
+}
+
+@media (max-width: 768px) {
+    .spectrumGrid,
+    .outcomeGrid {
+        grid-template-columns: 1fr;
+    }
+}

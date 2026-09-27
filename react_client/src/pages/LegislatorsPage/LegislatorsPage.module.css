@@ -1,0 +1,60 @@
+/* page layout, header, tabs, and filter cards live in the shared components
+   (ListPage, PageHeader, PillTabs, FilterCard, FilterChip) */
+
+/* NAME CELL - photo, name, and chamber/district */
+.nameCell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 0;
+    color: inherit;
+    text-decoration: none;
+}
+
+.nameCell__photo {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top;
+    background-color: #e2e8f0;
+    box-shadow: 0 0 0 2px white, 0 0 0 3px var(--color-table-border);
+}
+
+.nameCell__name {
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.nameCell__district {
+    font-size: var(--font-size-sm);
+    color: #6b7280;
+}
+
+.nameCell:hover .nameCell__name {
+    color: var(--color-accent);
+    text-decoration: underline;
+}
+
+.countyList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.contactCell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.contactCell a {
+    color: var(--color-accent);
+    text-decoration: none;
+}
+
+.contactCell a:hover {
+    text-decoration: underline;
+}

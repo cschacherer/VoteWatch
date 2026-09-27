@@ -15,6 +15,8 @@ type SearchableDropdownProps = {
     //label for the "no selection" option, ie "All Subjects"
     allLabel: string;
     searchPlaceholder?: string;
+    //false hides the "all" option and the clear button, for pickers that always need a selection
+    clearable?: boolean;
 };
 
 //a dropdown button that opens a searchable list - for option lists too long for chips or a plain <select>
@@ -24,6 +26,7 @@ export default function SearchableDropdown({
     onSelect,
     allLabel,
     searchPlaceholder = "Search...",
+    clearable = true,
 }: SearchableDropdownProps) {
     const [open, setOpen] = useState(false);
     const [query, setQuery] = useState("");
@@ -39,11 +42,12 @@ export default function SearchableDropdown({
     const matchingOptions = searchText
         ? options.filter((o) => o.label.toLowerCase().includes(searchText))
         : options;
-    //null is the "all" option
-    const visibleOptions: (DropdownOption | null)[] = [
-        null,
-        ...matchingOptions,
-    ];
+    //null is the "all" option, only offered when the selection can be cleared
+    const visibleOptions: (DropdownOption | null)[] = clearable
+        ? [null, ...matchingOptions]
+        : matchingOptions;
+    //index of the first real option - where the highlight starts while searching
+    const firstOptionIndex = clearable ? 1 : 0;
 
     const close = () => {
         setOpen(false);
@@ -87,7 +91,10 @@ export default function SearchableDropdown({
             setHighlightIndex((i) => Math.max(i - 1, 0));
         } else if (e.key === "Enter") {
             e.preventDefault();
-            choose(visibleOptions[highlightIndex] ?? null);
+            //no matches leaves the highlight past the end of the list, so there's nothing to pick
+            if (highlightIndex < visibleOptions.length) {
+                choose(visibleOptions[highlightIndex]);
+            }
         } else if (e.key === "Escape") {
             close();
         }
@@ -122,7 +129,7 @@ export default function SearchableDropdown({
                 </svg>
             </button>
 
-            {selectedValue && (
+            {clearable && selectedValue && (
                 <button
                     type="button"
                     className={style.dropdown__clear}
@@ -143,7 +150,11 @@ export default function SearchableDropdown({
                         value={query}
                         onChange={(e) => {
                             setQuery(e.target.value);
-                            setHighlightIndex(0);
+                            //while searching, highlight the first match (index 1) so Enter picks it
+                            //instead of the "all" option
+                            setHighlightIndex(
+                                e.target.value.trim() ? firstOptionIndex : 0,
+                            );
                         }}
                         onKeyDown={handleKeyDown}
                     />

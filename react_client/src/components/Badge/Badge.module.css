@@ -2,7 +2,7 @@
 .badge__default {
     padding: 6px 14px;
     border-radius: 999px;
-    font-size: 14px;
+    font-size: var(--font-size-sm);
     font-weight: 600;
     text-align: center;
     display: flex;
@@ -39,7 +39,7 @@
 }
 
 .badge__basic.badge__subject {
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     font-weight: 500;
     padding: 3px 12px;
     border: none;

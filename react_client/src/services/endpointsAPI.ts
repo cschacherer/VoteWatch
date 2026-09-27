@@ -15,6 +15,10 @@ export const endpointsAPI = {
     legislatorSponsoredBills: (legislatorId: string) =>
         `legislators/${legislatorId}/sponsored`,
     // ANALYSIS
+    analysisYears: "analysis/years",
+    legislatureOverview: (year: string) => `analysis/overview/${year}`,
+    policyCoupleOutcome: (year: string, policyCoupleName: string) =>
+        `analysis/outcomes/${year}/${policyCoupleName}`,
     analysisOfLegislator: (legislatorId: string, year: string) =>
         `analysis/${legislatorId}/${year}/`,
     analysisOfLegislatorPolicy: (

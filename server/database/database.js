@@ -2,6 +2,12 @@ import fs from "fs";
 import sqlite3 from "sqlite3";
 import { fileURLToPath } from "url";
 import path from "path";
+import {
+    buildPolicyOutcomes,
+    findPolicyCouple,
+    outcomeScoreFromWeights,
+} from "./policyOutcomes.js";
+import { getPolicyWeight } from "./policyWeight.js";
 
 class Database {
     constructor() {
@@ -352,8 +358,13 @@ class Database {
         const values = [sessionId, billId];
 
         const row = await this._getFirstRow(sqlCommand, values);
+        if (!row) return row;
 
-        return row;
+        //json_group_array comes back as a string, and as [null] for bills with no policies
+        return {
+            ...row,
+            policies: JSON.parse(row.policies || "[]").filter(Boolean),
+        };
     }
 
     async getTextSummaryFromBill(session_id, bill_id) {
@@ -1035,6 +1046,170 @@ class Database {
         return await this._getAllRows(sqlCommand, values);
     }
 
+    //the passed bills behind a couple's legislature outcome score for a year - one row per bill with its
+    //policy for this couple's topic, plus the couple's labels and outcome score
+    async getPolicyCoupleOutcome(policyCoupleName, year) {
+        const found = findPolicyCouple(policyCoupleName);
+        if (!found) return null;
+        const { topic, couple } = found;
+
+        const sqlCommand = `
+        SELECT
+            bills.*,
+            policy.policy_topic,
+            policy.policy_direction,
+            policy.policy_topic_strength,
+            policy.impact_level,
+            policy.confidence,
+            policy.neutral_summary
+        FROM policy
+        JOIN bills
+            ON bills.id = policy.bill_id
+            AND bills.session_id = policy.session_id
+        WHERE bills.year = ?
+          AND bills.passed = 'true'
+          AND policy.policy_topic = ?
+          AND policy.policy_direction IN (?, ?)
+        ORDER BY bills.session_id DESC, bills.id
+    `;
+        const bills = await this._getAllRows(sqlCommand, [
+            year,
+            topic,
+            couple.leftPolicyDirection,
+            couple.rightPolicyDirection,
+        ]);
+
+        const sideWeight = (direction) =>
+            bills
+                .filter((bill) => bill.policy_direction === direction)
+                .reduce((sum, bill) => sum + getPolicyWeight(bill), 0);
+
+        return {
+            year,
+            policy_topic: topic,
+            policy_topic_couple_name: couple.policyCoupleName,
+            name_label: couple.nameLabel,
+            left_policy_direction: couple.leftPolicyDirection,
+            right_policy_direction: couple.rightPolicyDirection,
+            outcome_score: outcomeScoreFromWeights(
+                sideWeight(couple.leftPolicyDirection),
+                sideWeight(couple.rightPolicyDirection),
+            ),
+            bills,
+        };
+    }
+
+    //years that have bills, newest first, and whether each has policy scores yet
+    async getAnalysisYears() {
+        const sqlCommand = `
+        SELECT
+            bills.year,
+            EXISTS (
+                SELECT 1 FROM leg_scores_policy_topic_couples AS scores
+                WHERE scores.year = bills.year
+            ) AS has_scores
+        FROM bills
+        WHERE bills.year IS NOT NULL
+        GROUP BY bills.year
+        ORDER BY bills.year DESC
+    `;
+        return await this._getAllRows(sqlCommand, []);
+    }
+
+    //legislature-wide numbers for the Analysis page - every legislator's couple scores, each legislator's
+    //vote counts, and what passed per policy topic and direction (see policyOutcomes.js), all for one year
+    async getLegislatureOverview(year) {
+        const summarySql = `
+        SELECT
+            COUNT(DISTINCT votes.session_id || votes.bill_id) AS bills_voted_on,
+            COUNT(*) AS total_votes,
+            SUM(votes.vote = 'absent') AS absent_votes
+        FROM votes
+        JOIN bills
+            ON bills.id = votes.bill_id
+            AND bills.session_id = votes.session_id
+        WHERE bills.year = ?
+    `;
+
+        const scoresSql = `
+        SELECT
+            scores.legislator_id,
+            scores.policy_topic_couple_name,
+            scores.score,
+            scores.all_included_votes,
+            couples.policy_topic,
+            couples.name_label,
+            couples.left_policy_direction,
+            couples.right_policy_direction,
+            legislators.format_name,
+            legislators.party,
+            legislators.house,
+            legislators.district
+        FROM leg_scores_policy_topic_couples AS scores
+        JOIN policy_topic_couples AS couples
+            ON couples.policy_topic_couple_name = scores.policy_topic_couple_name
+        JOIN legislators
+            ON legislators.id = scores.legislator_id
+        WHERE scores.year = ?
+          AND scores.all_included_votes > 0
+    `;
+
+        const participationSql = `
+        SELECT
+            legislators.id AS legislator_id,
+            legislators.full_name,
+            legislators.format_name,
+            legislators.image,
+            legislators.party,
+            legislators.house,
+            legislators.district,
+            SUM(votes.vote = 'yes') AS yes_votes,
+            SUM(votes.vote = 'no') AS no_votes,
+            SUM(votes.vote = 'absent') AS absent_votes
+        FROM votes
+        JOIN bills
+            ON bills.id = votes.bill_id
+            AND bills.session_id = votes.session_id
+        JOIN legislators
+            ON legislators.id = votes.legislator_id
+        WHERE bills.year = ?
+        GROUP BY legislators.id
+    `;
+
+        //one row per (bill, policy topic) - joining bills drops the policy rows that aren't tied to a real bill
+        const policySql = `
+        SELECT
+            policy.session_id,
+            policy.bill_id,
+            policy.policy_topic,
+            policy.policy_direction,
+            policy.policy_topic_strength,
+            policy.impact_level,
+            policy.confidence,
+            bills.passed
+        FROM policy
+        JOIN bills
+            ON bills.id = policy.bill_id
+            AND bills.session_id = policy.session_id
+        WHERE bills.year = ?
+    `;
+
+        const [summary, scores, participation, policyRows] =
+            await Promise.all([
+                this._getFirstRow(summarySql, [year]),
+                this._getAllRows(scoresSql, [year]),
+                this._getAllRows(participationSql, [year]),
+                this._getAllRows(policySql, [year]),
+            ]);
+
+        return {
+            summary,
+            scores,
+            participation,
+            policy_outcomes: buildPolicyOutcomes(policyRows),
+        };
+    }
+
     //every bill + vote for a legislator's policy couple, including absent votes (which are not scored)
     async getAllBillsAndVotesForLegislatorByPolicyCouple(
         legislatorId,
@@ -1100,7 +1275,7 @@ class Database {
     }
 
     async getAllVotesOnBill(bill_id, session_id) {
-        const sqlCommand = `SELECT session_id, bill_id, legislator_id, full_name, vote, house FROM votes JOIN legislators ON votes.legislator_id = legislators.id AND votes.bill_id = ? AND votes.session_id = ?`;
+        const sqlCommand = `SELECT session_id, bill_id, legislator_id, full_name, format_name, party, image, vote, house FROM votes JOIN legislators ON votes.legislator_id = legislators.id AND votes.bill_id = ? AND votes.session_id = ?`;
         const values = [bill_id, session_id];
         return await this._getAllRows(sqlCommand, values);
     }

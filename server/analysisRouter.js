@@ -6,6 +6,51 @@ const analysisRouter = express.Router();
 const _db = new Database();
 await _db.openDatabase();
 
+//these must be registered before /:legislatorId/:year... or "years"/"overview"/"outcomes" is read as a legislator id
+analysisRouter.get("/years", async (req, res) => {
+    try {
+        console.log("get analysis years");
+
+        const years = await _db.getAnalysisYears();
+        res.json(years);
+    } catch (err) {
+        console.error("Error fetching analysis years:", err);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+analysisRouter.get("/outcomes/:year/:policyCoupleName", async (req, res) => {
+    try {
+        console.log("get legislature outcome for a policy couple");
+
+        const outcome = await _db.getPolicyCoupleOutcome(
+            req.params.policyCoupleName,
+            req.params.year,
+        );
+        if (!outcome) {
+            res.status(404).send("Policy couple not found");
+            return;
+        }
+        res.json(outcome);
+    } catch (err) {
+        console.error("Error fetching policy couple outcome:", err);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+analysisRouter.get("/overview/:year", async (req, res) => {
+    try {
+        console.log("get legislature overview");
+
+        const year = req.params.year;
+        const overview = await _db.getLegislatureOverview(year);
+        res.json(overview);
+    } catch (err) {
+        console.error("Error fetching legislature overview:", err);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
 analysisRouter.get("/:legislatorId/:year", async (req, res) => {
     //send back the legislator id information
     try {

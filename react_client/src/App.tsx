@@ -9,6 +9,7 @@ import LegislatorDetailsPage from "./pages/LegislatorDetailsPage/LegislatorDetai
 import MapsPage from "./pages/MapsPage/MapsPage";
 import AnalysisPage from "./pages/AnalysisPage/AnalysisPage";
 import AnalysisDetailsPage from "./pages/AnalysisDetailsPage/AnalysisDetailsPage";
+import OutcomeDetailsPage from "./pages/OutcomeDetailsPage/OutcomeDetailsPage";
 
 import "./App.css";
 
@@ -31,6 +32,11 @@ function App() {
                 <Route
                     path="/legislators/:legislatorId"
                     element={<LegislatorDetailsPage />}
+                />
+                {/* the static "outcomes" segment ranks above the :legislatorId route below */}
+                <Route
+                    path="/analysis/outcomes/:year/:policyCoupleName"
+                    element={<OutcomeDetailsPage />}
                 />
                 <Route
                     path="/analysis/:legislatorId/:year/:policyCoupleName"

@@ -1,5 +1,5 @@
 import { getErrorMessage } from "./errorHandling";
-import { type Address, createAddress } from "../models/MapUtils";
+import { createAddress } from "../models/MapUtils";
 
 const UGRC_API_KEY = import.meta.env.VITE_UGRC_APIKEY;
 const GEOAPIFY_API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY;

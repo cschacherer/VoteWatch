@@ -1,0 +1,147 @@
+.spectrum {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px 22px;
+    border: 1px solid var(--color-table-border);
+    border-radius: 16px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.spectrum__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.spectrum__topic {
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.spectrum__title {
+    margin: 0;
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.spectrum__count {
+    flex-shrink: 0;
+    font-size: var(--font-size-sm);
+    color: #6b7280;
+}
+
+.spectrum__footer {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.spectrum__votes {
+    font-weight: 400;
+    color: #6b7280;
+}
+
+/* HISTOGRAM - 20 bins, each a stack of party colored segments */
+.chart {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 90px;
+    padding-bottom: 2px;
+    border-bottom: 3px solid transparent;
+    border-image: linear-gradient(
+            to right,
+            var(--color-policy-left),
+            #e2e8f0 50%,
+            var(--color-policy-right)
+        )
+        1;
+}
+
+.chart__bin {
+    display: flex;
+    flex: 1;
+    flex-direction: column-reverse;
+    height: 100%;
+}
+
+.chart__bin:hover {
+    background-color: #f8fafc;
+}
+
+.chart__segment {
+    width: 100%;
+}
+
+.chart__segment:last-child {
+    border-radius: 3px 3px 0 0;
+}
+
+.chart__center {
+    position: absolute;
+    top: 0;
+    bottom: -3px;
+    left: 50%;
+    border-left: 2px dashed #cbd5e1;
+    pointer-events: none;
+}
+
+/* party colors - match the party dots on the bill details page */
+.party__rep {
+    background-color: #dc2626;
+}
+
+.party__dem {
+    background-color: #2563eb;
+}
+
+.party__other {
+    background-color: #9ca3af;
+}
+
+/* MEDIAN MARKERS */
+.medians {
+    position: relative;
+    height: 22px;
+}
+
+.medians__stacked {
+    height: 44px;
+}
+
+.median {
+    position: absolute;
+    top: 0;
+    padding: 1px 7px;
+    border-radius: 6px;
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    transform: translateX(-50%);
+}
+
+.axis {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.axis__left {
+    color: var(--color-policy-left);
+}
+
+.axis__right {
+    color: var(--color-policy-right);
+    text-align: right;
+}

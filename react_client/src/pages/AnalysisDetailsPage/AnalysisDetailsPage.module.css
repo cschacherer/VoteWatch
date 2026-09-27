@@ -1,24 +1,157 @@
-.side {
-    border: 1px solid var(--color-datatable-outline);
-    border-left-width: 8px;
-    border-radius: 7px;
-    padding: var(--space-4);
+/* score bar, stat cards, bill cells, and policy chips live in the shared components
+   (PolicyScoreBar, StatCards, BillCell, PolicyChip) */
+
+.analysisDetails {
+    background-color: #f8fafc;
+}
+
+.analysisDetails__content {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: 24px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 12px 0 32px;
+}
+
+.backLink {
+    align-self: flex-start;
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: #4b5563;
+    text-decoration: none;
+}
+
+.backLink:hover {
+    color: var(--color-accent);
+}
+
+.message {
+    padding: 48px;
+    border: 1px dashed var(--color-table-border);
+    border-radius: 14px;
+    font-size: var(--font-size-md);
+    text-align: center;
+    color: #6b7280;
+}
+
+/* OVERVIEW */
+.hero {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 28px;
+    border: 1px solid var(--color-table-border);
+    border-radius: 16px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.hero__eyebrow {
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+}
+
+.hero__title {
+    margin: 0;
+    font-size: var(--font-size-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    color: #0f172a;
+}
+
+.hero__score {
+    max-width: 820px;
+    padding: 8px 0;
+}
+
+.hero__note {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: #6b7280;
+}
+
+.legislator {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-self: flex-start;
+    gap: 10px;
+    padding: 6px 14px 6px 6px;
+    border: 1px solid var(--color-table-border);
+    border-radius: 999px;
+    color: inherit;
+    text-decoration: none;
+}
+
+.legislator:hover {
+    border-color: #cbd5e1;
+    background-color: #f8fafc;
+    color: inherit;
+}
+
+.legislator__photo {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top;
+    background-color: #e2e8f0;
+}
+
+.legislator__name {
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.legislator:hover .legislator__name {
+    color: var(--color-accent);
+}
+
+.legislator__meta {
+    font-size: var(--font-size-sm);
+    color: #6b7280;
+}
+
+/* SIDE SECTIONS - purple for the left direction, teal for the right */
+.side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 22px 24px;
+    border: 1px solid var(--color-table-border);
+    border-top-width: 5px;
+    border-radius: 16px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
 }
 
 .side__left {
-    border-left-color: var(--color-policy-left);
+    border-top-color: var(--color-policy-left);
 }
 
 .side__right {
-    border-left-color: var(--color-policy-right);
+    border-top-color: var(--color-policy-right);
+}
+
+.side__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
 }
 
 .side__title {
+    margin: 0 0 4px;
     font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-bold);
+    font-weight: 700;
 }
 
 .side__left .side__title {
@@ -29,28 +162,47 @@
     color: var(--color-policy-right);
 }
 
+.side__explainer {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    color: #4b5563;
+}
+
 .side__counts {
     display: flex;
-    gap: var(--space-4);
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
 }
 
-.directionLabel {
-    padding: 6px 14px;
-    border-radius: 999px;
+.side__billCount {
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.side__tally {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-size-md);
     font-weight: 600;
-    white-space: nowrap;
+    color: #1f2937;
+    font-variant-numeric: tabular-nums;
 }
 
-.directionLabel__left {
-    color: var(--color-policy-left);
-    background-color: var(--color-policy-left-bg);
+.side__table {
+    display: flex;
+    flex-direction: column;
 }
 
-.directionLabel__right {
-    color: var(--color-policy-right);
-    background-color: var(--color-policy-right-bg);
+.side__empty {
+    margin: 0;
+    font-size: var(--font-size-md);
+    color: #6b7280;
 }
 
+/* EFFECT ON SCORE column */
 .effect {
     font-weight: 600;
 }
@@ -65,4 +217,11 @@
 
 .effect__none {
     color: var(--darker-gray);
+}
+
+@media (max-width: 768px) {
+    .hero,
+    .side {
+        padding: 20px;
+    }
 }

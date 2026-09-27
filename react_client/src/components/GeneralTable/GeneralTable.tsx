@@ -138,7 +138,7 @@ export default function GeneralTable<T>({
                 padding: "var(--padding-datatable-header)",
                 color: "var(--color-table-header-text)",
                 backgroundColor: "var(--color-table-header-bg)",
-                fontSize: "12px",
+                fontSize: "var(--font-size-xs)",
                 fontWeight: 700,
                 letterSpacing: "0.06em",
                 textTransform: "uppercase" as const,
@@ -157,7 +157,7 @@ export default function GeneralTable<T>({
         cells: {
             style: {
                 padding: "var(--padding-datatable-header)",
-                fontSize: "var(--font-size-default)",
+                fontSize: "var(--font-size-sm)",
                 color: "#1f2937",
             },
         },

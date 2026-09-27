@@ -1,9 +1,15 @@
 import { Link } from "react-router-dom";
 import style from "./HomePage.module.css";
-import capital_pic from "../../assets/blue_capital.jpg";
-import landscape_pic from "../../assets/landscape.jpg";
-import senate_bill_pic from "../../assets/senateBill.jpg";
-import legislature_pic from "../../assets/legislature.jpg";
+import landscape_pic from "../../assets/landscape-card.webp";
+import senate_bill_pic from "../../assets/senatebill-card.webp";
+import legislature_pic from "../../assets/legislature-card.webp";
+
+//hero image lives in public/ (not imported) so index.html can preload it by a fixed URL before any JS
+//runs - keep these paths in sync with the preload in index.html
+const HERO_IMAGE = "/images/capitol-hero-1600.webp";
+const HERO_SRCSET =
+    "/images/capitol-hero-800.webp 800w, /images/capitol-hero-1600.webp 1600w";
+const HERO_SIZES = "(max-width: 1240px) 100vw, 1200px";
 
 const featureCards = [
     {
@@ -34,10 +40,16 @@ const HomePage = () => {
         <div className={`page pageScroll ${style.home}`}>
             <div className={style.home__content}>
                 {/* Hero Section */}
-                <section
-                    className={style.hero}
-                    style={{ backgroundImage: `url(${capital_pic})` }}
-                >
+                <section className={style.hero}>
+                    <img
+                        className={style.hero__image}
+                        src={HERO_IMAGE}
+                        srcSet={HERO_SRCSET}
+                        sizes={HERO_SIZES}
+                        alt=""
+                        fetchPriority="high"
+                        decoding="async"
+                    />
                     <div className={style.hero__content}>
                         <span className={style.hero__eyebrow}>
                             Nonpartisan · Utah State Legislature
@@ -112,6 +124,9 @@ const HomePage = () => {
                                     className={style.card__image}
                                     src={card.image}
                                     alt=""
+                                    //below the fold - don't compete with the hero for bandwidth
+                                    loading="lazy"
+                                    decoding="async"
                                 />
                             </div>
                             <div className={style.card__body}>

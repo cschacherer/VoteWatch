@@ -1,21 +1,278 @@
-.districtFinder__suggestions {
-    position: absolute;
-    top: "100%";
-    left: 0;
-    right: 0; 
-    background: white;
-    border: "1px solid #ccc";
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    z-index: 1000;
-    max-height: 200;
-    overflow-y: auto; 
+.finder {
+    display: grid;
+    grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+    align-items: start;
+    gap: 24px;
 }
 
+/* LEFT PANEL - address form and results */
+.panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
 
-.districtFinder__map {
-    height: 600; 
-    margin: 20; 
-    width: 100%; 
+.form,
+.results {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px 24px;
+    border: 1px solid var(--color-table-border);
+    border-radius: 16px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.panel__title {
+    margin: 0;
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field__label {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: #374151;
+}
+
+.input {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--color-table-border);
+    border-radius: 10px;
+    font-size: var(--font-size-md);
+    outline: none;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.input:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-bg);
+}
+
+/* the suggestion list is positioned under the street input */
+.autocomplete {
+    position: relative;
+}
+
+.suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    max-height: 240px;
+    margin: 0;
+    padding: 6px;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid var(--color-table-border);
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: 0 16px 32px -12px rgba(15, 23, 42, 0.3);
+}
+
+.suggestions li {
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-size: var(--font-size-sm);
+    color: #1f2937;
+    cursor: pointer;
+}
+
+.suggestions li:hover {
+    background-color: #f1f5f9;
+}
+
+.error {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background-color: #fee2e2;
+    font-size: var(--font-size-sm);
+    color: #b91c1c;
+}
+
+.searchButton {
+    height: 44px;
+    border: none;
+    border-radius: 10px;
+    background-color: var(--color-accent);
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: white;
+    transition: background-color 0.2s ease;
+}
+
+.searchButton:hover:not(:disabled) {
+    background-color: var(--color-accent-dark);
+}
+
+.searchButton:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.results__empty {
+    margin: 0;
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    color: #6b7280;
+}
+
+/* LEGISLATOR CARDS */
+.rep {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    border: 1px solid var(--color-table-border);
+    border-left-width: 5px;
+    border-radius: 12px;
+}
+
+.rep__photo {
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top;
+    background-color: #e2e8f0;
+}
+
+.rep__info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.rep__chamber {
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.rep__name {
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    color: #0f172a;
+    text-decoration: none;
+}
+
+.rep__name:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
+}
+
+.rep__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.rep__link {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-accent);
+    text-decoration: none;
+}
+
+.rep__link:hover {
+    text-decoration: underline;
+}
+
+/* MAP */
+.mapCard {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--color-table-border);
+    border-radius: 16px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.map {
+    width: 100%;
+    height: 640px;
+}
+
+.legend {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: #374151;
+}
+
+.legend > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.legend__swatch {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 3px solid;
+    border-radius: 4px;
+}
+
+.mapOverlay {
+    position: absolute;
+    inset: 0;
+    z-index: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.6);
+    font-size: var(--font-size-md);
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* leaflet tooltip for the district name - :global because leaflet renders it outside React */
+:global(.leaflet-tooltip).mapLabel {
+    padding: 3px 8px;
+    border: none;
+    border-radius: 6px;
+    background-color: rgba(15, 23, 42, 0.85);
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    color: white;
+    box-shadow: none;
+}
+
+@media (max-width: 900px) {
+    .finder {
+        grid-template-columns: 1fr;
+    }
+
+    .map {
+        height: 420px;
+    }
 }

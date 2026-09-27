@@ -15,7 +15,7 @@
     background-color: rgb(175, 175, 175);
     color: black;
     font-weight: 500;
-    font-size: 20px;
+    font-size: var(--font-size-lg);
     display: flex;
     align-items: center;
     justify-content: center;

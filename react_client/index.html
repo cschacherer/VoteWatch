@@ -5,6 +5,24 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>react_client</title>
+    <!-- Home page hero: start downloading the photo right away instead of waiting for React to render
+         it. Only on "/" so other pages don't download it. The srcset and sizes must match the <img>
+         in HomePage.tsx or the browser may download a second copy. -->
+    <script>
+      if (location.pathname === "/") {
+        const preload = document.createElement("link");
+        preload.rel = "preload";
+        preload.as = "image";
+        preload.href = "/images/capitol-hero-1600.webp";
+        preload.setAttribute(
+          "imagesrcset",
+          "/images/capitol-hero-800.webp 800w, /images/capitol-hero-1600.webp 1600w",
+        );
+        preload.setAttribute("imagesizes", "(max-width: 1240px) 100vw, 1200px");
+        preload.setAttribute("fetchpriority", "high");
+        document.head.appendChild(preload);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

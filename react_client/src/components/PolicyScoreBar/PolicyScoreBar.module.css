@@ -1,0 +1,73 @@
+.scoreBar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    padding-top: 26px;
+}
+
+.scoreBar__track {
+    position: relative;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(
+        to right,
+        var(--color-policy-left),
+        #e2e8f0 50%,
+        var(--color-policy-right)
+    );
+}
+
+/* tick at 50 so "even" is easy to see */
+.scoreBar__center {
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    left: 50%;
+    width: 2px;
+    background-color: #94a3b8;
+    transform: translateX(-50%);
+}
+
+.scoreBar__marker {
+    position: absolute;
+    top: 50%;
+    width: 18px;
+    height: 18px;
+    border: 3px solid #0f172a;
+    border-radius: 50%;
+    background-color: white;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.3);
+    transform: translate(-50%, -50%);
+}
+
+.scoreBar__value {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    padding: 1px 7px;
+    border-radius: 6px;
+    background-color: #0f172a;
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    color: white;
+    font-variant-numeric: tabular-nums;
+    transform: translateX(-50%);
+}
+
+.scoreBar__labels {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
+.scoreBar__left {
+    color: var(--color-policy-left);
+}
+
+.scoreBar__right {
+    color: var(--color-policy-right);
+    text-align: right;
+}

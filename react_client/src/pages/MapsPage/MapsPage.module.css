@@ -1,0 +1,15 @@
+/* header comes from the shared PageHeader, the form and map from DistrictFinder */
+
+.mapsPage {
+    background-color: #f8fafc;
+}
+
+.mapsPage__content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 12px 0 32px;
+}

@@ -13,9 +13,6 @@
 
 
     --padding-datatable-header: 16px;
-    --font-size-datatable-header: 16px;
-
-    --font-size-default: 14px;
 
     --padding-default: 16px;
     --padding-sm: 10px;
@@ -76,12 +73,18 @@
 
 
     /* === FONT SIZES === */
-    --font-size-default: 14px; 
-    --font-size-sm: 14px;
-    --font-size-md: 16px;
-    --font-size-lg: 20px;
-    --font-size-title: 28px; 
-    --font-size-page-title: 32px;
+    /* every font-size in the app comes from this scale - rem so text follows the user's browser font
+       size setting (1rem = 16px by default). Use px only for borders, shadows, and other hairlines */
+    --font-size-xs: 0.75rem; /* 12px - uppercase labels, eyebrows, counts */
+    --font-size-sm: 0.875rem; /* 14px - secondary text, table cells, chips */
+    --font-size-md: 1rem; /* 16px - body text, inputs, buttons */
+    --font-size-lg: 1.25rem; /* 20px - card titles */
+    --font-size-xl: 1.5rem; /* 24px - section titles, stat values */
+    --font-size-2xl: 2rem; /* 32px - large headings, brand */
+    /* responsive headings that grow with the screen width */
+    --font-size-section: clamp(1.7rem, 3vw, 2.3rem); /* home page section titles */
+    --font-size-display: clamp(2rem, 4vw, 2.75rem); /* page and detail page titles */
+    --font-size-hero: clamp(2.2rem, 5vw, 3.6rem); /* home page hero */
 
     /* === FONT WEIGHTS === */
     --font-weight-bold: 600; 
@@ -94,12 +97,12 @@
 
 /* TYPOGRAPHY */
 .pageTitle {
-    font-size: var(--font-size-page-title);
+    font-size: var(--font-size-2xl);
     font-weight: var(--font-weight-bold);
 }
 
 .subHeader {
-    font-size: 25px;
+    font-size: var(--font-size-xl);
 }
 
 .largeFont {
@@ -145,7 +148,7 @@
 
 .filledHeader {
     font-weight: var(--font-weight-bold);
-    font-size: var(--font-size-title);
+    font-size: var(--font-size-2xl);
     background-color: rgb(54, 54, 54);
     color: var(--color-filled-header-text);
     padding: var(--space-3);
@@ -372,7 +375,7 @@
     position: absolute;
     bottom: 18px;
     transform: translateX(-50%);
-    font-size: 13px;
+    font-size: var(--font-size-sm);
     font-weight: 600;
     white-space: nowrap;
 }

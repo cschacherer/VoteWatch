@@ -1,5 +1,6 @@
 import Database from "./database.js";
 import { PolicyTopic, createPolicyTopics } from "./policyTopics.js";
+import { getPolicyWeight } from "./policyWeight.js";
 
 async function generatePolicyDirectionScore(
     legislatorId,
@@ -244,24 +245,6 @@ async function generateSinglePolicyDirectionScore(
     }
 }
 
-function getPolicyWeight(policyVote) {
-    const impactWeight = {
-        low: 0.5,
-        moderate: 1,
-        high: 2,
-    };
-
-    const strengthWeight = {
-        primary: 1,
-        secondary: 0.5,
-    };
-
-    const i = impactWeight[policyVote.impact_level];
-    const s = strengthWeight[policyVote.policy_topic_strength];
-    const c = policyVote.confidence;
-
-    return i * s * c;
-}
 
 // const x = await generatePolicyDirectionScore(
 //     "ESCAML",

@@ -1,3 +1,5 @@
+import { normalizeParty } from "./Legislator";
+
 export const VoteValue = {
     Yes: "YES",
     No: "NO",
@@ -12,6 +14,10 @@ export type Vote = {
     house: string;
     legislatorId: string;
     legislatorName: string;
+    //"First Last" display name, image url, and full party name ("Republican") of the voting legislator
+    formatName: string;
+    image: string;
+    party: string;
     vote: VoteValue;
 };
 
@@ -32,6 +38,9 @@ export const createVote = (raw: any): Vote => {
         house: String(raw.house ?? ""),
         legislatorId: String(raw.legislator_id ?? ""),
         legislatorName: String(raw.full_name ?? ""),
+        formatName: String(raw.format_name ?? raw.full_name ?? ""),
+        image: String(raw.image ?? ""),
+        party: normalizeParty(raw.party),
         vote: voteValue as VoteValue,
     };
 };

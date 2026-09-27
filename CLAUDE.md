@@ -49,11 +49,14 @@ Check the client with `npx tsc -p tsconfig.app.json --noEmit` and `npm run lint`
 ### REST API (all GET, snake_case JSON straight from SQLite rows)
 - `/bills`: every bill with a `policies[]` array (built with a SQL `json_group_array` over `policy`)
 - `/bills/:sessionId`: bills for one session. ⚠ `policies` comes back as an unparsed JSON string (see §7)
-- `/bills/:sessionId/:id`: one bill with its policies. ⚠ `policies` is also an unparsed string here
+- `/bills/:sessionId/:id`: one bill with a parsed `policies[]` array
 - `/bills/:sessionId/:id/votes`: the votes joined with legislator name and house
 - `/legislators`, `/legislators/:id`, `/legislators/:id/votes`, `/legislators/:id/sponsored`
 - `/legislators/:chamber/:district`: chamber is `H` or `S`
 - `/legislators/:id/:year/analysis`: reads the older `policy_score` table
+- `/analysis/years`: years that have bills, newest first, with `has_scores`. The Analysis page and the profile's Policy Scores tab use it instead of a hard-coded year list
+- `/analysis/overview/:year`: legislature-wide data for the Analysis page: `summary` (bills voted on, total and absent votes), `scores` (every legislator's couple scores with votes, plus party and chamber), `participation` (each legislator's yes/no/absent counts) and `policy_outcomes`. `policy_outcomes` comes from `server/database/policyOutcomes.js`: per topic, the bill and passed counts for every direction, plus an outcome score per couple. The outcome score uses the legislator-score formula, but each *passed* bill counts toward its own direction. Only directions valid for their topic (per `policyTopics.js`) are counted. This route and `/years` must be registered before `/:legislatorId/:year`
+- `/analysis/outcomes/:year/:policyCoupleName`: one couple's legislature outcome score plus the passed bills behind it (each row is bill + policy). Used by `OutcomeDetailsPage`
 - `/analysis/:legislatorId/:year`: couple scores (`leg_scores_policy_topic_couples` ⨝ `policy_topic_couples`). **This is what the Analysis page uses.**
 - `/analysis/:legislatorId/:year/:policyTopic/:policyDirection`: the bills and this legislator's votes for one direction
 - `/analysis/:legislatorId/:year/couple/:policyCoupleName`: every bill in that couple with the legislator's vote, including absent votes (yes + no rows equal `all_included_votes`; absent rows are shown but not scored). Used by `AnalysisDetailsPage`. It must be registered before the four-parameter route above
@@ -109,7 +112,7 @@ Inserts use `INSERT OR IGNORE`, so **re-running a stage does not overwrite exist
 ## 5. Client (`react_client/src/`)
 
 - **Stack:** React 19, react-router-dom 7 (`BrowserRouter`), TypeScript strict with `noUnusedLocals`/`noUnusedParameters`, Vite 7 with `vite-plugin-svgr` (import SVGs as components), Bootstrap 5 CSS and react-bootstrap, `react-data-table-component` for tables, react-leaflet for maps. `@tanstack/react-table`, the `datatables.net-*` packages and `styled-components` are installed but **unused**, so don't introduce them.
-- **Routes** (`App.tsx`, all inside `AppLayout` with `NavigationBar`): `/`, `/about`, `/bills`, `/bills/:sessionId/:billId`, `/legislators`, `/legislators/:legislatorId`, `/maps`, `/analysis`, `/analysis/:legislatorId/:year/:policyCoupleName` (AnalysisDetailsPage, linked from "Votes Included" in PolicyTopicSection).
+- **Routes** (`App.tsx`, all inside `AppLayout` with `NavigationBar`): `/`, `/about`, `/bills`, `/bills/:sessionId/:billId`, `/legislators`, `/legislators/:legislatorId`, `/maps`, `/analysis`, `/analysis` is **Legislature Trends**: legislature-wide charts plus a participation table, with `?year=`. One legislator's scores live on their profile at `/legislators/:id?tab=scores&year=`. `/analysis/outcomes/:year/:policyCoupleName` (OutcomeDetailsPage, the bills behind a legislature outcome score; its static `outcomes` segment outranks the route below). Also `/analysis/:legislatorId/:year/:policyCoupleName` (AnalysisDetailsPage, linked from "Votes Included" in PolicyTopicSection).
 - **Folder layout:** one folder per page or component (`Name/Name.tsx` plus `Name.module.css`), default export. ScoreSlider is the exception: it uses a plain `.css` file with BEM names (`ScoreSlider__track`) and a named export.
 - **Data flow** follows the pattern `services/*Service.ts` → `apiClient` (axios, baseURL `http://127.0.0.1:3005`) → `endpointsAPI` path builders → `models/*.ts#createX(raw)` factory → typed object.
   - Models are `type`s plus a `createX(raw: any)` that maps snake_case to camelCase with `String(x ?? "")`/`Number(...)` coercion.
@@ -117,9 +120,21 @@ Inserts use `INSERT OR IGNORE`, so **re-running a stage does not overwrite exist
   - Pages load data in `useEffect` with `useState`. There is no global state library, React Query or context. Keep it that way unless the user asks.
 - **Tables:** use `GeneralTable<T>` with a `createXColumns({ filterBadgeClick })` function that returns `createDataTableColumn<T>({...})` entries, each with a `filterConfig`. `GeneralTable` expects `filterConfig` on every column. Clicking a `Badge` inside a cell calls `filterBadgeClick(key, value)`, which replaces all active filters with that one. To filter on data that isn't displayed, add a hidden column (`omit: true`) with a string selector and call `filterBadgeClick` with its id, as the Bills page does for policy topics and directions. Optional props: `loading` shows a loading state, and `onFilteredDataChange(rows)` reports the rows currently shown. That callback fires on every render, so store only primitive values from it (like counts), never the array itself.
 - **Styling:** prefer the global utility classes in `styles/global.css` and `styles/layout.css` over new CSS: `page`, `pageScroll`, `section`, `verticalStack`, `horizontalRow`, `centerVertically`, `centerHorizontally`, `justifySpaceBetween`, `smallGap`/`defaultGap`/`largeGap`, `smallPadding`/`defaultPadding`/`largePadding`, `largeFont`, `outline`/`outlineThin`, `filledHeader`, `subHeader`, `link`, `topicHeight`. Colors and spacing are CSS variables on `:root` (`--padding-*`, `--color-house`, `--color-senate`, `--color-republican`, `--color-democrat`, …). Use a component `.module.css` only for component-specific styles.
+- **Font sizes:** every `font-size` uses the rem scale in `global.css`: `--font-size-xs` (12px), `-sm` (14), `-md` (16), `-lg` (20), `-xl` (24) and `-2xl` (32), plus `--font-size-section`, `--font-size-display` and `--font-size-hero` for responsive headings. Never hard-code `px` or `rem` font sizes, including in inline styles such as `GeneralTable`'s `customStyles`. Because the scale is in rem, text follows the user's browser font-size setting. Use `px` only for borders, shadows and fixed-size details like icons. Inputs use `-md` (16px) so iPhones don't zoom in when an input gets focus.
+- **Images:** ship photos as resized WebP, about twice their displayed width. The originals are converted with `sharp`, which isn't a project dependency; run it from a scratch folder. The Home hero is served from `public/images/capitol-hero-{800,1600}.webp` and preloaded by an inline script in `index.html`, only on `/`. The preload's `imagesrcset` and `imagesizes` must match the hero `<img>` in `HomePage.tsx`, or the browser downloads it twice. Photos below the fold get `loading="lazy"`. The original JPEGs in `src/assets/` are no longer imported and don't ship.
+- **List pages (Bills, Legislators) share one layout.** Build new list pages from the shared components:
+  - `ListPage` for the scrolling page, where the last child (the table) gets 80vh
+  - `PageHeader` for the label, title, subtitle and stats
+  - `PillTabs` for single-select tabs
+  - `FilterCard` and `FilterRow` for the filter card
+  - `FilterChip` for a chip with a count
+  - `ToggleSwitch` for switches
+  - `GeneralTable` with `onFilteredDataChange`, so the header stats count the visible rows
+
+  Filters live in page state and filter the data before it reaches `GeneralTable`. Chip counts are faceted: each filter's counts apply every other filter but not its own.
 - **Long option lists:** use `components/SearchableDropdown` (a button that opens a searchable list with optional counts and keyboard support), as the Bills page does for its 579 subjects. Use chips only for short lists such as sessions and policy topics.
 - **Display helpers:** `formatPolicyName("housing_land_use")` → "Housing Land Use" (`utils/stringFormat.ts`), and `formatDate` in `models/DataTableUtils.ts`.
-- **District lookup** (`services/mapService.ts`, `DistrictFinder`): the browser calls Geoapify autocomplete, then UGRC geocode, then ArcGIS district layers, then `/legislators/:chamber/:district`. The keys come from `react_client/.env` (`VITE_GEOAPIFY_API_KEY`, `VITE_UGRC_APIKEY`).
+- **District lookup** (`services/mapService.ts`, `DistrictFinder`): the browser calls Geoapify autocomplete, then UGRC geocode, then ArcGIS district layers, then `/legislators/:chamber/:district`. The keys come from `react_client/.env` (`VITE_GEOAPIFY_API_KEY`, `VITE_UGRC_APIKEY`). The basemap tiles are Esri's World Light Gray canvas: free with attribution and no key needed. The old CARTO URL now shows "API KEY REQUIRED" tiles. House outlines are blue (`#2563eb`) and Senate amber (`#d97706`), so chamber colors don't look like party colors.
 - Formatting: 4-space indent, double quotes, trailing commas (Prettier defaults with `tabWidth: 4`). Match this in both projects.
 
 ---
@@ -144,8 +159,8 @@ Inserts use `INSERT OR IGNORE`, so **re-running a stage does not overwrite exist
 - `react_client/.env` is tracked in git even though `.gitignore` lists `.env`. It contains the Geoapify and UGRC keys, which are browser-exposed by design, but it should still be untracked.
 
 **Server bugs**
-- `generateCouplePolicyDirectionScore`: in the **left** loop `totalWeightedLeftVote += policyWeight` runs twice, so left weight is double-counted and scores are skewed toward 50. All current 2026 scores are affected.
-- `getAllBillsWithPoliciesForSession` returns before its `JSON.parse` mapping (the code after the return is unreachable), and `getBillDetailsWithPolicies` never parses either. As a result `policies` is a JSON **string** on those endpoints, and the client's `createAllBillPolicies` has to cope with that.
+- `getAllBillsWithPoliciesForSession` returns before its `JSON.parse` mapping (the code after the return is unreachable), so `policies` is a JSON **string** on `/bills/:sessionId`, and the client's `createAllBillPolicies` has to cope with that. `getBillDetailsWithPolicies` was fixed on 2026-09-26: it now parses the string and drops the `[null]` entry that bills with no policies produced.
+- `getAllVotesOnBill` inner-joins `legislators`, so votes by legislators no longer in office are left out of bill vote lists.
 - `legislatorRouter.js` path `"analysis/:legislatorId/..."` has no leading `/`, so it never matches. Use `/analysis/...` instead.
 - `_createTables()` has drifted from the live schema:
   - `leg_scores_policy_topic_couples` contains invalid SQL (`TEXT (Foregin key )`, missing comma).
@@ -162,7 +177,8 @@ Inserts use `INSERT OR IGNORE`, so **re-running a stage does not overwrite exist
 **Client**
 - `tsc` fails on about 20 unused imports or locals across `AnalysisPage`, `BillDetailsPage`, `HomePage`, `LegislatorDetailsPage`, `LegislatorsPage` and the services. This blocks `npm run build`.
 - `analysisService.getAllPolicyTopics` actually fetches bills, so it is misnamed.
-- `AnalysisPage` defaults `selectedYear` to the current year, but scores exist only for 2026.
+- **Many couple scores rest on very few votes.** 2026 has 16 of 41 couples at a median of under 5 votes per legislator, and several have exactly 1, so every score there is 0 or 100. The Analysis page hides couples under `MIN_MEDIAN_VOTES` (5) by default and shows the vote basis on each chart. Keep this in mind for any new score view.
 - `AnalysisPage` links use `<a href>`, which does a full reload. `react-router`'s `Link` would avoid that.
-- `PolicyTopicSection` hard-codes the "Reduce"/"Increase" labels. The real per-couple `leftLabel`/`rightLabel` values exist in `policyTopics.js` but aren't stored in the DB or sent to the client.
+- `getPolicyWeight` (impact × strength × confidence) lives in `server/database/policyWeight.js` and is shared by `createPolicyScore.js` and `policyOutcomes.js`. Change it in one place so legislator scores and outcome scores stay consistent. Changes only take effect after re-running scoring.
+- Couple end labels ("Restrict" / "Increase") are derived on the client by `shortenDirectionPair` in `utils/stringFormat.ts`. It matches the hand-written `leftLabel`/`rightLabel` in `policyTopics.js` for all 50 current couples, but new couples should be checked.
 - The root README describes a generic setup (ports 3000 and the concurrently script) and doesn't match the actual ports 3005 and 5173.

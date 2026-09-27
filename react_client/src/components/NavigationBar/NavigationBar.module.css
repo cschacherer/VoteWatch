@@ -15,8 +15,8 @@
     align-items: center;
     gap: 10px;
     margin: 0;
-    font-size: 1.85rem;
-    font-weight: 800;
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
     letter-spacing: -0.02em;
     color: #0f172a;
 }
@@ -26,8 +26,8 @@
 }
 
 .navigationBar__icon {
-    width: 42px;
-    height: 42px;
+    width: 50px;
+    height: 50px;
 }
 
 .navigationBar__collapse {
@@ -41,7 +41,7 @@
 :global(.navbar) .navigationBar__link {
     padding: 10px 20px !important;
     border-radius: 999px;
-    font-size: 1.2rem;
+    font-size: var(--font-size-lg);
     font-weight: 600;
     color: #1f2937 !important;
     transition:
@@ -76,7 +76,7 @@
     }
 
     :global(.navbar) .navigationBar__brand {
-        font-size: 1.35rem;
+        font-size: var(--font-size-lg);
     }
 
     .navigationBar__icon {

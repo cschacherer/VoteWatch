@@ -1,17 +1,20 @@
 import DistrictFinder from "../../components/DistrictFinder/DistrictFinder";
+import PageHeader from "../../components/PageHeader/PageHeader";
 import style from "./MapsPage.module.css";
 
-const HomePage = () => {
+const MapsPage = () => {
     return (
-        <div className={`page pageScroll`}>
-            <div className={`verticalStack defaultGap`}>
-                <div className="pageTitle">Mapping and Districting</div>
-                <div className={style.homePage__districtFinder}>
-                    <DistrictFinder></DistrictFinder>
-                </div>
+        <div className={`page pageScroll ${style.mapsPage}`}>
+            <div className={style.mapsPage__content}>
+                <PageHeader
+                    eyebrow="Utah State Legislature"
+                    title="Find Your Legislators"
+                    subtitle="Enter your home address to see your Utah House and Senate districts and who represents you."
+                />
+                <DistrictFinder />
             </div>
         </div>
     );
 };
 
-export default HomePage;
+export default MapsPage;

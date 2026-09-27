@@ -42,12 +42,12 @@ const normalizeHouse = (text?: string): string => {
     else return "";
 };
 
-const normalizeParty = (text?: string): string => {
+export const normalizeParty = (text?: string): string => {
     if (!text) return "";
     if (text.toUpperCase() == "R") {
         return "Republican";
     } else if (text.toUpperCase() == "D") return "Democrat";
     else if (text.toUpperCase() == "I") return "Independent";
-    else if (text.toUpperCase() == "F") return "Foward Party";
+    else if (text.toUpperCase() == "F") return "Forward Party";
     else return text;
 };

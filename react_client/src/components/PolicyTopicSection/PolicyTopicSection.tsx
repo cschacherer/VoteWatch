@@ -1,14 +1,18 @@
-import style from "./PolicyTopicSection.module.css";
-import type { LegislatorCouplePolicyScore } from "../../models/LegislatorCouplePolicyScore";
-import { ScoreSlider } from "../ScoreSlider/ScoreSlider";
-import { formatPolicyName } from "../../utils/stringFormat";
-import ExpandableSection from "../ExpandableSection/ExpandableSection";
 import { Link } from "react-router-dom";
+import type { LegislatorCouplePolicyScore } from "../../models/LegislatorCouplePolicyScore";
+import {
+    formatPolicyName,
+    shortenDirectionPair,
+} from "../../utils/stringFormat";
+import PolicyScoreBar from "../PolicyScoreBar/PolicyScoreBar";
+
+import style from "./PolicyTopicSection.module.css";
 
 type PolicyTopicSectionProps = {
     legislatorPolicyScores: LegislatorCouplePolicyScore[];
 };
 
+//one card per policy topic, with a score bar for each policy couple the legislator has votes on
 const PolicyTopicSection = ({
     legislatorPolicyScores,
 }: PolicyTopicSectionProps) => {
@@ -17,92 +21,75 @@ const PolicyTopicSection = ({
     ];
 
     return (
-        <div className="section verticalStack largeGap ">
+        <div className={style.topicGrid}>
             {distinctPolicyTopics.map((policyTopic) => {
+                //couples with no included votes have no meaningful score, so they're not shown
+                const scoredCouples = legislatorPolicyScores.filter(
+                    (x) =>
+                        x.policyTopic === policyTopic && x.allIncludedVotes > 0,
+                );
+                const unscoredCount =
+                    legislatorPolicyScores.filter(
+                        (x) => x.policyTopic === policyTopic,
+                    ).length - scoredCouples.length;
+
                 return (
-                    <div className="section largeGap" key={policyTopic}>
-                        <ExpandableSection
-                            header={formatPolicyName(policyTopic)}
-                            defaultExpanded={true}
-                        >
-                            <div className="largePadding horizontalRow largeGap">
-                                {legislatorPolicyScores
-                                    .filter(
-                                        (x) => x.policyTopic === policyTopic,
-                                    )
-                                    .map((legislatorPolicyScore, index) =>
-                                        legislatorPolicyScore.allIncludedVotes !=
-                                        0 ? (
-                                            <div
-                                                key={index}
-                                                className="section verticalStack largeGap topicHeight centerVertically justifySpaceBetween"
-                                            >
-                                                <div className="outlineThin largePadding largeGap verticalStack topicHeight centerVertically">
-                                                    <div className="centerText largeFont">
-                                                        <strong>
-                                                            {
-                                                                legislatorPolicyScore.policyNameLabel
-                                                            }
-                                                        </strong>
-                                                    </div>
-                                                    <div className="horizontalRow centerHorizontally largeFont">
-                                                        <div
-                                                            className={
-                                                                style.scoreRow__left
-                                                            }
-                                                        >
-                                                            {/* {
-                                                        legislatorPolicyScore.leftPolicyDirection
-                                                    } */}
-                                                            <strong>
-                                                                Reduce
-                                                            </strong>
-                                                        </div>
-                                                        <div
-                                                            className={
-                                                                style.scoreRow__center
-                                                            }
-                                                        >
-                                                            <ScoreSlider
-                                                                value={
-                                                                    legislatorPolicyScore.score
-                                                                }
-                                                                showValueLabel={
-                                                                    true
-                                                                }
-                                                            />
-                                                        </div>
-                                                        <div
-                                                            className={
-                                                                style.scoreRow__right
-                                                            }
-                                                        >
-                                                            <strong>
-                                                                Increase
-                                                            </strong>
-                                                            {/* {
-                                                        legislatorPolicyScore.rightPolicyDirection
-                                                    } */}
-                                                        </div>
-                                                    </div>
-                                                    <Link
-                                                        className="centerText link"
-                                                        to={`/analysis/${legislatorPolicyScore.legislatorId}/${legislatorPolicyScore.year}/${legislatorPolicyScore.policyCoupleName}`}
-                                                    >
-                                                        <strong>
-                                                            Votes Included:
-                                                        </strong>{" "}
-                                                        {
-                                                            legislatorPolicyScore.allIncludedVotes
-                                                        }
-                                                    </Link>
-                                                </div>
-                                            </div>
-                                        ) : null,
-                                    )}
-                            </div>
-                        </ExpandableSection>
-                    </div>
+                    <section className={style.topicCard} key={policyTopic}>
+                        <h2 className={style.topicCard__title}>
+                            {formatPolicyName(policyTopic)}
+                        </h2>
+
+                        {scoredCouples.length === 0 && (
+                            <p className={style.topicCard__empty}>
+                                No scored votes on this topic.
+                            </p>
+                        )}
+
+                        {scoredCouples.map((couple) => {
+                            const [leftLabel, rightLabel] =
+                                shortenDirectionPair(
+                                    couple.leftPolicyDirection,
+                                    couple.rightPolicyDirection,
+                                );
+
+                            return (
+                                <div
+                                    className={style.couple}
+                                    key={couple.policyCoupleName}
+                                >
+                                    <div className={style.couple__header}>
+                                        <span className={style.couple__name}>
+                                            {couple.policyNameLabel}
+                                        </span>
+                                        <Link
+                                            className={style.couple__votes}
+                                            to={`/analysis/${couple.legislatorId}/${couple.year}/${couple.policyCoupleName}`}
+                                            title="See every bill in this score"
+                                        >
+                                            {couple.allIncludedVotes}{" "}
+                                            {couple.allIncludedVotes === 1
+                                                ? "vote"
+                                                : "votes"}{" "}
+                                            →
+                                        </Link>
+                                    </div>
+                                    <PolicyScoreBar
+                                        score={Number(couple.score)}
+                                        leftLabel={leftLabel}
+                                        rightLabel={rightLabel}
+                                    />
+                                </div>
+                            );
+                        })}
+
+                        {scoredCouples.length > 0 && unscoredCount > 0 && (
+                            <p className={style.topicCard__note}>
+                                {unscoredCount} more{" "}
+                                {unscoredCount === 1 ? "policy" : "policies"}{" "}
+                                with no scored votes
+                            </p>
+                        )}
+                    </section>
                 );
             })}
         </div>

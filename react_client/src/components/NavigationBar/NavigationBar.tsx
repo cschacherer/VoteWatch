@@ -1,7 +1,7 @@
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import { Link, NavLink } from "react-router-dom";
-import BinocularIcon from "../../assets/icons-binoculars1.svg";
+import BinocularIcon from "../../assets/icons-binoculars2.svg";
 
 import style from "./NavigationBar.module.css";
 
@@ -26,7 +26,7 @@ const NavigationBar = () => {
                     src={BinocularIcon}
                     alt=""
                 />
-                Utah Vote Watch
+                UTAH VOTEWATCH
             </Navbar.Brand>
 
             <Navbar.Toggle

@@ -1,0 +1,20 @@
+.listPage {
+    background-color: #f8fafc;
+}
+
+.listPage__content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 12px 0 24px;
+}
+
+/* the table needs a definite height so its body can scroll - flex: none because GeneralTable's
+   own flex: 1 would otherwise override the height */
+.listPage__fillLast > :last-child {
+    flex: none;
+    height: 80vh;
+}
