@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import DataTable from "react-data-table-component";
+import { StyleSheetManager } from "styled-components";
+//a dependency of styled-components 6 - the filter its docs recommend for libraries built on v5
+import isPropValid from "@emotion/is-prop-valid";
 import type { DataTableColumn } from "../../models/DataTableUtils";
 
 import "../../styles/global.css";
@@ -59,6 +62,10 @@ type GeneralTableProps<T> = {
     //row property with a unique value, used as the React key - duplicate keys leave stale rows on screen
     keyField?: string;
 };
+
+//only real HTML attributes reach DOM elements - custom components still get every prop
+const forwardValidProps = (prop: string, target: unknown) =>
+    typeof target === "string" ? isPropValid(prop) : true;
 
 export default function GeneralTable<T>({
     data,
@@ -223,31 +230,36 @@ export default function GeneralTable<T>({
                 )}
             </div>
             <div className={style.generalTable__tableWrapper} ref={tableRef}>
-                <DataTable
-                    columns={columns}
-                    data={filteredData}
-                    keyField={keyField}
-                    defaultSortFieldId={defaultSortId}
-                    defaultSortAsc={defaultSortAscending}
-                    customStyles={customStyles}
-                    responsive
-                    highlightOnHover
-                    fixedHeader
-                    progressPending={loading}
-                    progressComponent={
-                        <div className={style.generalTable__message}>
-                            Loading...
-                        </div>
-                    }
-                    noDataComponent={
-                        <div className={style.generalTable__message}>
-                            No matching records
-                        </div>
-                    }
-                    pagination
-                    paginationPerPage={10}
-                    paginationRowsPerPageOptions={[10, 20, 50]}
-                />
+                {/* react-data-table-component 7 hands column settings (grow, minWidth, ...) to styled-components,
+                    and styled-components 6 no longer filters them - without this, React warns about
+                    unknown props on DOM elements */}
+                <StyleSheetManager shouldForwardProp={forwardValidProps}>
+                    <DataTable
+                        columns={columns}
+                        data={filteredData}
+                        keyField={keyField}
+                        defaultSortFieldId={defaultSortId}
+                        defaultSortAsc={defaultSortAscending}
+                        customStyles={customStyles}
+                        responsive
+                        highlightOnHover
+                        fixedHeader
+                        progressPending={loading}
+                        progressComponent={
+                            <div className={style.generalTable__message}>
+                                Loading...
+                            </div>
+                        }
+                        noDataComponent={
+                            <div className={style.generalTable__message}>
+                                No matching records
+                            </div>
+                        }
+                        pagination
+                        paginationPerPage={10}
+                        paginationRowsPerPageOptions={[10, 20, 50]}
+                    />
+                </StyleSheetManager>
             </div>
         </div>
     );

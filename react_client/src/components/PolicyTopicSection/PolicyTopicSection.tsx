@@ -12,12 +12,15 @@ type PolicyTopicSectionProps = {
     legislatorPolicyScores: LegislatorCouplePolicyScore[];
     //set when the scores are for one session, so the vote links show that session's bills
     session?: string | null;
+    //policy couple name -> party -> median score, shown on each bar when set
+    partyMediansByCouple?: Map<string, Map<string, number>>;
 };
 
 //one card per policy topic, with a score bar for each policy couple the legislator has votes on
 const PolicyTopicSection = ({
     legislatorPolicyScores,
     session,
+    partyMediansByCouple,
 }: PolicyTopicSectionProps) => {
     const distinctPolicyTopics = [
         ...new Set(legislatorPolicyScores.map((x) => x.policyTopic)),
@@ -80,6 +83,9 @@ const PolicyTopicSection = ({
                                         score={Number(couple.score)}
                                         leftLabel={leftLabel}
                                         rightLabel={rightLabel}
+                                        partyMedians={partyMediansByCouple?.get(
+                                            couple.policyCoupleName,
+                                        )}
                                     />
                                 </div>
                             );

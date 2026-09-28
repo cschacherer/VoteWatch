@@ -234,6 +234,13 @@ function countBy<T>(list: T[], getKey: (item: T) => string) {
     return counts;
 }
 
+//every session belongs to one year - "2025S2" -> 2025
+const sessionYear = (sessionId: string) => Number(sessionId.slice(0, 4));
+
+//"2025 Special Session 1" -> "Special Session 1" (the year is already picked above)
+const sessionLabel = (sessionId: string) =>
+    String(normalizeSessionId(sessionId)).replace(/^\d{4}\s*/, "");
+
 const formatPercent = (part: number, total: number) =>
     total ? `${Math.round((part / total) * 100)}%` : "—";
 
@@ -263,6 +270,7 @@ const LegislatorDetailsPage = () => {
         );
         setSearchParams(next, { replace: true });
     };
+    const [selectedYear, setSelectedYear] = useState<number | null>(null);
     const [selectedSession, setSelectedSession] = useState<string | null>(null);
     const [selectedVote, setSelectedVote] = useState<VoteValue | null>(null);
     const [selectedRole, setSelectedRole] = useState<SponsorRole | null>(null);
@@ -286,6 +294,7 @@ const LegislatorDetailsPage = () => {
     //how many filters are on - "primary only" counts because it changes which bills match. Vote and
     //role only count on their own tab, since each only filters that tab's table
     const activeFilterCount = [
+        selectedYear !== null,
         selectedSession !== null,
         view === "votes" ? selectedVote !== null : selectedRole !== null,
         selectedStatus !== null,
@@ -296,6 +305,7 @@ const LegislatorDetailsPage = () => {
     ].filter(Boolean).length;
 
     const clearAllFilters = () => {
+        setSelectedYear(null);
         setSelectedSession(null);
         setSelectedVote(null);
         setSelectedRole(null);
@@ -357,15 +367,20 @@ const LegislatorDetailsPage = () => {
     const getRole = (bill: Bill): SponsorRole =>
         bill.billSponsor === legislatorId ? "sponsor" : "floor";
 
+    const matchesYear = (sessionId: string) =>
+        selectedYear === null || sessionYear(sessionId) === selectedYear;
     const matchesSession = (sessionId: string) =>
         !selectedSession || sessionId === selectedSession;
+    //the year, then optionally one of that year's sessions
+    const matchesTime = (sessionId: string) =>
+        matchesYear(sessionId) && matchesSession(sessionId);
 
-    //session filter applies to the stats and both tabs
+    //the year and session filters apply to the stats and both tabs
     const sessionVotes = legislatorVotes.filter((v) =>
-        matchesSession(v.bill.sessionId),
+        matchesTime(v.bill.sessionId),
     );
     const sessionSponsored = sponsoredBills.filter((b) =>
-        matchesSession(b.sessionId),
+        matchesTime(b.sessionId),
     );
 
     const matchesStatus = (bill: Bill) =>
@@ -394,7 +409,7 @@ const LegislatorDetailsPage = () => {
 
     const tableVotes = legislatorVotes.filter(
         (v) =>
-            matchesSession(v.bill.sessionId) &&
+            matchesTime(v.bill.sessionId) &&
             matchesVote(v.vote) &&
             matchesStatus(v.bill) &&
             matchesSubject(v.bill) &&
@@ -402,7 +417,7 @@ const LegislatorDetailsPage = () => {
     );
     const tableSponsored = sponsoredBills.filter(
         (b) =>
-            matchesSession(b.sessionId) &&
+            matchesTime(b.sessionId) &&
             matchesRole(b) &&
             matchesStatus(b) &&
             matchesSubject(b) &&
@@ -425,18 +440,25 @@ const LegislatorDetailsPage = () => {
 
     //each filter's counts apply every OTHER filter but not its own, so each chip shows how many rows
     //clicking it would give
+    //skipping the year also skips the session, since a session only exists inside its year
     const rowsExcept = (
-        skip: "session" | "own" | "status" | "subject" | "policy",
+        skip: "year" | "session" | "own" | "status" | "subject" | "policy",
     ) =>
         viewRows.filter(
             (row) =>
-                (skip === "session" || matchesSession(row.bill.sessionId)) &&
+                (skip === "year" || matchesYear(row.bill.sessionId)) &&
+                (skip === "year" ||
+                    skip === "session" ||
+                    matchesSession(row.bill.sessionId)) &&
                 (skip === "own" || row.matchesOwnFilter) &&
                 (skip === "status" || matchesStatus(row.bill)) &&
                 (skip === "subject" || matchesSubject(row.bill)) &&
                 (skip === "policy" || matchesPolicy(row.bill)),
         );
 
+    const yearCounts = countBy(rowsExcept("year"), (row) =>
+        String(sessionYear(row.bill.sessionId)),
+    );
     const sessionCounts = countBy(
         rowsExcept("session"),
         (row) => row.bill.sessionId,
@@ -508,15 +530,33 @@ const LegislatorDetailsPage = () => {
         directionOptions.push(selectedDirection);
     }
 
-    //newest session first - sessions from both lists so the chips don't change when switching tabs
-    const sessionOptions = [
+    //newest first - from both lists so the chips don't change when switching tabs
+    const allSessions = [
         ...new Set([
             ...legislatorVotes.map((v) => v.bill.sessionId),
             ...sponsoredBills.map((b) => b.sessionId),
         ]),
     ].sort((a, b) => b.localeCompare(a));
+    const yearOptions = [...new Set(allSessions.map(sessionYear))];
+    //the selected year's sessions - the session row shows once a year is picked
+    const yearSessions =
+        selectedYear === null
+            ? []
+            : allSessions.filter((id) => sessionYear(id) === selectedYear);
 
-    //the stat cards describe the legislator, so they only follow the session filter
+    //picking a year clears the session, since the old session may belong to a different year
+    const selectYear = (year: number | null) => {
+        setSelectedYear(year);
+        setSelectedSession(null);
+    };
+
+    //clicking a session badge in a row selects its year and the session itself
+    const selectSessionFromRow = (sessionId: string) => {
+        setSelectedYear(sessionYear(sessionId));
+        setSelectedSession(sessionId);
+    };
+
+    //the stat cards describe the legislator, so they only follow the year and session filters
     const voteCounts = countBy(sessionVotes, (v) => v.vote);
 
     const yesCount = voteCounts.get(VoteValue.Yes) ?? 0;
@@ -526,7 +566,7 @@ const LegislatorDetailsPage = () => {
 
     const billClickHandlers: BillClickHandlers = {
         onSessionSelect: (sessionId) =>
-            filterFromRow(() => setSelectedSession(sessionId)),
+            filterFromRow(() => selectSessionFromRow(sessionId)),
         onStatusSelect: (status) =>
             filterFromRow(() => setSelectedStatus(status)),
         onSubjectSelect: (subject) =>
@@ -657,7 +697,9 @@ const LegislatorDetailsPage = () => {
                     year={scoresYear}
                     session={scoresSession}
                     //a new year clears the session, since the old one belongs to a different year
-                    onYearChange={(year) => updateParams({ year, session: null })}
+                    onYearChange={(year) =>
+                        updateParams({ year, session: null })
+                    }
                     onSessionChange={(session) => updateParams({ session })}
                 />
             )}
@@ -672,28 +714,52 @@ const LegislatorDetailsPage = () => {
                         />
                     }
                 >
-                    <FilterRow label="Session">
+                    <FilterRow label="Year">
                         <FilterChip
-                            label="All Sessions"
-                            active={!selectedSession}
-                            onClick={() => setSelectedSession(null)}
+                            label="All Years"
+                            active={selectedYear === null}
+                            onClick={() => selectYear(null)}
                         />
-                        {sessionOptions.map((session) => (
+                        {yearOptions.map((year) => (
                             <FilterChip
-                                key={session}
-                                label={String(normalizeSessionId(session))}
-                                count={sessionCounts.get(session) ?? 0}
-                                active={selectedSession === session}
+                                key={year}
+                                label={String(year)}
+                                count={yearCounts.get(String(year)) ?? 0}
+                                active={selectedYear === year}
                                 onClick={() =>
-                                    setSelectedSession(
-                                        selectedSession === session
-                                            ? null
-                                            : session,
+                                    selectYear(
+                                        selectedYear === year ? null : year,
                                     )
                                 }
                             />
                         ))}
                     </FilterRow>
+
+                    {/* once a year is picked, its sessions - even a year with only a General Session */}
+                    {selectedYear !== null && (
+                        <FilterRow label="Session">
+                            <FilterChip
+                                label={`All ${selectedYear}`}
+                                active={!selectedSession}
+                                onClick={() => setSelectedSession(null)}
+                            />
+                            {yearSessions.map((session) => (
+                                <FilterChip
+                                    key={session}
+                                    label={sessionLabel(session)}
+                                    count={sessionCounts.get(session) ?? 0}
+                                    active={selectedSession === session}
+                                    onClick={() =>
+                                        setSelectedSession(
+                                            selectedSession === session
+                                                ? null
+                                                : session,
+                                        )
+                                    }
+                                />
+                            ))}
+                        </FilterRow>
+                    )}
 
                     {view === "votes" ? (
                         <FilterRow label="Vote">
@@ -801,7 +867,9 @@ const LegislatorDetailsPage = () => {
                             <FilterChip
                                 label={`All ${formatPolicyName(selectedTopic)}`}
                                 active={!selectedDirection}
-                                onClick={() => selectPolicy(selectedTopic, null)}
+                                onClick={() =>
+                                    selectPolicy(selectedTopic, null)
+                                }
                             />
                             {directionOptions.map((direction) => (
                                 <FilterChip

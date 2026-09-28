@@ -21,8 +21,18 @@ export const endpointsAPI = {
     // ANALYSIS
     analysisYears: "analysis/years",
     legislatureOverview: (year: string) => `analysis/overview/${year}`,
-    policyCoupleOutcome: (year: string, policyCoupleName: string) =>
-        `analysis/outcomes/${year}/${policyCoupleName}`,
+    //every legislator's couple scores with party - for comparing one legislator with the party medians
+    legislatureCoupleScores: (year: string, session?: string | null) =>
+        `analysis/scores/${year}${sessionQuery(session)}`,
+    //session is optional on both - without it the outcomes cover the whole year
+    policyOutcomes: (year: string, session?: string | null) =>
+        `analysis/outcomes/${year}${sessionQuery(session)}`,
+    policyCoupleOutcome: (
+        year: string,
+        policyCoupleName: string,
+        session?: string | null,
+    ) =>
+        `analysis/outcomes/${year}/${policyCoupleName}${sessionQuery(session)}`,
     //session is optional - without it the scores are for the whole year
     analysisOfLegislator: (
         legislatorId: string,

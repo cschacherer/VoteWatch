@@ -114,6 +114,23 @@ export const createPolicyCoupleOutcome = (raw: any): PolicyCoupleOutcome => {
     };
 };
 
+//one legislator's score on one policy couple, with their party - only couples they have counted votes on
+export type PartyCoupleScore = {
+    legislatorId: string;
+    party: string;
+    policyCoupleName: string;
+    score: number;
+    includedVotes: number;
+};
+
+export const createPartyCoupleScore = (raw: any): PartyCoupleScore => ({
+    legislatorId: String(raw.legislator_id ?? ""),
+    party: normalizeParty(raw.party),
+    policyCoupleName: String(raw.policy_topic_couple_name ?? ""),
+    score: Number(raw.score ?? 50),
+    includedVotes: Number(raw.all_included_votes ?? 0),
+});
+
 export const createAnalysisYear = (raw: any): AnalysisYear => ({
     year: String(raw.year ?? ""),
     hasScores: Boolean(raw.has_scores),
@@ -160,25 +177,21 @@ export const createLegislatureOverview = (raw: any): LegislatureOverview => {
             }),
         ),
 
-        policyOutcomes: (raw.policy_outcomes ?? []).map(
-            (t: any): TopicOutcome => ({
-                policyTopic: String(t.policy_topic ?? ""),
-                bills: Number(t.bills ?? 0),
-                passed: Number(t.passed ?? 0),
-                couples: (t.couples ?? []).map((c: any): CoupleOutcome => ({
-                    policyCoupleName: String(c.policy_topic_couple_name ?? ""),
-                    policyNameLabel: String(c.name_label ?? ""),
-                    left: createDirectionOutcome(c.left),
-                    right: createDirectionOutcome(c.right),
-                    outcomeScore:
-                        c.outcome_score == null
-                            ? null
-                            : Number(c.outcome_score),
-                })),
-                otherDirections: (t.other_directions ?? []).map(
-                    createDirectionOutcome,
-                ),
-            }),
-        ),
+        policyOutcomes: (raw.policy_outcomes ?? []).map(createTopicOutcome),
     };
 };
+
+//one topic's outcomes - used by the overview and by the per-session outcomes route
+export const createTopicOutcome = (t: any): TopicOutcome => ({
+    policyTopic: String(t.policy_topic ?? ""),
+    bills: Number(t.bills ?? 0),
+    passed: Number(t.passed ?? 0),
+    couples: (t.couples ?? []).map((c: any): CoupleOutcome => ({
+        policyCoupleName: String(c.policy_topic_couple_name ?? ""),
+        policyNameLabel: String(c.name_label ?? ""),
+        left: createDirectionOutcome(c.left),
+        right: createDirectionOutcome(c.right),
+        outcomeScore: c.outcome_score == null ? null : Number(c.outcome_score),
+    })),
+    otherDirections: (t.other_directions ?? []).map(createDirectionOutcome),
+});

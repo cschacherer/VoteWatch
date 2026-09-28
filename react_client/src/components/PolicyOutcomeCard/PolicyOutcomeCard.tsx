@@ -13,9 +13,12 @@ import style from "./PolicyOutcomeCard.module.css";
 const PolicyOutcomeCard = ({
     outcome,
     year,
+    session,
 }: {
     outcome: TopicOutcome;
     year: string;
+    //set when the outcomes are for one session, so the bill links show that session's bills
+    session?: string | null;
 }) => {
     //couples with no bills on either side have nothing to show
     const couplesWithBills = outcome.couples.filter(
@@ -45,7 +48,7 @@ const PolicyOutcomeCard = ({
                             {countedBills > 0 && (
                                 <Link
                                     className={style.couple__link}
-                                    to={`/analysis/outcomes/${year}/${couple.policyCoupleName}`}
+                                    to={`/analysis/outcomes/${year}/${couple.policyCoupleName}${session ? `?session=${session}` : ""}`}
                                     title="See every passed bill behind this score"
                                 >
                                     {countedBills}{" "}

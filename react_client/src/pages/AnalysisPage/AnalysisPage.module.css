@@ -15,14 +15,6 @@
     padding: 12px 0 32px;
 }
 
-.controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
 /* SECTIONS */
 .section {
     display: flex;
@@ -34,14 +26,6 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-}
-
-.section__title {
-    margin: 0;
-    font-size: var(--font-size-xl);
-    font-weight: 800;
-    letter-spacing: -0.01em;
-    color: #0f172a;
 }
 
 .section__subtitle {
@@ -70,10 +54,12 @@
 }
 
 /* POLICY SPECTRUMS */
+/* topic cards hold several sliders each, so they get more room than the old one-policy cards */
 .spectrumGrid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+    align-items: start;
+    gap: 24px;
 }
 
 .legend {
@@ -91,11 +77,12 @@
     gap: 6px;
 }
 
+/* round, like the party dots on the sliders */
 .legend__swatch {
     display: inline-block;
     width: 12px;
     height: 12px;
-    border-radius: 3px;
+    border-radius: 50%;
 }
 
 .legend__rep {
@@ -104,10 +91,6 @@
 
 .legend__dem {
     background-color: #2563eb;
-}
-
-.legend__other {
-    background-color: #9ca3af;
 }
 
 /* POLICY OUTCOMES */

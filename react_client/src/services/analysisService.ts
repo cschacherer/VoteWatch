@@ -8,6 +8,10 @@ import {
     createAnalysisYear,
     createLegislatureOverview,
     createPolicyCoupleOutcome,
+    createTopicOutcome,
+    createPartyCoupleScore,
+    type TopicOutcome,
+    type PartyCoupleScore,
 } from "../models/LegislatureOverview";
 
 export const getAllPolicyTopics = async () => {
@@ -123,13 +127,45 @@ export const getLegislatureOverview = async (year: string) => {
 };
 
 //the passed bills behind one couple's legislature outcome score for a year
-export const getPolicyCoupleOutcome = async (
+//every legislator's couple scores for a year or one session - the party medians are worked out from these
+export const getLegislatureCoupleScores = async (
     year: string,
-    policyCoupleName: string,
+    session?: string | null,
 ) => {
     try {
         const response = await apiClient.get(
-            endpointsAPI.policyCoupleOutcome(year, policyCoupleName),
+            endpointsAPI.legislatureCoupleScores(year, session),
+        );
+        return response.data.map(createPartyCoupleScore) as PartyCoupleScore[];
+    } catch (error) {
+        let msg = getErrorMessage(error);
+        console.log(msg);
+        throw new Error(msg);
+    }
+};
+
+//what passed per topic for one session - the overview already has the whole year's outcomes
+export const getPolicyOutcomes = async (year: string, session: string) => {
+    try {
+        const response = await apiClient.get(
+            endpointsAPI.policyOutcomes(year, session),
+        );
+        return response.data.map(createTopicOutcome) as TopicOutcome[];
+    } catch (error) {
+        let msg = getErrorMessage(error);
+        console.log(msg);
+        throw new Error(msg);
+    }
+};
+
+export const getPolicyCoupleOutcome = async (
+    year: string,
+    policyCoupleName: string,
+    session?: string | null,
+) => {
+    try {
+        const response = await apiClient.get(
+            endpointsAPI.policyCoupleOutcome(year, policyCoupleName, session),
         );
         return createPolicyCoupleOutcome(response.data);
     } catch (error) {

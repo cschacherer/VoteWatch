@@ -287,17 +287,10 @@ const BillsPage = () => {
         setSelectedSession(null);
     };
 
-    //clicking a session badge in a row selects its year, plus the session itself when that year has
-    //more than one session (a one-session year hides the session row, so the session would be invisible)
+    //clicking a session badge in a row selects its year and the session itself
     const selectSessionFromRow = (sessionId: string) => {
-        const year = sessionYear(sessionId);
-        const sessionsInYear = new Set(
-            bills
-                .filter((bill) => sessionYear(bill.sessionId) === year)
-                .map((bill) => bill.sessionId),
-        );
-        setSelectedYear(year);
-        setSelectedSession(sessionsInYear.size > 1 ? sessionId : null);
+        setSelectedYear(sessionYear(sessionId));
+        setSelectedSession(sessionId);
     };
 
     //"2025 Special Session 1" -> "Special Session 1" (the year is already picked above)
@@ -465,8 +458,8 @@ const BillsPage = () => {
                     />
                 </FilterRow>
 
-                {/* only when the chosen year has more than one session - ie 2025's General + Special sessions */}
-                {selectedYear !== null && yearSessions.length > 1 && (
+                {/* once a year is picked, its sessions - even a year with only a General Session */}
+                {selectedYear !== null && (
                     <FilterRow label="Session">
                         <FilterChip
                             label={`All ${selectedYear}`}

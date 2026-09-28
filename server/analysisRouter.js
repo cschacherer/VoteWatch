@@ -19,13 +19,31 @@ analysisRouter.get("/years", async (req, res) => {
     }
 });
 
+//the Analysis page's outcome cards for a year, or one session with ?session=2025S1
+analysisRouter.get("/outcomes/:year", async (req, res) => {
+    try {
+        console.log("get legislature policy outcomes");
+
+        const outcomes = await _db.getPolicyOutcomes(
+            req.params.year,
+            req.query.session || null,
+        );
+        res.json(outcomes);
+    } catch (err) {
+        console.error("Error fetching policy outcomes:", err);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
 analysisRouter.get("/outcomes/:year/:policyCoupleName", async (req, res) => {
     try {
         console.log("get legislature outcome for a policy couple");
 
+        //optional ?session=2025S1 - only that session's passed bills
         const outcome = await _db.getPolicyCoupleOutcome(
             req.params.policyCoupleName,
             req.params.year,
+            req.query.session || null,
         );
         if (!outcome) {
             res.status(404).send("Policy couple not found");
@@ -34,6 +52,23 @@ analysisRouter.get("/outcomes/:year/:policyCoupleName", async (req, res) => {
         res.json(outcome);
     } catch (err) {
         console.error("Error fetching policy couple outcome:", err);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+//every legislator's couple scores with their party, for a year or one session with ?session=2025S1 -
+//used to compare one legislator with the party medians
+analysisRouter.get("/scores/:year", async (req, res) => {
+    try {
+        console.log("get every legislator's policy couple scores");
+
+        const scores = await _db.getLegislatureCoupleScores(
+            req.params.year,
+            req.query.session || null,
+        );
+        res.json(scores);
+    } catch (err) {
+        console.error("Error fetching legislature couple scores:", err);
         res.status(500).send("Internal Server Error");
     }
 });

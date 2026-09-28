@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getPolicyCoupleOutcome } from "../../services/analysisService";
 import type { PolicyCoupleOutcome } from "../../models/LegislatureOverview";
 import { type Bill, normalizeSessionId } from "../../models/Bill";
@@ -88,6 +88,7 @@ const OutcomeSideSection = ({
     direction: string;
     sideLabel: string;
     bills: Bill[];
+    //the year or session the outcome covers, ie "2025 Special Session 1"
     year: string;
 }) => (
     <section
@@ -136,12 +137,22 @@ const OutcomeDetailsPage = () => {
     if (!year) year = "";
     if (!policyCoupleName) policyCoupleName = "";
 
+    //optional ?session=2025S1 - the outcome for one session instead of the whole year
+    const [searchParams] = useSearchParams();
+    const session = searchParams.get("session");
+    //what the outcome covers, ie "2025" or "2025 Special Session 1"
+    const periodLabel = session ? String(normalizeSessionId(session)) : year;
+
     useEffect(() => {
         const fetchOutcome = async () => {
             setLoading(true);
             try {
                 setOutcome(
-                    await getPolicyCoupleOutcome(year, policyCoupleName),
+                    await getPolicyCoupleOutcome(
+                        year,
+                        policyCoupleName,
+                        session,
+                    ),
                 );
             } catch (error) {
                 console.log(error);
@@ -152,9 +163,10 @@ const OutcomeDetailsPage = () => {
         };
 
         fetchOutcome();
-    }, [year, policyCoupleName]);
+    }, [year, policyCoupleName, session]);
 
-    const backLink = `/analysis?year=${year}`;
+    //back to Legislature Trends on the same year and session
+    const backLink = `/analysis?year=${year}${session ? `&session=${session}` : ""}`;
 
     if (loading || !outcome) {
         return (
@@ -198,8 +210,8 @@ const OutcomeDetailsPage = () => {
                 {/* Overview */}
                 <section className={style.hero}>
                     <span className={style.hero__eyebrow}>
-                        {formatPolicyName(outcome.policyTopic)} · {year} · Whole
-                        Legislature
+                        {formatPolicyName(outcome.policyTopic)} · {periodLabel}{" "}
+                        · Whole Legislature
                     </span>
                     <h1 className={style.hero__title}>
                         {outcome.policyNameLabel}
@@ -208,7 +220,7 @@ const OutcomeDetailsPage = () => {
                     <div className={style.hero__score}>
                         {outcome.outcomeScore === null ? (
                             <p className={style.hero__note}>
-                                No bills on this policy passed in {year}.
+                                No bills on this policy passed in {periodLabel}.
                             </p>
                         ) : (
                             <PolicyScoreBar
@@ -226,11 +238,11 @@ const OutcomeDetailsPage = () => {
                     <StatCards stats={stats} />
 
                     <p className={style.hero__note}>
-                        The score is based on the bills below — every {year}{" "}
-                        bill on this policy that passed. Each counts toward its
-                        own direction, and higher-impact bills, and bills where
-                        this policy is the main focus, count more. Bills are
-                        sorted into policies by AI.
+                        The score is based on the bills below — every{" "}
+                        {periodLabel} bill on this policy that passed. Each
+                        counts toward its own direction, and higher-impact
+                        bills, and bills where this policy is the main focus,
+                        count more. Bills are sorted into policies by AI.
                     </p>
                 </section>
 
@@ -239,14 +251,14 @@ const OutcomeDetailsPage = () => {
                     direction={outcome.leftPolicyDirection}
                     sideLabel={leftLabel}
                     bills={leftBills}
-                    year={year}
+                    year={periodLabel}
                 />
                 <OutcomeSideSection
                     side="right"
                     direction={outcome.rightPolicyDirection}
                     sideLabel={rightLabel}
                     bills={rightBills}
-                    year={year}
+                    year={periodLabel}
                 />
             </div>
         </div>

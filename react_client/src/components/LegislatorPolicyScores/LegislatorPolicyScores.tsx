@@ -2,8 +2,14 @@ import { useState, useEffect } from "react";
 import {
     getAnalysisYears,
     getLegislatorAnalysisByYear,
+    getLegislatureCoupleScores,
 } from "../../services/analysisService";
-import type { AnalysisYear } from "../../models/LegislatureOverview";
+import type {
+    AnalysisYear,
+    PartyCoupleScore,
+} from "../../models/LegislatureOverview";
+import { partyMedians } from "../../utils/partyMedians";
+import ToggleSwitch from "../ToggleSwitch/ToggleSwitch";
 import type { LegislatorCouplePolicyScore } from "../../models/LegislatorCouplePolicyScore";
 import { formatPolicyName } from "../../utils/stringFormat";
 import { normalizeSessionId } from "../../models/Bill";
@@ -45,6 +51,10 @@ const LegislatorPolicyScores = ({
     >([]);
     const [loading, setLoading] = useState(true);
     const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+    //every legislator's scores for the same year/session, only loaded while the compare switch is on
+    const [compareParties, setCompareParties] = useState(false);
+    const [partyScores, setPartyScores] = useState<PartyCoupleScore[]>([]);
+    const [partyScoresLoading, setPartyScoresLoading] = useState(false);
 
     //newest first - every year with bills can be scored
     const yearOptions = years.map((y) => y.year);
@@ -97,6 +107,47 @@ const LegislatorPolicyScores = ({
         fetchScores();
     }, [legislatorId, selectedYear, selectedSession]);
 
+    useEffect(() => {
+        if (!compareParties || !selectedYear) return;
+
+        //ignore a response for a year or session that's no longer selected
+        let stale = false;
+        const fetchPartyScores = async () => {
+            setPartyScoresLoading(true);
+            try {
+                const scores = await getLegislatureCoupleScores(
+                    selectedYear,
+                    selectedSession,
+                );
+                if (!stale) setPartyScores(scores);
+            } catch (error) {
+                console.log(error);
+                if (!stale) setPartyScores([]);
+            } finally {
+                if (!stale) setPartyScoresLoading(false);
+            }
+        };
+
+        fetchPartyScores();
+        return () => {
+            stale = true;
+        };
+    }, [compareParties, selectedYear, selectedSession]);
+
+    //policy couple -> party -> median legislator score, the same medians Party Trends shows
+    const partyMediansByCouple = new Map<string, Map<string, number>>();
+    if (compareParties) {
+        const scoresByCouple = new Map<string, PartyCoupleScore[]>();
+        for (const score of partyScores) {
+            const list = scoresByCouple.get(score.policyCoupleName) ?? [];
+            list.push(score);
+            scoresByCouple.set(score.policyCoupleName, list);
+        }
+        for (const [coupleName, scores] of scoresByCouple) {
+            partyMediansByCouple.set(coupleName, partyMedians(scores));
+        }
+    }
+
     //only couples with votes have a meaningful score
     const topicCounts = new Map<string, number>();
     for (const couple of policyScores) {
@@ -148,8 +199,8 @@ const LegislatorPolicyScores = ({
                     ))}
                 </FilterRow>
 
-                {/* a one-session year has nothing to narrow down */}
-                {yearSessions.length > 1 && (
+                {/* the selected year's sessions - even a year with only a General Session */}
+                {yearSessions.length > 0 && (
                     <FilterRow label="Session">
                         <FilterChip
                             label={`All ${selectedYear}`}
@@ -188,6 +239,18 @@ const LegislatorPolicyScores = ({
                         searchPlaceholder="Search topics..."
                     />
                 </FilterRow>
+                <FilterRow label="Compare">
+                    <ToggleSwitch
+                        label={
+                            compareParties && partyScoresLoading
+                                ? "Show Democrat and Republican medians (loading...)"
+                                : "Show Democrat and Republican medians"
+                        }
+                        title="Adds each party's median legislator score to every bar, for the same year and session"
+                        checked={compareParties}
+                        onChange={setCompareParties}
+                    />
+                </FilterRow>
             </FilterCard>
 
             {loading ? (
@@ -201,6 +264,9 @@ const LegislatorPolicyScores = ({
                 <PolicyTopicSection
                     legislatorPolicyScores={shownScores}
                     session={selectedSession}
+                    partyMediansByCouple={
+                        compareParties ? partyMediansByCouple : undefined
+                    }
                 />
             )}
         </div>

@@ -71,3 +71,45 @@
     color: var(--color-policy-right);
     text-align: right;
 }
+
+/* PARTY MEDIANS - optional smaller dots on the track with R / D labels underneath */
+.scoreBar__party {
+    position: absolute;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    border: 2px solid white;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.35);
+    transform: translate(-50%, -50%);
+}
+
+.scoreBar__parties {
+    position: relative;
+    height: 20px;
+}
+
+.scoreBar__partiesStacked {
+    height: 42px;
+}
+
+.scoreBar__partyLabel {
+    position: absolute;
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    transform: translateX(-50%);
+}
+
+/* party colors - match Party Trends */
+.party__rep {
+    background-color: #dc2626;
+}
+
+.party__dem {
+    background-color: #2563eb;
+}

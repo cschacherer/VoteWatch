@@ -140,6 +140,7 @@
     border: 1px solid var(--color-table-border);
     border-left-width: 5px;
     border-radius: 12px;
+    text-decoration: none;
 }
 
 .rep__photo {
@@ -175,7 +176,7 @@
 
 .rep__name:hover {
     color: var(--color-accent);
-    text-decoration: underline;
+    /* text-decoration: underline; */
 }
 
 .rep__actions {

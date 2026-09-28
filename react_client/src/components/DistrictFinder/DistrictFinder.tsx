@@ -92,37 +92,21 @@ const RepresentativeCard = ({
     chamber: string;
     color: string;
 }) => (
-    <div className={style.rep} style={{ borderLeftColor: color }}>
-        <img className={style.rep__photo} src={legislator.image} alt="" />
-        <div className={style.rep__info}>
-            <span className={style.rep__chamber} style={{ color }}>
-                {chamber} · District {legislator.district}
-            </span>
-            <Link
-                className={style.rep__name}
-                to={`/legislators/${legislator.id}`}
-            >
+    <Link className={style.rep__name} to={`/legislators/${legislator.id}`}>
+        <div className={style.rep} style={{ borderLeftColor: color }}>
+            <img className={style.rep__photo} src={legislator.image} alt="" />
+            <div className={style.rep__info}>
+                <span className={style.rep__chamber} style={{ color }}>
+                    {chamber} · District {legislator.district}
+                </span>
+
                 {legislator.formatName}
-            </Link>
-            <div className={style.rep__actions}>
-                <Badge type="party" value={legislator.party} />
-                {legislator.email && (
-                    <a
-                        className={style.rep__link}
-                        href={`mailto:${legislator.email}`}
-                    >
-                        Email
-                    </a>
-                )}
-                <Link
-                    className={style.rep__link}
-                    to={`/legislators/${legislator.id}`}
-                >
-                    Profile →
-                </Link>
+                <div className={style.rep__actions}>
+                    <Badge type="party" value={legislator.party} />
+                </div>
             </div>
         </div>
-    </div>
+    </Link>
 );
 
 const DistrictFinder = () => {
