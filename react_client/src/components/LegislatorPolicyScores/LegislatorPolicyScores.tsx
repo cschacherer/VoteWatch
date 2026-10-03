@@ -4,9 +4,10 @@ import {
     getLegislatorAnalysisByYear,
     getLegislatureCoupleScores,
 } from "../../services/analysisService";
-import type {
-    AnalysisYear,
-    PartyCoupleScore,
+import {
+    ALL_YEARS,
+    type AnalysisYear,
+    type PartyCoupleScore,
 } from "../../models/LegislatureOverview";
 import { partyMedians } from "../../utils/partyMedians";
 import ToggleSwitch from "../ToggleSwitch/ToggleSwitch";
@@ -58,17 +59,25 @@ const LegislatorPolicyScores = ({
 
     //newest first - every year with bills can be scored
     const yearOptions = years.map((y) => y.year);
+    //"all" scores every year together - otherwise a listed year, falling back to the newest
     const selectedYear =
-        year && yearOptions.includes(year) ? year : yearOptions[0];
+        year === ALL_YEARS
+            ? ALL_YEARS
+            : year && yearOptions.includes(year)
+              ? year
+              : yearOptions[0];
+    const isAllYears = selectedYear === ALL_YEARS;
     const yearSessions =
         years.find((y) => y.year === selectedYear)?.sessions ?? [];
     //ignore a session that isn't in the selected year (ie an old link)
     const selectedSession =
         session && yearSessions.includes(session) ? session : null;
-    //what the scores cover, ie "2025" or "2025 Special Session 1"
-    const periodLabel = selectedSession
-        ? String(normalizeSessionId(selectedSession))
-        : selectedYear;
+    //what the scores cover, ie "2025", "2025 Special Session 1", or "all years"
+    const periodLabel = isAllYears
+        ? "all years"
+        : selectedSession
+          ? String(normalizeSessionId(selectedSession))
+          : selectedYear;
 
     useEffect(() => {
         const fetchYears = async () => {
@@ -186,6 +195,14 @@ const LegislatorPolicyScores = ({
 
             <FilterCard title="Filter analysis">
                 <FilterRow label="Year">
+                    <FilterChip
+                        label="All Years"
+                        active={isAllYears}
+                        onClick={() => {
+                            setSelectedTopic(null);
+                            onYearChange?.(ALL_YEARS);
+                        }}
+                    />
                     {yearOptions.map((y) => (
                         <FilterChip
                             key={y}

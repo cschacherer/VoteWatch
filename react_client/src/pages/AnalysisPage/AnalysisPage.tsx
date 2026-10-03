@@ -5,12 +5,13 @@ import {
     getLegislatureOverview,
     getPolicyOutcomes,
 } from "../../services/analysisService";
-import type {
-    AnalysisYear,
-    LegislatureOverview,
-    LegislatorCoupleScore,
-    LegislatorParticipation,
-    TopicOutcome,
+import {
+    ALL_YEARS,
+    type AnalysisYear,
+    type LegislatureOverview,
+    type LegislatorCoupleScore,
+    type LegislatorParticipation,
+    type TopicOutcome,
 } from "../../models/LegislatureOverview";
 import { normalizeSessionId } from "../../models/Bill";
 import { createDataTableColumn } from "../../models/DataTableUtils";
@@ -175,12 +176,18 @@ const AnalysisPage = () => {
     >(null);
     const [outcomesLoading, setOutcomesLoading] = useState(false);
 
+    //"all" covers every year together - otherwise a listed year, falling back to the newest
     const selectedYear =
-        yearParam && years.some((y) => y.year === yearParam)
-            ? yearParam
-            : years[0]?.year;
+        yearParam === ALL_YEARS
+            ? ALL_YEARS
+            : yearParam && years.some((y) => y.year === yearParam)
+              ? yearParam
+              : years[0]?.year;
+    const isAllYears = selectedYear === ALL_YEARS;
+    //all years has no stored scores, but the server scores it live
     const yearHasScores =
-        years.find((y) => y.year === selectedYear)?.hasScores ?? false;
+        isAllYears ||
+        (years.find((y) => y.year === selectedYear)?.hasScores ?? false);
 
     //the session only narrows "What the legislature passed" - the rest of the page is the whole year
     const yearSessions =
@@ -191,9 +198,15 @@ const AnalysisPage = () => {
             ? sessionParam
             : null;
     //what the outcomes cover, ie "2025" or "2025 Special Session 1"
-    const outcomePeriodLabel = outcomeSession
-        ? String(normalizeSessionId(outcomeSession))
-        : selectedYear;
+    const outcomePeriodLabel = isAllYears
+        ? "all years"
+        : outcomeSession
+          ? String(normalizeSessionId(outcomeSession))
+          : selectedYear;
+    //"2026 bills" / "bills from every year" - for sentences about the bills a view covers
+    const periodBills = isAllYears
+        ? "bills from every year"
+        : `${outcomePeriodLabel} bills`;
 
     //a new year clears the session, since the old one belongs to a different year
     const selectYear = (year: string) => {
@@ -382,6 +395,11 @@ const AnalysisPage = () => {
     //the page-wide year - every tab's filter card has this row, since each tab is its own view
     const yearRow = (
         <FilterRow label="Year">
+            <FilterChip
+                label="All Years"
+                active={isAllYears}
+                onClick={() => selectYear(ALL_YEARS)}
+            />
             {years.map((y) => (
                 <FilterChip
                     key={y.year}
@@ -424,9 +442,9 @@ const AnalysisPage = () => {
                         <div className={style.section__header}>
                             <p className={style.section__subtitle}>
                                 The legislature's score on each policy, based on
-                                the {outcomePeriodLabel} bills that passed: 0
-                                means everything that passed moved toward the
-                                left position, 100 toward the right, on the same
+                                the {periodBills} that passed: 0 means
+                                everything that passed moved toward the left
+                                position, 100 toward the right, on the same
                                 scale as legislator scores. Higher-impact bills,
                                 and bills where the policy is the main focus,
                                 count more. Bills are sorted into policies by
@@ -691,7 +709,10 @@ const AnalysisPage = () => {
                         <div className={style.section__header}>
                             <p className={style.section__subtitle}>
                                 Floor votes each legislator cast or missed on{" "}
-                                {selectedYear} bills. Click a column to sort.
+                                {isAllYears
+                                    ? "bills from every year"
+                                    : `${selectedYear} bills`}
+                                . Click a column to sort.
                             </p>
                         </div>
                         <FilterCard title="Filter legislators">

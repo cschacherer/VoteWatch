@@ -1,11 +1,25 @@
 import { getErrorMessage } from "./errorHandling";
-import { createAddress } from "../models/MapUtils";
+import { createAddress, type Address } from "../models/MapUtils";
 
 const UGRC_API_KEY = import.meta.env.VITE_UGRC_APIKEY;
 const GEOAPIFY_API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY;
 
-export const searchAddresses = async (streetName: string, zipCode: string) => {
+//address suggestions already looked up this visit, by "street|zip" - Geoapify can take several seconds
+//to answer, so going back to text that was already typed (ie backspacing) shouldn't wait again
+const addressSearchCache = new Map<string, Address[]>();
+
+//signal cancels the request when the text changes before Geoapify answers, so slow older lookups
+//don't pile up behind the newest one - an aborted lookup throws an AbortError for the caller to ignore
+export const searchAddresses = async (
+    streetName: string,
+    zipCode: string,
+    signal?: AbortSignal,
+): Promise<Address[]> => {
     if (!streetName || streetName.length < 3) return [];
+
+    const cacheKey = `${streetName.trim().toLowerCase()}|${zipCode.trim()}`;
+    const cached = addressSearchCache.get(cacheKey);
+    if (cached) return cached;
 
     // Utah bounding box:
     // Geoapify rect format is: lon1,lat1,lon2,lat2
@@ -23,9 +37,18 @@ export const searchAddresses = async (streetName: string, zipCode: string) => {
         apiKey: GEOAPIFY_API_KEY ?? "",
     });
 
-    const res = await fetch(
-        `https://api.geoapify.com/v1/geocode/autocomplete?${params.toString()}`,
-    );
+    let res: Response;
+    try {
+        res = await fetch(
+            `https://api.geoapify.com/v1/geocode/autocomplete?${params.toString()}`,
+            { signal },
+        );
+    } catch (error) {
+        //a cancelled lookup isn't a failure - let the caller see it and ignore it
+        if (signal?.aborted) throw error;
+        console.error("Geoapify address search failed", error);
+        return [];
+    }
 
     if (!res.ok) {
         console.error("Geoapify address search failed", await res.text());
@@ -33,7 +56,10 @@ export const searchAddresses = async (streetName: string, zipCode: string) => {
     }
 
     const data = await res.json();
-    const addressArray = data.results.map((x: any) => createAddress(x));
+    const addressArray: Address[] = data.results.map((x: any) =>
+        createAddress(x),
+    );
+    addressSearchCache.set(cacheKey, addressArray);
     return addressArray;
 
     // //nominatim - don't need an api key

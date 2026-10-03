@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { getPolicyCoupleOutcome } from "../../services/analysisService";
-import type { PolicyCoupleOutcome } from "../../models/LegislatureOverview";
+import {
+    ALL_YEARS,
+    type PolicyCoupleOutcome,
+} from "../../models/LegislatureOverview";
 import { type Bill, normalizeSessionId } from "../../models/Bill";
 import { createDataTableColumn, formatDate } from "../../models/DataTableUtils";
 import {
@@ -141,7 +144,11 @@ const OutcomeDetailsPage = () => {
     const [searchParams] = useSearchParams();
     const session = searchParams.get("session");
     //what the outcome covers, ie "2025" or "2025 Special Session 1"
-    const periodLabel = session ? String(normalizeSessionId(session)) : year;
+    const periodLabel = session
+        ? String(normalizeSessionId(session))
+        : year === ALL_YEARS
+          ? "all years"
+          : year;
 
     useEffect(() => {
         const fetchOutcome = async () => {
@@ -238,11 +245,12 @@ const OutcomeDetailsPage = () => {
                     <StatCards stats={stats} />
 
                     <p className={style.hero__note}>
-                        The score is based on the bills below — every{" "}
-                        {periodLabel} bill on this policy that passed. Each
-                        counts toward its own direction, and higher-impact
-                        bills, and bills where this policy is the main focus,
-                        count more. Bills are sorted into policies by AI.
+                        The score is based on the bills below — every
+                        {year === ALL_YEARS ? "" : ` ${periodLabel}`} bill on
+                        this policy that passed. Each counts toward its own
+                        direction, and higher-impact bills, and bills where this
+                        policy is the main focus, count more. Bills are sorted
+                        into policies by AI.
                     </p>
                 </section>
 

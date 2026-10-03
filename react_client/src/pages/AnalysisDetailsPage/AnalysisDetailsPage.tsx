@@ -9,6 +9,7 @@ import type { Legislator } from "../../models/Legislator";
 import type { LegislatorVote } from "../../models/LegislatorVote";
 import type { LegislatorCouplePolicyScore } from "../../models/LegislatorCouplePolicyScore";
 import { normalizeSessionId } from "../../models/Bill";
+import { ALL_YEARS } from "../../models/LegislatureOverview";
 import { VoteValue } from "../../models/Vote";
 import { createDataTableColumn } from "../../models/DataTableUtils";
 import {
@@ -251,7 +252,11 @@ const AnalysisDetailsPage = () => {
     const [searchParams] = useSearchParams();
     const session = searchParams.get("session");
     //what the score covers, ie "2025" or "2025 Special Session 1"
-    const periodLabel = session ? String(normalizeSessionId(session)) : year;
+    const periodLabel = session
+        ? String(normalizeSessionId(session))
+        : year === ALL_YEARS
+          ? "all years"
+          : year;
 
     useEffect(() => {
         const fetchAll = async () => {

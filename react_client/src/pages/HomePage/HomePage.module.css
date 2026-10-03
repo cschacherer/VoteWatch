@@ -128,7 +128,7 @@
 
 .button__secondary {
     background-color: rgba(255, 255, 255, 0.22);
-        border: 1px solid rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.4);
     color: white;
 }
 
@@ -182,79 +182,175 @@
     margin: 0;
 }
 
-/* FEATURE CARDS */
+/* FEATURES - one large section per part of the site, picture and text side by side */
 .features {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
 }
 
-.card {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+.features__header {
+    max-width: 720px;
+}
+
+.feature {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 48px;
+    padding: 40px;
     border: 1px solid var(--home-border);
     border-radius: var(--home-radius);
     background-color: white;
-    color: inherit;
-    text-decoration: none;
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease;
 }
 
-.card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 16px 32px -12px rgba(15, 23, 42, 0.25);
-    color: inherit;
+/* every other section puts the picture on the right */
+.feature__reversed .feature__picture {
+    order: 2;
 }
 
-.card__imageWrapper {
-    height: 200px;
-    overflow: hidden;
+.feature__picture {
+    padding: 20px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--color-accent-bg), #f8fafc);
 }
 
-.card__image {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-}
-
-.card:hover .card__image {
-    transform: scale(1.05);
-}
-
-.card__body {
+.feature__body {
     display: flex;
-    flex: 1;
     flex-direction: column;
-    gap: 10px;
-    padding: 24px;
+    gap: 14px;
 }
 
-.card__title {
-    margin: 0;
-    font-size: var(--font-size-lg);
+.feature__eyebrow {
+    font-size: var(--font-size-sm);
     font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--home-accent);
+}
+
+.feature__title {
+    margin: 0;
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    line-height: 1.25;
     color: #0f172a;
 }
 
-.card__description {
-    flex: 1;
+.feature__description {
     margin: 0;
     line-height: 1.6;
     color: var(--home-text-muted);
 }
 
-.card__cta {
+/* checklist of what the page can do */
+.feature__points {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.feature__points li {
+    position: relative;
+    padding-left: 30px;
+    line-height: 1.5;
+    color: #1f2937;
+}
+
+.feature__points li::before {
+    content: "✓";
+    position: absolute;
+    top: 1px;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--color-accent-bg);
+    font-size: var(--font-size-xs);
+    font-weight: 800;
+    color: var(--home-accent);
+}
+
+.feature__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 6px;
+}
+
+/* two ways into the same page, each with its own summary and link */
+.feature__paths {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.path {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 18px;
+    border: 1px solid var(--home-border);
+    border-radius: 12px;
+    background-color: #f8fafc;
+}
+
+.path__title {
+    margin: 0;
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.path__description {
+    flex: 1;
+    margin: 0;
+    font-size: var(--font-size-sm);
+    line-height: 1.55;
+    color: var(--home-text-muted);
+}
+
+.path__link {
     font-weight: 600;
     color: var(--home-accent);
+    text-decoration: none;
+}
+
+.path__link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 960px) {
+    .feature {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding: 28px;
+    }
+
+    /* stacked, the picture always comes first */
+    .feature__reversed .feature__picture {
+        order: 0;
+    }
+}
+
+@media (max-width: 560px) {
+    .feature {
+        padding: 20px;
+    }
+
+    .feature__paths {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* PHONE / TABLET */

@@ -115,6 +115,11 @@ const DistrictFinder = () => {
     const [zipCode, setZipCode] = useState<string>("");
 
     const [suggestions, setSuggestions] = useState<Address[]>([]);
+    //shown as the first row of the suggestions list - Geoapify can take several seconds to answer,
+    //so the list says it's working instead of looking broken
+    const [addressStatus, setAddressStatus] = useState<
+        "idle" | "searching" | "empty"
+    >("idle");
     const [coords, setCoords] = useState<LatLngTuple | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -126,31 +131,56 @@ const DistrictFinder = () => {
 
     const streetInputRef = useRef<HTMLInputElement>(null);
 
+    //hides the suggestions list and its status row
+    const closeSuggestions = () => {
+        setSuggestions([]);
+        setAddressStatus("idle");
+    };
+
     // AUTOCOMPLETE (debounced)
     useEffect(() => {
-        //set when the street changes again before this lookup finishes, so a slow, older lookup
-        //can't overwrite newer suggestions
-        let stale = false;
+        //a chosen suggestion (or Escape) needs no lookup, and Geoapify needs at least 3 characters
+        if (streetName === selectedStreetName || streetName.trim().length < 3) {
+            closeSuggestions();
+            return;
+        }
+
+        //cancels this lookup when the street changes again, so a slow, older lookup can't overwrite
+        //newer suggestions or hold up the newest one
+        const controller = new AbortController();
 
         const timeout = setTimeout(async () => {
-            if (streetName === selectedStreetName) {
-                setSuggestions([]);
-                return;
-            }
+            //don't pop the list open if the user has already left the street box
+            if (document.activeElement !== streetInputRef.current) return;
 
-            const results = await searchAddresses(streetName, zipCode);
+            setAddressStatus("searching");
+            try {
+                const results = await searchAddresses(
+                    streetName,
+                    zipCode,
+                    controller.signal,
+                );
 
-            //the lookup can take a few seconds - don't pop the list open if the user has since moved
-            //on (left the street box or pressed Escape), or it covers the zip code field
-            if (stale || document.activeElement !== streetInputRef.current) {
-                return;
+                //the lookup can take a few seconds - don't pop the list open if the user has since
+                //moved on (left the street box or pressed Escape), or it covers the zip code field
+                if (document.activeElement !== streetInputRef.current) {
+                    closeSuggestions();
+                    return;
+                }
+                setSuggestions(results);
+                setAddressStatus(results.length > 0 ? "idle" : "empty");
+            } catch (error) {
+                //an aborted lookup was replaced by a newer one, which owns the status now
+                if (!controller.signal.aborted) {
+                    console.log(error);
+                    setAddressStatus("idle");
+                }
             }
-            setSuggestions(results);
-        }, 200);
+        }, 350);
 
         return () => {
-            stale = true;
             clearTimeout(timeout);
+            controller.abort();
         };
     }, [streetName, selectedStreetName]);
 
@@ -162,7 +192,7 @@ const DistrictFinder = () => {
 
         setLoading(true);
         setError("");
-        setSuggestions([]);
+        closeSuggestions();
 
         try {
             const { lat, lng } = await getCoordinatesFromAddress(
@@ -227,18 +257,32 @@ const DistrictFinder = () => {
                                     setSelectedStreetName("");
                                 }}
                                 onBlur={() => {
-                                    setTimeout(() => setSuggestions([]), 150);
+                                    setTimeout(closeSuggestions, 150);
                                 }}
                                 onKeyDown={(e) => {
                                     //marking the current text as chosen stops the pending lookup from reopening the list
                                     if (e.key === "Escape") {
-                                        setSuggestions([]);
+                                        closeSuggestions();
                                         setSelectedStreetName(streetName);
                                     }
                                 }}
                             />
-                            {suggestions.length > 0 && (
+                            {(suggestions.length > 0 ||
+                                addressStatus !== "idle") && (
                                 <ul className={style.suggestions}>
+                                    {/* while a newer lookup runs, the older suggestions stay below this row */}
+                                    {addressStatus !== "idle" && (
+                                        <li
+                                            className={
+                                                style.suggestions__status
+                                            }
+                                            aria-live="polite"
+                                        >
+                                            {addressStatus === "searching"
+                                                ? "Searching addresses..."
+                                                : "No matching addresses - check the street, or add a zip code"}
+                                        </li>
+                                    )}
                                     {suggestions.map((s, i) => (
                                         <li
                                             key={i}
@@ -250,7 +294,7 @@ const DistrictFinder = () => {
                                                     s.displayStreetName,
                                                 );
                                                 setZipCode(s.zipCode);
-                                                setSuggestions([]);
+                                                closeSuggestions();
                                             }}
                                         >
                                             {s.displayFull}
@@ -269,7 +313,7 @@ const DistrictFinder = () => {
                             placeholder="84103"
                             inputMode="numeric"
                             //the street suggestions list covers this field, so close it when it gets focus
-                            onFocus={() => setSuggestions([])}
+                            onFocus={closeSuggestions}
                             onChange={(e) => setZipCode(e.target.value)}
                         />
                     </label>

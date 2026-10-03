@@ -1,6 +1,10 @@
 import { normalizeParty } from "./Legislator";
 import { type Bill, createBillFromVote } from "./Bill";
 
+//the year value for "every year" in the legislator score routes - the server scores it live, since
+//stored scores are per year
+export const ALL_YEARS = "all";
+
 export type AnalysisYear = {
     year: string;
     //true when scores for this year are stored - years without them are scored live for a legislator

@@ -95,6 +95,17 @@
     background-color: #f1f5f9;
 }
 
+/* "Searching addresses..." / "No matching addresses" - a note, not a choice */
+.suggestions li.suggestions__status {
+    font-style: italic;
+    color: #6b7280;
+    cursor: default;
+}
+
+.suggestions li.suggestions__status:hover {
+    background-color: transparent;
+}
+
 .error {
     margin: 0;
     padding: 10px 12px;

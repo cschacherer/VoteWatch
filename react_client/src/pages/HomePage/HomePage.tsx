@@ -1,8 +1,6 @@
 import { Link } from "react-router-dom";
 import style from "./HomePage.module.css";
-import landscape_pic from "../../assets/landscape-card.webp";
-import senate_bill_pic from "../../assets/senatebill-card.webp";
-import legislature_pic from "../../assets/legislature-card.webp";
+import FeatureIllustration from "../../components/FeatureIllustration/FeatureIllustration";
 
 //hero image lives in public/ (not imported) so index.html can preload it by a fixed URL before any JS
 //runs - keep these paths in sync with the preload in index.html
@@ -11,27 +9,69 @@ const HERO_SRCSET =
     "/images/capitol-hero-800.webp 800w, /images/capitol-hero-1600.webp 1600w";
 const HERO_SIZES = "(max-width: 1240px) 100vw, 1200px";
 
-const featureCards = [
+type FeatureLink = { label: string; to: string };
+
+type Feature = {
+    eyebrow: string;
+    title: string;
+    description: string;
+    illustration: "map" | "bills" | "trends";
+    //what you can do there - a checklist
+    points?: string[];
+    //two ways in, each with its own summary and link (ie the whole legislature vs. one legislator)
+    paths?: { title: string; description: string; link: FeatureLink }[];
+    links?: FeatureLink[];
+};
+
+//one big section per part of the site - what it does, with a picture of it
+const features: Feature[] = [
     {
-        title: "Find Your Representatives",
+        eyebrow: "Your districts",
+        title: "Find who represents you",
         description:
-            "Enter your address to see your Utah House and Senate districts and who represents you.",
-        image: landscape_pic,
-        link: "/maps",
+            "Type your address to see your Utah House and Senate districts on the map, along with the two legislators who represent you.",
+        illustration: "map",
+        points: [
+            "Address suggestions as you type",
+            "Your House and Senate districts outlined on the map",
+            "One click to each legislator's full voting record",
+        ],
+        links: [{ label: "Find your legislators", to: "/maps" }],
     },
     {
-        title: "See Legislative Bills",
+        eyebrow: "Bills",
+        title: "Browse, filter, and sort every bill",
         description:
-            "Browse every bill with plain-English summaries, policy topics, and how each legislator voted.",
-        image: senate_bill_pic,
-        link: "/bills",
+            "Every bill comes with a plain-English summary, and each one is sorted into policy topics so you can go straight to the issues you care about.",
+        illustration: "bills",
+        points: [
+            "Filter by year and session, passed or failed, and subject",
+            "Narrow to a policy topic like Education or Housing, then the direction a bill pushes it",
+            "Search by bill number, title, or summary",
+            "Click any topic, subject, or session in the table to filter by it",
+        ],
+        links: [{ label: "Browse bills", to: "/bills" }],
     },
     {
-        title: "Analyze Legislators' Votes",
+        eyebrow: "Voting analysis",
+        title: "See the big picture, or one legislator's record",
         description:
-            "See where each legislator lands on key policy issues, based on the bills they voted for and against.",
-        image: legislature_pic,
-        link: "/analysis",
+            "Every vote is scored on policy issues, from one side of the issue to the other, so you can analyze the legislature two ways.",
+        illustration: "trends",
+        paths: [
+            {
+                title: "The whole legislature",
+                description:
+                    "What passed on each policy, where Republicans and Democrats land, and who showed up to vote — for one year or all of them.",
+                link: { label: "Legislature trends", to: "/analysis" },
+            },
+            {
+                title: "One legislator",
+                description:
+                    "Their voting history, the bills they sponsored, and a score on every policy, side by side with each party's median.",
+                link: { label: "Find a legislator", to: "/legislators" },
+            },
+        ],
     },
 ];
 
@@ -111,36 +151,94 @@ const HomePage = () => {
                     </div>
                 </section>
 
-                {/* Feature Cards */}
+                {/* Features - one big section per part of the site, picture and text alternating sides */}
                 <section className={style.features}>
-                    {featureCards.map((card) => (
-                        <Link
-                            key={card.link}
-                            className={style.card}
-                            to={card.link}
+                    <div className={style.features__header}>
+                        <span className={style.sectionEyebrow}>
+                            What you can do
+                        </span>
+                        <h2 className={style.sectionTitle}>
+                            Everything the legislature does, in one place
+                        </h2>
+                    </div>
+
+                    {features.map((feature, index) => (
+                        <article
+                            key={feature.title}
+                            className={`${style.feature} ${index % 2 === 1 ? style.feature__reversed : ""}`}
                         >
-                            <div className={style.card__imageWrapper}>
-                                <img
-                                    className={style.card__image}
-                                    src={card.image}
-                                    alt=""
-                                    //below the fold - don't compete with the hero for bandwidth
-                                    loading="lazy"
-                                    decoding="async"
+                            <div className={style.feature__picture}>
+                                <FeatureIllustration
+                                    variant={feature.illustration}
                                 />
                             </div>
-                            <div className={style.card__body}>
-                                <h3 className={style.card__title}>
-                                    {card.title}
-                                </h3>
-                                <p className={style.card__description}>
-                                    {card.description}
-                                </p>
-                                <span className={style.card__cta}>
-                                    Explore →
+
+                            <div className={style.feature__body}>
+                                <span className={style.feature__eyebrow}>
+                                    {feature.eyebrow}
                                 </span>
+                                <h3 className={style.feature__title}>
+                                    {feature.title}
+                                </h3>
+                                <p className={style.feature__description}>
+                                    {feature.description}
+                                </p>
+
+                                {feature.points && (
+                                    <ul className={style.feature__points}>
+                                        {feature.points.map((point) => (
+                                            <li key={point}>{point}</li>
+                                        ))}
+                                    </ul>
+                                )}
+
+                                {feature.paths && (
+                                    <div className={style.feature__paths}>
+                                        {feature.paths.map((path) => (
+                                            <div
+                                                key={path.title}
+                                                className={style.path}
+                                            >
+                                                <h4
+                                                    className={
+                                                        style.path__title
+                                                    }
+                                                >
+                                                    {path.title}
+                                                </h4>
+                                                <p
+                                                    className={
+                                                        style.path__description
+                                                    }
+                                                >
+                                                    {path.description}
+                                                </p>
+                                                <Link
+                                                    className={style.path__link}
+                                                    to={path.link.to}
+                                                >
+                                                    {path.link.label} →
+                                                </Link>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {feature.links && (
+                                    <div className={style.feature__links}>
+                                        {feature.links.map((link) => (
+                                            <Link
+                                                key={link.to}
+                                                className={`${style.button} ${style.button__primary}`}
+                                                to={link.to}
+                                            >
+                                                {link.label} →
+                                            </Link>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                        </Link>
+                        </article>
                     ))}
                 </section>
             </div>

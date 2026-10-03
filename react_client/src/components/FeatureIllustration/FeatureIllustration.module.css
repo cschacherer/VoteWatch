@@ -1,0 +1,6 @@
+/* fills its box and keeps the 3:2 drawing proportions */
+.illustration {
+    display: block;
+    width: 100%;
+    height: auto;
+}

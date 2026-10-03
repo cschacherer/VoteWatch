@@ -1,5 +1,5 @@
 import express from "express";
-import Database from "./database/database.js";
+import Database, { ALL_YEARS } from "./database/database.js";
 
 const analysisRouter = express.Router();
 
@@ -96,7 +96,8 @@ analysisRouter.get("/:legislatorId/:year", async (req, res) => {
         //optional ?session=2026GS - scores are only stored per year, so a session is computed live
         const session = req.query.session || null;
 
-        if (!session) {
+        //stored scores are per year, so "all" years (like a session) is computed live
+        if (!session && year !== ALL_YEARS) {
             const storedScores =
                 await _db.getPolicyCouplesFromLegislatorAndYear(
                     legislatorId,

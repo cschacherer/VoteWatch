@@ -10,6 +10,10 @@ import {
 import { getPolicyWeight } from "./policyWeight.js";
 import { buildLegislatorCoupleScores } from "./legislatorCoupleScores.js";
 
+//the year value that means every year - the live score queries skip their year filter for it.
+//Stored scores are per year, so "all" is always computed live
+export const ALL_YEARS = "all";
+
 //a bill's policy rows as a JSON array string - use in a SELECT that has the bills table, then
 //JSON.parse the result with parsePolicies. A subquery (not a join) so bills keep one row each,
 //and it gives "[]" for bills without policies
@@ -1095,7 +1099,7 @@ class Database {
         JOIN bills
             ON bills.id = policy.bill_id
             AND bills.session_id = policy.session_id
-        WHERE bills.year = ?
+        WHERE (? = '${ALL_YEARS}' OR bills.year = ?)
           AND (? IS NULL OR bills.session_id = ?)
           AND bills.passed = 'true'
           AND policy.policy_topic = ?
@@ -1103,6 +1107,7 @@ class Database {
         ORDER BY bills.session_id DESC, bills.id
     `;
         const bills = await this._getAllRows(sqlCommand, [
+            year,
             year,
             sessionId,
             sessionId,
@@ -1159,6 +1164,7 @@ class Database {
 
     //legislature-wide numbers for the Analysis page - every legislator's couple scores, each legislator's
     //vote counts, and what passed per policy topic and direction (see policyOutcomes.js), all for one year
+    //year can be ALL_YEARS for every year together
     async getLegislatureOverview(year) {
         const summarySql = `
         SELECT
@@ -1169,7 +1175,7 @@ class Database {
         JOIN bills
             ON bills.id = votes.bill_id
             AND bills.session_id = votes.session_id
-        WHERE bills.year = ?
+        WHERE (? = '${ALL_YEARS}' OR bills.year = ?)
     `;
 
         const scoresSql = `
@@ -1213,15 +1219,18 @@ class Database {
             AND bills.session_id = votes.session_id
         JOIN legislators
             ON legislators.id = votes.legislator_id
-        WHERE bills.year = ?
+        WHERE (? = '${ALL_YEARS}' OR bills.year = ?)
         GROUP BY legislators.id
     `;
 
         const [summary, scores, participation, policyOutcomes] =
             await Promise.all([
-                this._getFirstRow(summarySql, [year]),
-                this._getAllRows(scoresSql, [year]),
-                this._getAllRows(participationSql, [year]),
+                this._getFirstRow(summarySql, [year, year]),
+                //stored scores are per year, so all years is scored live (about a second)
+                year === ALL_YEARS
+                    ? this._getLiveOverviewScores()
+                    : this._getAllRows(scoresSql, [year]),
+                this._getAllRows(participationSql, [year, year]),
                 this.getPolicyOutcomes(year),
             ]);
 
@@ -1231,6 +1240,42 @@ class Database {
             participation,
             policy_outcomes: policyOutcomes,
         };
+    }
+
+    //every legislator's couple scores across all years, in the same shape as the overview's stored scores
+    //(couple labels plus the legislator's name, party, chamber, and district) - computed live
+    async _getLiveOverviewScores() {
+        const [scores, couples, legislators] = await Promise.all([
+            this.getLegislatureCoupleScores(ALL_YEARS),
+            this._getAllRows(`SELECT * FROM policy_topic_couples`, []),
+            this._getAllRows(
+                `SELECT id, format_name, party, house, district FROM legislators`,
+                [],
+            ),
+        ]);
+        const coupleByName = new Map(
+            couples.map((c) => [c.policy_topic_couple_name, c]),
+        );
+        const legislatorById = new Map(legislators.map((l) => [l.id, l]));
+
+        return scores.map((score) => {
+            const couple = coupleByName.get(score.policy_topic_couple_name);
+            const legislator = legislatorById.get(score.legislator_id);
+            return {
+                legislator_id: score.legislator_id,
+                policy_topic_couple_name: score.policy_topic_couple_name,
+                score: score.score,
+                all_included_votes: score.all_included_votes,
+                policy_topic: couple.policy_topic,
+                name_label: couple.name_label,
+                left_policy_direction: couple.left_policy_direction,
+                right_policy_direction: couple.right_policy_direction,
+                format_name: legislator.format_name,
+                party: legislator.party,
+                house: legislator.house,
+                district: legislator.district,
+            };
+        });
     }
 
     //what passed per policy topic and direction (see policyOutcomes.js) for a year, or one of its
@@ -1251,11 +1296,12 @@ class Database {
         JOIN bills
             ON bills.id = policy.bill_id
             AND bills.session_id = policy.session_id
-        WHERE bills.year = ?
+        WHERE (? = '${ALL_YEARS}' OR bills.year = ?)
           AND (? IS NULL OR bills.session_id = ?)
     `;
 
         const policyRows = await this._getAllRows(policySql, [
+            year,
             year,
             sessionId,
             sessionId,
@@ -1289,13 +1335,14 @@ class Database {
             AND votes.session_id = bills.session_id
         WHERE couple.policy_topic_couple_name = ?
           AND votes.legislator_id = ?
-          AND bills.year = ?
+          AND (? = '${ALL_YEARS}' OR bills.year = ?)
           AND (? IS NULL OR bills.session_id = ?)
     `;
 
         const values = [
             policyCoupleName,
             legislatorId,
+            year,
             year,
             sessionId,
             sessionId,
@@ -1345,7 +1392,7 @@ class Database {
             ON votes.bill_id = bills.id
             AND votes.session_id = bills.session_id
         WHERE (? IS NULL OR votes.legislator_id = ?)
-          AND bills.year = ?
+          AND (? = '${ALL_YEARS}' OR bills.year = ?)
           AND (? IS NULL OR bills.session_id = ?)
     `;
 
@@ -1354,6 +1401,7 @@ class Database {
             this._getAllRows(votesSql, [
                 legislatorId,
                 legislatorId,
+                year,
                 year,
                 sessionId,
                 sessionId,
@@ -1368,7 +1416,7 @@ class Database {
     async getLegislatureCoupleScores(year, sessionId = null) {
         const partiesSql = `SELECT id, party FROM legislators`;
 
-        if (!sessionId) {
+        if (!sessionId && year !== ALL_YEARS) {
             const storedSql = `
             SELECT
                 scores.legislator_id,
