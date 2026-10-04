@@ -20,7 +20,7 @@ nano-gpt LLM API (summaries, policies) ──┘   server/database/createPolicyS
                                                  └─► browser calls Geoapify / UGRC / ArcGIS directly for district lookup
 ```
 
-- **There are two separate npm projects** and no root package.json: `server/` (plain JS ESM) and `react_client/` (TypeScript).
+- **There are three separate npm projects** and no root package.json: `server/` (plain JS ESM: the API plus the ETL), `server_ts/` (the same API in TypeScript, see §2b) and `react_client/` (TypeScript).
 - **The ETL runs offline and by hand.** The API server only reads. Nothing in the running app writes to the DB.
 - **The DB is committed**: `server/database/voteWatch.db` is about 98 MB and currently has 1,998 bills, 133k votes, 102 legislators, 2,261 policy rows and 5,100 couple scores. Sessions are `2025GS`, `2025S1`, `2025S2` and `2026GS`. Stored scores exist **only for year 2026**. Other years and single sessions are scored live for one legislator (see `/analysis/:legislatorId/:year`).
 
@@ -28,9 +28,39 @@ nano-gpt LLM API (summaries, policies) ──┘   server/database/createPolicyS
 ```bash
 cd server && npm run dev          # nodemon server.js → http://localhost:3005
 cd react_client && npm run dev    # vite → http://localhost:5173
-cd server && npm run databaseDev  # runs fillDatabase.js (whatever await lines are uncommented at the bottom)
+cd server_ts && npm run dev       # TypeScript API on Postgres (tsx watch) → http://localhost:3005 (port hard-coded in src/server.ts)
+cd server_ts && npm run etl -- <stages>  # the ETL (TypeScript, writes Postgres) - see §3; npm run etl alone lists the stages
+cd server && npm run copyToPostgres -- --force  # REPLACES all Postgres data with SQLite's - only on purpose (see below)
 ```
-`.vscode/launch.json` has matching debug configs ("Debug Full Stack", "Launch and Debug Fill Database").
+**Postgres is the project's final database** (decided 2026-10-03). **The ETL now writes Postgres directly** (`server_ts`, 2026-10-03), so SQLite (`voteWatch.db`) is frozen legacy data, read only by the JavaScript server. Make schema changes such as identity ids, foreign keys and normalization in `schema.sql` and the copy step, never by altering SQLite. The end state is the ETL on Postgres, with `voteWatch.db` and the JavaScript server retired.
+
+**Postgres database** (local PostgreSQL 17 service, database `votewatch`). It's rebuilt from `voteWatch.db` by `npm run copyToPostgres` in `server/`, which runs `server/database/postgres/copySqliteToPostgres.js` in **one transaction**:
+  1. Load every SQLite table as-is into a `staging` schema (`staging.sql`: same names and columns, loose types).
+  2. Drop and recreate the real tables (`schema.sql`).
+  3. Fill them with `transform.sql`, which looks up the new integer ids by joining on the old text keys.
+  4. Run 17 checks of row counts and totals against SQLite, and commit only if all match. Otherwise it rolls back and the previous data stays.
+
+  The `staging` schema is dropped at the end (`--keep-staging` keeps it). SQLite is opened read-only. The script reads `DATABASE_URL` from `server/.env` and never prints it. **It now refuses to run without `--force`**, because it replaces everything in Postgres with SQLite's older data and would wipe whatever the ETL has written since.
+- **`schema.sql` (the final layout):**
+  - Every table has `id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY`, and links are integer foreign keys named `<table>_id`.
+  - Tables: `sessions` (code '2026GS', year), `policy_topics` (16), `policy_directions` (was SQLite's misnamed `policy_topics`), `policy_couples`, `policy_singles`, `legislators` (`code` = the Legislature's id), `bills` (`bill_number` 'HB0001', `session_id` → sessions, sponsors as `sponsor_id`/`floor_sponsor_id` → legislators plus the raw `sponsor_code`/`floor_sponsor_code`), `votes` (`bill_id` → bills ON DELETE CASCADE, `legislator_id` → legislators RESTRICT, UNIQUE(bill, legislator)), `bill_policies` (was `policy`: `bill_id`, `policy_topic_id`, `direction_id`) and `legislator_couple_scores` (was `leg_scores_policy_topic_couples`).
+  - The old text keys stay as UNIQUE columns. CHECK constraints cover vote, house, party, strength, impact, confidence (0–1) and score (0–100). `passed`, `is_substantive` and `needs_review` are booleans.
+  - The indexes cover the foreign-key columns the app looks up.
+- **Data decisions (2026-10-03):**
+  - Sponsors who aren't in `legislators` (5 bill sponsors and 3 floor sponsors, about 50 bills each) keep their code with a NULL link.
+  - 6 bill policies whose direction isn't in the taxonomy have `direction_id` NULL.
+  - 14 policies whose direction belongs to another topic keep both ids (scoring skips them, because it matches the couple's topic and its directions).
+  - The 105 SQLite `policy` rows with no bill are dropped, as is the old `policy_score` table.
+  - Dates stay TEXT (mixed formats), `subjects` stays comma-separated, and `summary_text` stays text (candidates for later).
+- The JavaScript server (`server/`) and the ETL still use SQLite. **The TypeScript server (`server_ts/`) reads Postgres** (§2b).
+
+`.vscode/launch.json` debug configs:
+- **"Launch and Debug Server":** `server_ts` via `node --watch --import tsx src/server.ts`. Breakpoints work in the `.ts` files, and it restarts on save.
+- **"Debug ETL":** prompts for the stages and options, for example `legislators bills --sessions=2026GS`. `run.ts` splits that text on spaces.
+- **"Debug Full Stack":** the server plus Firefox on the React app.
+- **"Launch and Debug Fill Database"** is the legacy JavaScript ETL. Its last line runs the paid policy stage.
+
+nodemon can't run TypeScript, so the server configs use Node's own `--watch` with the tsx loader.
 Check the client with `npx tsc -p tsconfig.app.json --noEmit` and `npm run lint`. `npm run build` currently **fails**: `noUnusedLocals` is on and several files have unused imports. There are no tests; mocha is listed in the server's dependencies but has no test files.
 
 ---
@@ -77,22 +107,52 @@ Route conventions: wrap each handler in `try/catch`, `console.log` a label, and 
 
 Keys: bills are identified by **(session_id, id)**. Bill IDs look like `HB0001` or `SB0123`. Special-session sessions end in `S1`/`S2`. Year is `session_id.slice(0,4)`.
 
+### 2b. TypeScript server (`server_ts/`)
+A TypeScript copy of the API only, **reading the Postgres copy of the data** (`DATABASE_URL` in `server_ts/.env`, filled by `npm run copyToPostgres` in `server/`). It has every route, path, query parameter and JSON shape of `server/`, so the React app works against either one. It was checked route by route against the SQLite server: all 35 sample requests returned the same data. The only differences are the types noted below and row order. The ETL stays in `server/` and still writes SQLite, so **re-run `copyToPostgres` after any ETL run**, or the Postgres copy goes stale.
+- Runs with `tsx` (`npm run dev` / `npm start`, no build step). `npm run typecheck` runs strict `tsc --noEmit`. It `src/server.ts` currently hard-codes port **3005** (the commented line used `process.env.PORT || "3006"`), so stop the JavaScript server before starting it.
+- `src/server.ts` (Express 5 + CORS), and `src/routes/*Router.ts` as factories (`createBillRouter(db)` …) built on `handle(label, errorLabel, handler)`. `handle` adds the console label, the JSON response and the plain 500 that every JavaScript route writes by hand. A handler returns `new NotFound(msg)` for a 404. `param(req, name)` and `sessionQuery(req)` read params.
+- `src/database/database.ts`: a `Database` around one `pg.Pool`, with typed `all<T>()`/`get<T>()`. It loads `.env` with Node's `process.loadEnvFile`, and `open()` fails at startup if `DATABASE_URL` is wrong. It queries the integer-id tables in `schema.sql`, but returns the API's **original JSON** through SQL fragments: `BILL_COLUMNS` (for example `s.code AS session_id`, `b.bill_number AS id`, `b.sponsor_code AS bill_sponsor`), `LEGISLATOR_COLUMNS` (`l.code AS id`), `POLICY_JSON`/`BILL_POLICIES_COLUMN`, `POLICY_COLUMNS` and `COUPLES_SELECT`. Route parameters are still the text codes (`PETERT`, `2026GS`, `HB0001`), and the React app is unchanged. It was checked against the SQLite server on 34 routes, all matching. The only differences: the legacy bill field `policy_topics` is gone, the 6 unknown-direction policies return `policy_direction: null`, and `/legislators/:id/:year/analysis` (old `policy_score`) is removed. List queries have an explicit `ORDER BY`.
+- Postgres type differences in the JSON, which the client already handles with `Boolean(...)`/`Number(...)`: `passed` and `has_scores` are true/false (SQLite: `'true'`/`0` and 1/0), and a policy's `confidence` inside `policies` is a JSON number (SQLite: text). `COUNT`/`SUM` bigints are parsed to numbers by a `pg.types.setTypeParser(20, …)` in `database.ts`. On the timed routes it's faster than SQLite (overview 0.11s vs 0.41s, all years 0.3s vs 1.4s), thanks to the schema's indexes.
+- `src/types.ts` has the row types, snake_case and as loose as SQLite stores them. `src/scoring/` holds typed ports of `policyWeight`, `legislatorCoupleScores` and `policyOutcomes`. **`getPolicyWeight` and the couple-score math now exist in both servers** (the JavaScript ETL writes the stored scores with its copy), so change both together.
+- The taxonomy isn't copied: `policyOutcomes.ts` imports `server/database/policyTopics.js` directly (`allowJs`, `checkJs: false`), and TypeScript infers its types from the classes.
+- Testing tip: stopping an `npm start`/`tsx` background task can leave the node child running and holding its port. Check with `Get-NetTCPConnection -LocalPort <port>` and stop the process.
+- Deliberate differences from `server/`: `/bills/:sessionId` returns `policies` parsed (the JavaScript server's unparsed-string bug, §7). The never-matching `legislators` route `analysis/:id/...` isn't ported.
+
 ---
 
-## 3. ETL pipeline (`server/database/`)
+## 3. ETL pipeline (`server_ts/src/etl/`, TypeScript, writes Postgres)
 
-`fillDatabase.js` exposes stage functions and runs whichever ones are uncommented at the bottom of the file. The stages, in order:
-1. `createNewEmptyDatabase()`: **this deletes voteWatch.db.** Never run it unless the user asks explicitly.
-2. `fillLegislatorsTable()`: `getLegislatorsFromGovApi.js`
-3. `fillBillsTableAllSessions_generalData()`: calls the gov API bill list, then fetches each bill and builds a `Bill` object
-4. `…_passedData()`: sets passed and dates from the passed list (strips the `S01` version suffix)
-5. `…_textData()`: `getBillTextFromWebScraping.js` (PDF link plus XML full text)
-6. `currentFillVotesTable()`: `getVotesFromWebScraping.js` scrapes `svotes.jsp` with cheerio (uses a TLS-insecure undici agent)
-7. `…_summaryData()`: `getSummariesFromAI.js` stores a JSON summary in `bills.summary_text`. Currently hard-limited to `2026GS`/`2025S2` and 300 bills
-8. `…_policyData()`: `getPoliciesFromAI.js` sends the summary and subjects to the LLM, which returns strict JSON with topics constrained to the `policyTopics.js` enums; the result goes into `policy` plus the bill's review fields
-9. `createPolicyScore.js` → `createScoresForAllLegislators()` (year hard-coded to `"2026"`). Also contains the commented-out `generatePolicyTopicTable()` that seeds `policy_topic_couples`
+Run with `cd server_ts && npm run etl -- <stages> [options]`. `npm run etl` alone prints the usage. Stages always run in this fixed order, whatever order they're named in:
 
-Inserts use `INSERT OR IGNORE`, so **re-running a stage does not overwrite existing rows**. To recompute scores or policies you must delete the old rows first. These jobs make many paid LLM calls and scrape external sites, so confirm with the user before running any of them.
+| Stage | What it does | Source |
+|---|---|---|
+| `taxonomy` | Seeds `policy_topics`, `policy_directions`, `policy_couples` and `policy_singles` from `taxonomy/policyTopics.ts`. Upserts and never deletes | local |
+| `legislators` | Current legislators, and links any waiting sponsor ids | Legislature API |
+| `bills` | Each bill's details (title, provisions, sponsors, subjects, vote-page links), 10 requests at a time. Creates new sessions | Legislature API |
+| `passed` | Marks passed bills and their dates (`HB0005S01` becomes `HB0005`) | Legislature API |
+| `text` | PDF link and full text from the bill XML | scrapes le.utah.gov |
+| `votes` | House and Senate 3rd-reading roll calls. Votes by legislators who aren't in `legislators`, or with no link, are skipped and counted | scrapes le.utah.gov (TLS-insecure agent) |
+| `summaries` | **PAID**: a plain-English JSON summary of the full text | nano-gpt LLM |
+| `policies` | **PAID**: topics and directions from the summary. Replaces the bill's policies atomically | nano-gpt LLM |
+| `scores` | Every legislator's couple scores per year (default: every year with bills), using the same live scoring as the API | Postgres |
+
+Options: `--sessions=2026GS,2025S2` (default `SESSION_LIST` in `config.ts`), `--years=2026` (scores), `--limit=N` (LLM calls per session), `--redo` and `--paid`.
+- **Paid stages refuse to run without `--paid`.** `text`, `votes`, `summaries` and `policies` skip bills that already have their data unless `--redo` is passed.
+- **Re-running refreshes rows (upserts)** instead of SQLite's `INSERT OR IGNORE` skipping. Ask the user before running any stage that hits the Legislature's sites or the LLM.
+
+Files:
+- `config.ts`: sessions, URLs, the model, and the tokens read from `server_ts/.env` through `requireEnv` (`LEGISLATURE_API_DEV_TOKEN`, `NANO_AI_TOKEN`).
+- `govApi.ts`: the Legislature API fetchers.
+- `parse.ts`: `parseBill`/`parseLegislator`, ports of `server/classes`, including every fallback key spelling and the vote-URL matching.
+- `billText.ts`: the XML walker. `votes.ts`: the roll-call scraper.
+- `ai/client.ts` holds `chatCompletionJson`. `ai/summaries.ts` and `ai/policies.ts` hold the prompts and schemas, copied word for word from the JavaScript and checked byte-identical by capturing both requests with `fetch` stubbed. **Keep their neutral, nonpartisan rules.**
+- `store.ts` (`EtlStore`): every write, translating codes to ids in SQL. Built on a Pool, or on a PoolClient already in a transaction, where writes use savepoints. That's how the writes were tested against the real database and rolled back: every upsert of existing data left its table identical, and `scores` reproduced all 5,100 stored scores.
+- `stages.ts` (`STAGES`) and `run.ts` (the CLI).
+- Shared with the API: `src/env.ts` (loads `.env` once, plus `requireEnv`) and `src/database/connection.ts` (`createPool`, plus the bigint parser).
+
+The taxonomy's source of truth is now **`server_ts/src/taxonomy/policyTopics.ts`**. Its JSON is checked identical to `server/database/policyTopics.js`, which matters because the policy prompt embeds `JSON.stringify(createPolicyTopics())`. To change the taxonomy: edit it, run `npm run etl -- taxonomy`, re-run `policies --paid --redo` for the affected bills, then `scores`.
+
+**Legacy JavaScript ETL** (`server/database/fillDatabase.js` and its helpers, `server/classes`): it still writes SQLite only. Don't use it. `constants.js` still hard-codes the AI token (rotate that key). Its bottom line currently calls the paid `fillBillsTableAllSessions_policyData()`.
 
 ---
 
