@@ -23,7 +23,7 @@ Rules:
     `.trim();
 
 const userPrompt = (bill: AiBill) =>
-    `
+  `
 Please summarize this Utah bill for a general audience.
 
 Return a valid JSON object with exactly these properties:
@@ -66,42 +66,46 @@ ${bill.full_text}
     `.trim();
 
 const SUMMARY_SCHEMA = {
-    type: "object",
-    properties: {
-        one_sentence_summary: { type: "string" },
-        plain_english_overview: { type: "string" },
-        key_changes: {
-            type: "array",
-            items: { type: "string" },
-        },
-        who_is_affected: {
-            type: "array",
-            items: { type: "string" },
-        },
-        money_or_funding_impact: { type: "string" },
-        effective_date: { type: "string" },
-        unclear_items: { type: "string" },
+  type: "object",
+  properties: {
+    one_sentence_summary: { type: "string" },
+    plain_english_overview: { type: "string" },
+    key_changes: {
+      type: "array",
+      items: { type: "string" },
     },
-    required: [
-        "one_sentence_summary",
-        "plain_english_overview",
-        "key_changes",
-        "who_is_affected",
-        "money_or_funding_impact",
-        "effective_date",
-        "unclear_items",
-    ],
-    additionalProperties: false,
+    who_is_affected: {
+      type: "array",
+      items: { type: "string" },
+    },
+    money_or_funding_impact: { type: "string" },
+    effective_date: { type: "string" },
+    unclear_items: { type: "string" },
+  },
+  required: [
+    "one_sentence_summary",
+    "plain_english_overview",
+    "key_changes",
+    "who_is_affected",
+    "money_or_funding_impact",
+    "effective_date",
+    "unclear_items",
+  ],
+  additionalProperties: false,
 };
 
 //null when the LLM call fails
-export function getBillSummary(bill: AiBill): Promise<string | null> {
-    return chatCompletionJson(
-        [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: userPrompt(bill) },
-        ],
-        "bill_summary",
-        SUMMARY_SCHEMA,
-    );
+export function getBillSummary(
+  bill: AiBill,
+  model?: string,
+): Promise<string | null> {
+  return chatCompletionJson(
+    [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: userPrompt(bill) },
+    ],
+    "bill_summary",
+    SUMMARY_SCHEMA,
+    model,
+  );
 }

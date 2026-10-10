@@ -32,7 +32,10 @@
             "runtimeExecutable": "node",
             "runtimeArgs": ["--import", "tsx"],
             "program": "${workspaceFolder}/server_ts/src/etl/run.ts",
-            "args": "${input:etlArgs}",
+            //an array, not a string: with a string VS Code skips quoting the command line, and PowerShell
+            //splits "C:\Program Files\nodejs\node.exe" at the space. The prompt's text arrives as one
+            //argument, and run.ts splits it on spaces
+            "args": ["${input:etlArgs}"],
             "cwd": "${workspaceFolder}/server_ts",
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen",

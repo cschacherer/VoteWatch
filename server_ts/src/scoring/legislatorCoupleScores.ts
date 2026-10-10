@@ -56,10 +56,20 @@ export function buildLegislatorCoupleScores(
     //the same row shape as the stored scores, so callers can't tell them apart
     return couples.map((couple) => {
         const total = totals.get(couple.policy_topic_couple_name)!;
+        //clamped: floating-point rounding can give 100.00000000000001 when every vote is on one side,
+        //which legislator_couple_scores' CHECK (score BETWEEN 0 AND 100) rejects
         const score =
             total.totalWeight > 0
-                ? 50 +
-                  50 * ((total.netRight - total.netLeft) / total.totalWeight)
+                ? Math.min(
+                      100,
+                      Math.max(
+                          0,
+                          50 +
+                              50 *
+                                  ((total.netRight - total.netLeft) /
+                                      total.totalWeight),
+                      ),
+                  )
                 : 50;
 
         return {

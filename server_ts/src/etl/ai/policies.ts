@@ -11,22 +11,20 @@ const POLICY_DIRECTION_ENUM = policyTopics.flatMap((t) => t.policyDirections);
 const policyTopicPromptText = JSON.stringify(policyTopics, null, 2);
 
 export type PolicyClassification = {
-    bill_id: string;
-    is_substantive: boolean;
-    topics: {
-        topic: string;
-        topic_strength: "primary" | "secondary";
-        policy_direction: string;
-        impact_level: "low" | "moderate" | "high";
-        confidence: number;
-        neutral_summary_for_scorecard: string;
-    }[];
-    needs_review: boolean;
-    review_reason: string;
-    measure_type:
-        | "substantive_policy"
-        | "symbolic_resolution"
-        | "technical_admin";
+  bill_id: string;
+  is_substantive: boolean;
+  topics: {
+    topic: string;
+    topic_strength: "primary" | "secondary";
+    policy_direction: string;
+    impact_level: "low" | "moderate" | "high";
+    confidence: number;
+    neutral_summary_for_scorecard: string;
+  }[];
+  needs_review: boolean;
+  review_reason: string;
+  measure_type:
+    "substantive_policy" | "symbolic_resolution" | "technical_admin";
 };
 
 const SYSTEM_PROMPT = `
@@ -100,7 +98,7 @@ review_reason:
                 `.trim();
 
 const userPrompt = (bill: AiBill) =>
-    `
+  `
 Classify the following Utah bill summary.
 
 Return ONLY valid JSON.
@@ -121,97 +119,115 @@ Bill metadata:
 
 Summary:
 ${bill.summary_text}
-                `.trim();
+                `.trim() + reviewSection(bill);
+
+//appended to the user prompt only when re-classifying a bill that was flagged for review - every other run
+//sends the original prompt unchanged. The rules above still apply in full
+const reviewSection = (bill: AiBill) =>
+  bill.previous_review
+    ? `
+
+This bill was classified before, and that classification was flagged for review.
+
+Previous classification:
+${JSON.stringify(bill.previous_review.policies, null, 2)}
+
+Review note: ${bill.previous_review.reason || "No specific reason was recorded."}
+
+Classify the bill again from the summary, following every rule above. Correct any problem the review note describes, but do not change parts of the previous classification that the summary supports.`
+    : "";
 
 const CLASSIFICATION_SCHEMA = {
-    type: "object",
-    properties: {
-        bill_id: { type: "string" },
-        is_substantive: { type: "boolean" },
-        topics: {
-            type: "array",
-            minItems: 0,
-            maxItems: 3,
-            items: {
-                type: "object",
-                properties: {
-                    topic: {
-                        type: "string",
-                        enum: TOPIC_ENUM,
-                    },
-                    topic_strength: {
-                        type: "string",
-                        enum: ["primary", "secondary"],
-                    },
-                    policy_direction: {
-                        type: "string",
-                        enum: POLICY_DIRECTION_ENUM,
-                    },
-                    impact_level: {
-                        type: "string",
-                        enum: ["low", "moderate", "high"],
-                    },
-                    confidence: {
-                        type: "number",
-                        minimum: 0,
-                        maximum: 1,
-                    },
-                    neutral_summary_for_scorecard: {
-                        type: "string",
-                    },
-                },
-                required: [
-                    "topic",
-                    "topic_strength",
-                    "policy_direction",
-                    "impact_level",
-                    "confidence",
-                    "neutral_summary_for_scorecard",
-                ],
-                additionalProperties: false,
-            },
-        },
-        needs_review: { type: "boolean" },
-        review_reason: { type: "string" },
-        measure_type: {
+  type: "object",
+  properties: {
+    bill_id: { type: "string" },
+    is_substantive: { type: "boolean" },
+    topics: {
+      type: "array",
+      minItems: 0,
+      maxItems: 3,
+      items: {
+        type: "object",
+        properties: {
+          topic: {
             type: "string",
-            enum: [
-                "substantive_policy",
-                "symbolic_resolution",
-                "technical_admin",
-            ],
+            enum: TOPIC_ENUM,
+          },
+          topic_strength: {
+            type: "string",
+            enum: ["primary", "secondary"],
+          },
+          policy_direction: {
+            type: "string",
+            enum: POLICY_DIRECTION_ENUM,
+          },
+          impact_level: {
+            type: "string",
+            enum: ["low", "moderate", "high"],
+          },
+          confidence: {
+            type: "number",
+            minimum: 0,
+            maximum: 1,
+          },
+          neutral_summary_for_scorecard: {
+            type: "string",
+          },
         },
+        required: [
+          "topic",
+          "topic_strength",
+          "policy_direction",
+          "impact_level",
+          "confidence",
+          "neutral_summary_for_scorecard",
+        ],
+        additionalProperties: false,
+      },
     },
-    required: [
-        "bill_id",
-        "is_substantive",
-        "topics",
-        "needs_review",
-        "review_reason",
-        "measure_type",
-    ],
-    additionalProperties: false,
+    needs_review: { type: "boolean" },
+    review_reason: { type: "string" },
+    measure_type: {
+      type: "string",
+      enum: ["substantive_policy", "symbolic_resolution", "technical_admin"],
+    },
+  },
+  required: [
+    "bill_id",
+    "is_substantive",
+    "topics",
+    "needs_review",
+    "review_reason",
+    "measure_type",
+  ],
+  additionalProperties: false,
 };
 
 //null when the LLM call fails or doesn't return valid JSON
 export async function getPolicyClassification(
-    bill: AiBill,
+  bill: AiBill,
+  model?: string,
 ): Promise<PolicyClassification | null> {
-    const json = await chatCompletionJson(
-        [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: userPrompt(bill) },
-        ],
-        "bill_policy_classification",
-        CLASSIFICATION_SCHEMA,
-    );
-    if (!json) return null;
-    try {
-        return JSON.parse(json) as PolicyClassification;
-    } catch {
-        console.log(
-            `LLM classification for ${bill.bill_number} wasn't valid JSON`,
-        );
-        return null;
-    }
+  const json = await chatCompletionJson(
+    [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: userPrompt(bill) },
+    ],
+    "bill_policy_classification",
+    CLASSIFICATION_SCHEMA,
+    model,
+  );
+  if (!json) return null;
+  try {
+    //some models (thinking ones especially) wrap the JSON in a ```json fence - parse what's between
+    //the outer braces
+    const start = json.indexOf("{");
+    const end = json.lastIndexOf("}");
+    return JSON.parse(
+      start >= 0 && end > start ? json.slice(start, end + 1) : json,
+    ) as PolicyClassification;
+  } catch {
+    console.log(`LLM classification for ${bill.bill_number} wasn't valid JSON`);
+    return null;
+  }
 }

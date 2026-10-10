@@ -1,15 +1,22 @@
 import { getErrorMessage } from "./errorHandling";
-import { createAddress, type Address } from "../models/MapUtils";
+import {
+    createAddress,
+    createAddressFromSuggestion,
+    type Address,
+} from "../models/MapUtils";
 
 const UGRC_API_KEY = import.meta.env.VITE_UGRC_APIKEY;
 const GEOAPIFY_API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY;
+const ARCGIS_API_KEY = import.meta.env.VITE_ARCGIS_API_KEY;
 
-//address suggestions already looked up this visit, by "street|zip" - Geoapify can take several seconds
-//to answer, so going back to text that was already typed (ie backspacing) shouldn't wait again
+//address suggestions already looked up this visit, by "street|zip", so going back to text that was
+//already typed (ie backspacing) doesn't wait again
 const addressSearchCache = new Map<string, Address[]>();
 
-//signal cancels the request when the text changes before Geoapify answers, so slow older lookups
-//don't pile up behind the newest one - an aborted lookup throws an AbortError for the caller to ignore
+//street address suggestions as the user types. Uses the ArcGIS Location Platform geocoder (about 0.15s)
+//when VITE_ARCGIS_API_KEY is set, otherwise Geoapify (2-12s). signal cancels the request when the text
+//changes before it answers, so older lookups don't pile up behind the newest one - an aborted lookup
+//throws an AbortError for the caller to ignore
 export const searchAddresses = async (
     streetName: string,
     zipCode: string,
@@ -20,6 +27,67 @@ export const searchAddresses = async (
     const cacheKey = `${streetName.trim().toLowerCase()}|${zipCode.trim()}`;
     const cached = addressSearchCache.get(cacheKey);
     if (cached) return cached;
+
+    const addresses = ARCGIS_API_KEY
+        ? await searchAddressesArcGis(streetName, zipCode, signal)
+        : await searchAddressesGeoapify(streetName, zipCode, signal);
+    //failed lookups return null and aren't cached, so typing the same text again retries
+    if (!addresses) return [];
+    addressSearchCache.set(cacheKey, addresses);
+    return addresses;
+};
+
+//ArcGIS World Geocoder "suggest": only addresses, only inside Utah, ranked nearest Salt Lake City first
+//(most Utahns live on the Wasatch Front - without it, the middle of the state ranks first). Suggest
+//requests don't use the key's geocode credits
+const searchAddressesArcGis = async (
+    streetName: string,
+    zipCode: string,
+    signal?: AbortSignal,
+): Promise<Address[] | null> => {
+    const params = new URLSearchParams({
+        f: "json",
+        text: zipCode ? `${streetName}, ${zipCode}` : streetName,
+        category: "Address",
+        countryCode: "USA",
+        searchExtent: "-114.1,36.9,-109.0,42.1",
+        location: "-111.89,40.76",
+        maxSuggestions: "5",
+        token: ARCGIS_API_KEY ?? "",
+    });
+
+    let res: Response;
+    try {
+        res = await fetch(
+            `https://geocode-api.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest?${params.toString()}`,
+            { signal },
+        );
+    } catch (error) {
+        //a cancelled lookup isn't a failure - let the caller see it and ignore it
+        if (signal?.aborted) throw error;
+        console.error("ArcGIS address search failed", error);
+        return null;
+    }
+
+    //ArcGIS reports errors (ie a bad or expired key) as a 200 with an error object
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data || data.error) {
+        console.error("ArcGIS address search failed", data?.error ?? res.status);
+        return null;
+    }
+
+    const suggestions: { text?: string; isCollection?: boolean }[] =
+        data.suggestions ?? [];
+    return suggestions
+        .filter((s) => !s.isCollection)
+        .map((s) => createAddressFromSuggestion(String(s.text ?? "")));
+};
+
+const searchAddressesGeoapify = async (
+    streetName: string,
+    zipCode: string,
+    signal?: AbortSignal,
+): Promise<Address[] | null> => {
 
     // Utah bounding box:
     // Geoapify rect format is: lon1,lat1,lon2,lat2
@@ -47,19 +115,18 @@ export const searchAddresses = async (
         //a cancelled lookup isn't a failure - let the caller see it and ignore it
         if (signal?.aborted) throw error;
         console.error("Geoapify address search failed", error);
-        return [];
+        return null;
     }
 
     if (!res.ok) {
         console.error("Geoapify address search failed", await res.text());
-        return [];
+        return null;
     }
 
     const data = await res.json();
     const addressArray: Address[] = data.results.map((x: any) =>
         createAddress(x),
     );
-    addressSearchCache.set(cacheKey, addressArray);
     return addressArray;
 
     // //nominatim - don't need an api key

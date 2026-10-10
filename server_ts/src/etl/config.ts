@@ -7,7 +7,9 @@ export const API_BASE_URL = "https://glen.le.utah.gov";
 export const WEB_BASE_URL = "https://le.utah.gov";
 
 export const AI_BASE_URL = "https://nano-gpt.com/api/v1/chat/completions";
-export const AI_MODEL = "deepseek/deepseek-v4-flash";
+//the default model - a run can pick another with --model=<nano-gpt model id>
+//export const AI_MODEL = "deepseek/deepseek-v4-flash";
+export const AI_MODEL = "deepseek/deepseek-v4-pro-0813:thinking";
 
 //the Utah Legislature API token (server_ts/.env)
 export const legislatureApiToken = () =>

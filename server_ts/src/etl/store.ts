@@ -28,6 +28,8 @@ export type StoredBill = {
     vote_count: number;
     //set once the policies stage has classified the bill (non-substantive bills have no policies)
     measure_type: string | null;
+    needs_review: boolean | null;
+    review_reason: string | null;
 };
 
 type Queryable = pg.Pool | pg.PoolClient;
@@ -263,7 +265,9 @@ export class EtlStore {
                 b.senate_vote_url,
                 (SELECT COUNT(*) FROM bill_policies bp WHERE bp.bill_id = b.id) AS policy_count,
                 (SELECT COUNT(*) FROM votes v WHERE v.bill_id = b.id) AS vote_count,
-                b.measure_type
+                b.measure_type,
+                b.needs_review,
+                b.review_reason
             FROM bills b JOIN sessions s ON s.id = b.session_id
             WHERE s.code = $1
             ORDER BY b.bill_number`,
@@ -347,6 +351,25 @@ export class EtlStore {
             }
             return added;
         });
+    }
+
+    //a bill's current policies, as the policy prompt describes a previous classification
+    async billPolicies(billId: number) {
+        const { rows } = await this.query<{
+            topic: string;
+            topic_strength: string;
+            policy_direction: string | null;
+            impact_level: string;
+        }>(
+            `SELECT t.name AS topic, bp.strength AS topic_strength, d.name AS policy_direction, bp.impact_level
+            FROM bill_policies bp
+            JOIN policy_topics t ON t.id = bp.policy_topic_id
+            LEFT JOIN policy_directions d ON d.id = bp.direction_id
+            WHERE bp.bill_id = $1
+            ORDER BY bp.strength, t.name`,
+            [billId],
+        );
+        return rows;
     }
 
     // #endregion

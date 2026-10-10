@@ -9,6 +9,12 @@
     background-color: white;
 }
 
+.policyChip:hover {
+    border-radius: 10px;
+    background-color: #f1f5f9;
+    /* background-color: #e2e8f0; */
+}
+
 .policyChip__primary {
     border-left-color: var(--color-accent);
 }

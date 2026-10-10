@@ -187,6 +187,8 @@
 
 .rep__name:hover {
     color: var(--color-accent);
+    border-radius: 10px; 
+    background-color: #f1f5f9;
     /* text-decoration: underline; */
 }
 
